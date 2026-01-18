@@ -1,0 +1,10 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.output/
+.nuxt/
+dist/
+
+# Logs
+npm-debug.log*

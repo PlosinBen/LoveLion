@@ -4,14 +4,16 @@ description: How to run the development environment locally
 
 # Run Development Environment
 
-Uses Docker Compose for consistent development setup.
+Uses Docker Compose with volume mounts. No build required for development.
 
 ## Start All Services
 // turbo
-1. Start the entire development stack (backend, frontend, database):
+1. Start the entire development stack:
 ```bash
 docker compose up -d
 ```
+
+First run will take longer as it downloads dependencies.
 
 ## View Logs
 // turbo
@@ -27,18 +29,18 @@ docker compose logs -f frontend
 docker compose logs -f postgres
 ```
 
-## Stop Services
+## Restart Backend (after code changes)
 // turbo
-4. Stop all services:
+4. Restart backend to apply Go code changes:
 ```bash
-docker compose down
+docker compose restart backend
 ```
 
-## Rebuild After Code Changes
-5. Rebuild containers after dependency changes:
+## Stop Services
+// turbo
+5. Stop all services:
 ```bash
-docker compose build --no-cache
-docker compose up -d
+docker compose down
 ```
 
 ## Access Database
