@@ -32,7 +32,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: sh -c "go mod tidy && go run main.go"
+    command: sh -c "go mod tidy && go run cmd/migrate/main.go && go run main.go"
 
   frontend:
     image: node:24-alpine
