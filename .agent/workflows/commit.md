@@ -16,27 +16,63 @@ git add .
 ```
 
 // turbo
-2. Commit with AI author:
+2. Set local user.name to Antigravity:
 ```bash
-git commit --author="Antigravity <PlosinBen@gmail.com>" -m "your commit message"
+git config user.name "Antigravity"
+```
+
+// turbo
+3. Commit with AI author:
+```bash
+git commit -m "your commit message"
+```
+
+// turbo
+4. Restore user.name (unset to use global):
+```bash
+git config --unset user.name
 ```
 
 ## Commit Specific Files
 // turbo
-3. Stage specific files:
+1. Stage specific files:
 ```bash
 git add <file1> <file2>
 ```
 
 // turbo
-4. Commit with AI author:
+2. Set local user.name to Antigravity:
 ```bash
-git commit --author="Antigravity <PlosinBen@gmail.com>" -m "your commit message"
+git config user.name "Antigravity"
+```
+
+// turbo
+3. Commit with AI author:
+```bash
+git commit -m "your commit message"
+```
+
+// turbo
+4. Restore user.name (unset to use global):
+```bash
+git config --unset user.name
 ```
 
 ## Amend Last Commit
 // turbo
-5. Amend the last commit to change author:
+1. Set local user.name to Antigravity:
 ```bash
-git commit --amend --author="Antigravity <PlosinBen@gmail.com>" --no-edit
+git config user.name "Antigravity"
+```
+
+// turbo
+2. Amend the last commit to change author:
+```bash
+git commit --amend --reset-author --no-edit
+```
+
+// turbo
+3. Restore user.name (unset to use global):
+```bash
+git config --unset user.name
 ```
