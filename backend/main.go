@@ -42,6 +42,26 @@ func main() {
 			// Protected routes
 			users.GET("/me", middleware.AuthRequired(cfg.JWTSecret), authHandler.GetMe)
 		}
+
+		// Protected ledger routes
+		ledgers := api.Group("/ledgers")
+		ledgers.Use(middleware.AuthRequired(cfg.JWTSecret))
+		{
+			ledgerHandler := handlers.NewLedgerHandler(db)
+			ledgers.GET("", ledgerHandler.List)
+			ledgers.POST("", ledgerHandler.Create)
+			ledgers.GET("/:id", ledgerHandler.Get)
+			ledgers.PUT("/:id", ledgerHandler.Update)
+			ledgers.DELETE("/:id", ledgerHandler.Delete)
+
+			// Transaction routes nested under ledger
+			transactionHandler := handlers.NewTransactionHandler(db)
+			ledgers.GET("/:id/transactions", transactionHandler.List)
+			ledgers.POST("/:id/transactions", transactionHandler.Create)
+			ledgers.GET("/:id/transactions/:txn_id", transactionHandler.Get)
+			ledgers.PUT("/:id/transactions/:txn_id", transactionHandler.Update)
+			ledgers.DELETE("/:id/transactions/:txn_id", transactionHandler.Delete)
+		}
 	}
 
 	// Start server
