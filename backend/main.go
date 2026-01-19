@@ -62,8 +62,35 @@ func main() {
 			ledgers.PUT("/:id/transactions/:txn_id", transactionHandler.Update)
 			ledgers.DELETE("/:id/transactions/:txn_id", transactionHandler.Delete)
 		}
-	}
 
+		// Protected trip routes
+		trips := api.Group("/trips")
+		trips.Use(middleware.AuthRequired(cfg.JWTSecret))
+		{
+			tripHandler := handlers.NewTripHandler(db)
+			trips.GET("", tripHandler.List)
+			trips.POST("", tripHandler.Create)
+			trips.GET("/:id", tripHandler.Get)
+			trips.PUT("/:id", tripHandler.Update)
+			trips.DELETE("/:id", tripHandler.Delete)
+
+			// Member routes
+			trips.GET("/:id/members", tripHandler.ListMembers)
+			trips.POST("/:id/members", tripHandler.AddMember)
+			trips.DELETE("/:id/members/:member_id", tripHandler.RemoveMember)
+
+			// Comparison routes
+			comparisonHandler := handlers.NewComparisonHandler(db)
+			trips.GET("/:id/stores", comparisonHandler.ListStores)
+			trips.POST("/:id/stores", comparisonHandler.CreateStore)
+			trips.GET("/:id/stores/:store_id", comparisonHandler.GetStore)
+			trips.DELETE("/:id/stores/:store_id", comparisonHandler.DeleteStore)
+			trips.GET("/:id/products", comparisonHandler.ListAllProducts)
+			trips.POST("/:id/stores/:store_id/products", comparisonHandler.CreateProduct)
+			trips.PUT("/:id/stores/:store_id/products/:product_id", comparisonHandler.UpdateProduct)
+			trips.DELETE("/:id/stores/:store_id/products/:product_id", comparisonHandler.DeleteProduct)
+		}
+	}
 	// Start server
 	port := cfg.Port
 	if port == "" {
