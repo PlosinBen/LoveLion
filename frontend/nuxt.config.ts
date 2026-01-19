@@ -9,7 +9,19 @@ export default defineNuxtConfig({
   // Runtime config for API base URL
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8080'
+      apiBase: ''  // Empty for same-origin requests
+    }
+  },
+
+  // Nitro server configuration
+  nitro: {
+    routeRules: {
+      '/api/**': {
+        proxy: 'http://backend:8080/api/**'
+      },
+      '/health': {
+        proxy: 'http://backend:8080/health'
+      }
     }
   },
 
