@@ -12,13 +12,11 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "@iconify/vue": "^4.1.2",
-    "nuxt": "^3.14.0",
-    "vue": "^3.5.0",
-    "vue-router": "^4.5.0"
+    "@iconify/vue": "^5.0.0",
+    "nuxt": "^4.2.2"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
-    "vitest": "^2.1.0"
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.17"
   }
 }
