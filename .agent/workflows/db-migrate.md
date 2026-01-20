@@ -44,3 +44,31 @@ docker compose exec backend migrate -path /app/migrations -database "$DATABASE_U
 ```bash
 docker compose exec backend migrate -path /app/migrations -database "$DATABASE_URL" force <version>
 ```
+
+## Reset Database (Drop + Migrate + Seed via Tests)
+
+Use this when database schema changes require a fresh start.
+
+// turbo
+6. Drop existing database:
+```bash
+docker compose exec postgres psql -U postgres -c "DROP DATABASE IF EXISTS lovelion"
+```
+
+// turbo
+7. Create fresh database:
+```bash
+docker compose exec postgres psql -U postgres -c "CREATE DATABASE lovelion"
+```
+
+// turbo
+8. Run all migrations:
+```bash
+docker compose exec backend migrate -path /app/migrations -database "$DATABASE_URL" up
+```
+
+// turbo
+9. Run API tests to seed data:
+```bash
+docker compose exec backend go test ./...
+```
