@@ -1,61 +1,61 @@
 <template>
-  <div class="login-page">
-    <div class="login-header">
-      <h1>LoveLion</h1>
-      <p>個人記帳 & 旅行助手</p>
+  <div class="flex flex-col justify-center min-h-screen p-6 bg-neutral-950">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold mb-2 bg-gradient-to-br from-indigo-500 to-purple-500 bg-clip-text text-transparent">LoveLion</h1>
+      <p class="text-neutral-400">個人記帳 & 旅行助手</p>
     </div>
 
-    <div class="login-form card">
+    <div class="w-full max-w-sm mx-auto bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
       <div v-if="!isRegister">
-        <h2>登入</h2>
+        <h2 class="mb-6 text-center text-xl font-semibold">登入</h2>
 
-        <div class="form-group">
-          <label class="label">帳號</label>
-          <input v-model="username" type="text" class="input" placeholder="請輸入帳號" />
+        <div class="mb-4">
+          <label class="block mb-2 text-sm text-neutral-400">帳號</label>
+          <input v-model="username" type="text" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base" placeholder="請輸入帳號" />
         </div>
 
-        <div class="form-group">
-          <label class="label">密碼</label>
-          <input v-model="password" type="password" class="input" placeholder="請輸入密碼" />
+        <div class="mb-4">
+          <label class="block mb-2 text-sm text-neutral-400">密碼</label>
+          <input v-model="password" type="password" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base" placeholder="請輸入密碼" />
         </div>
 
-        <div v-if="error" class="error-message">{{ error }}</div>
+        <div v-if="error" class="text-red-500 text-sm mt-2">{{ error }}</div>
 
-        <button @click="handleLogin" class="btn btn-primary btn-block" :disabled="loading">
+        <button @click="handleLogin" class="w-full mt-6 px-6 py-3 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" :disabled="loading">
           {{ loading ? '登入中...' : '登入' }}
         </button>
 
-        <p class="switch-mode">
-          還沒有帳號？ <a @click="isRegister = true">註冊</a>
+        <p class="text-center mt-4 text-neutral-400">
+          還沒有帳號？ <a @click="isRegister = true" class="text-indigo-500 cursor-pointer hover:underline">註冊</a>
         </p>
       </div>
 
       <div v-else>
-        <h2>註冊</h2>
+        <h2 class="mb-6 text-center text-xl font-semibold">註冊</h2>
 
-        <div class="form-group">
-          <label class="label">帳號</label>
-          <input v-model="username" type="text" class="input" placeholder="請輸入帳號" />
+        <div class="mb-4">
+          <label class="block mb-2 text-sm text-neutral-400">帳號</label>
+          <input v-model="username" type="text" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base" placeholder="請輸入帳號" />
         </div>
 
-        <div class="form-group">
-          <label class="label">顯示名稱</label>
-          <input v-model="displayName" type="text" class="input" placeholder="請輸入顯示名稱" />
+        <div class="mb-4">
+          <label class="block mb-2 text-sm text-neutral-400">顯示名稱</label>
+          <input v-model="displayName" type="text" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base" placeholder="請輸入顯示名稱" />
         </div>
 
-        <div class="form-group">
-          <label class="label">密碼</label>
-          <input v-model="password" type="password" class="input" placeholder="請輸入密碼" />
+        <div class="mb-4">
+          <label class="block mb-2 text-sm text-neutral-400">密碼</label>
+          <input v-model="password" type="password" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base" placeholder="請輸入密碼" />
         </div>
 
-        <div v-if="error" class="error-message">{{ error }}</div>
+        <div v-if="error" class="text-red-500 text-sm mt-2">{{ error }}</div>
 
-        <button @click="handleRegister" class="btn btn-primary btn-block" :disabled="loading">
+        <button @click="handleRegister" class="w-full mt-6 px-6 py-3 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" :disabled="loading">
           {{ loading ? '註冊中...' : '註冊' }}
         </button>
 
-        <p class="switch-mode">
-          已有帳號？ <a @click="isRegister = false">登入</a>
+        <p class="text-center mt-4 text-neutral-400">
+          已有帳號？ <a @click="isRegister = false" class="text-indigo-500 cursor-pointer hover:underline">登入</a>
         </p>
       </div>
     </div>
@@ -118,68 +118,3 @@ const handleRegister = async () => {
   }
 }
 </script>
-
-<style scoped>
-.login-page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 24px;
-  background: var(--bg-primary);
-}
-
-.login-header {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.login-header h1 {
-  font-size: 32px;
-  background: linear-gradient(135deg, var(--primary), #a855f7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 8px;
-}
-
-.login-header p {
-  color: var(--text-secondary);
-}
-
-.login-form {
-  max-width: 400px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.login-form h2 {
-  margin-bottom: 24px;
-  text-align: center;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.btn-block {
-  width: 100%;
-  margin-top: 24px;
-}
-
-.switch-mode {
-  text-align: center;
-  margin-top: 16px;
-  color: var(--text-secondary);
-}
-
-.switch-mode a {
-  color: var(--primary);
-  cursor: pointer;
-}
-
-.error-message {
-  color: var(--danger);
-  font-size: 14px;
-  margin-top: 8px;
-}
-</style>

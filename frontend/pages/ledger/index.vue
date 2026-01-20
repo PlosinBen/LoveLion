@@ -1,41 +1,41 @@
 <template>
   <div class="ledger-page">
-    <header class="page-header">
-      <h1>我的帳本</h1>
-      <NuxtLink to="/ledger/add" class="btn btn-primary">
+    <header class="flex justify-between items-center mb-5">
+      <h1 class="text-2xl font-bold">我的帳本</h1>
+      <NuxtLink to="/ledger/add" class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors text-sm no-underline">
         <Icon icon="mdi:plus" /> 新增
       </NuxtLink>
     </header>
 
-    <div v-if="loading" class="loading">載入中...</div>
+    <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
 
-    <div v-else-if="transactions.length === 0" class="empty-state card">
-      <Icon icon="mdi:receipt-text-outline" />
-      <p>還沒有任何記錄</p>
-      <NuxtLink to="/ledger/add" class="btn btn-primary">開始記帳</NuxtLink>
+    <div v-else-if="transactions.length === 0" class="text-center py-16 px-5 bg-neutral-900 rounded-2xl border border-neutral-800">
+      <Icon icon="mdi:receipt-text-outline" class="text-6xl text-neutral-400 mb-4" />
+      <p class="text-neutral-400 mb-5">還沒有任何記錄</p>
+      <NuxtLink to="/ledger/add" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors text-sm no-underline">開始記帳</NuxtLink>
     </div>
 
-    <div v-else class="transactions">
+    <div v-else class="flex flex-col gap-3">
       <div
         v-for="txn in transactions"
         :key="txn.id"
-        class="transaction-card card"
+        class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-500"
         @click="router.push(`/ledger/${txn.id}`)"
       >
-        <div class="txn-main">
-          <div class="txn-category">
-            <Icon :icon="getCategoryIcon(txn.category)" />
+        <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center w-11 h-11 rounded-xl bg-neutral-800">
+            <Icon :icon="getCategoryIcon(txn.category)" class="text-xl text-indigo-500" />
           </div>
-          <div class="txn-info">
-            <h3>{{ txn.category || '未分類' }}</h3>
-            <p>{{ formatDate(txn.date) }} • {{ txn.items?.length || 0 }} 項目</p>
+          <div class="flex-1">
+            <h3 class="text-[15px] font-semibold mb-1">{{ txn.category || '未分類' }}</h3>
+            <p class="text-xs text-neutral-400">{{ formatDate(txn.date) }} • {{ txn.items?.length || 0 }} 項目</p>
           </div>
-          <div class="txn-amount">
-            <span class="currency">{{ txn.currency }}</span>
-            <span class="amount">{{ formatAmount(txn.total_amount) }}</span>
+          <div class="text-right">
+            <span class="block text-xs text-neutral-400 mb-0.5">{{ txn.currency }}</span>
+            <span class="text-lg font-semibold">{{ formatAmount(txn.total_amount) }}</span>
           </div>
         </div>
-        <div v-if="txn.note" class="txn-note">{{ txn.note }}</div>
+        <div v-if="txn.note" class="mt-3 pt-3 border-t border-neutral-800 text-[13px] text-neutral-400">{{ txn.note }}</div>
       </div>
     </div>
   </div>
@@ -119,119 +119,3 @@ onMounted(() => {
   fetchData()
 })
 </script>
-
-<style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.page-header h1 {
-  font-size: 24px;
-}
-
-.page-header .btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-}
-
-.loading {
-  text-align: center;
-  color: var(--text-secondary);
-  padding: 40px;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-}
-
-.empty-state svg {
-  font-size: 64px;
-  color: var(--text-secondary);
-  margin-bottom: 16px;
-}
-
-.empty-state p {
-  color: var(--text-secondary);
-  margin-bottom: 20px;
-}
-
-.transactions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.transaction-card {
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.transaction-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--primary);
-}
-
-.txn-main {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.txn-category {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: var(--bg-tertiary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.txn-category svg {
-  font-size: 22px;
-  color: var(--primary);
-}
-
-.txn-info {
-  flex: 1;
-}
-
-.txn-info h3 {
-  font-size: 15px;
-  margin-bottom: 4px;
-}
-
-.txn-info p {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.txn-amount {
-  text-align: right;
-}
-
-.txn-amount .currency {
-  font-size: 12px;
-  color: var(--text-secondary);
-  display: block;
-}
-
-.txn-amount .amount {
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.txn-note {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-color);
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-</style>

@@ -1,30 +1,30 @@
 <template>
   <div class="add-transaction-page">
-    <header class="page-header">
-      <button @click="router.back()" class="back-btn">
-        <Icon icon="mdi:arrow-left" />
+    <header class="flex justify-between items-center mb-6">
+      <button @click="router.back()" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-white border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
+        <Icon icon="mdi:arrow-left" class="text-2xl" />
       </button>
-      <h1>{{ isEdit ? '編輯交易' : '新增記帳' }}</h1>
+      <h1 class="text-xl font-bold">{{ isEdit ? '編輯交易' : '新增記帳' }}</h1>
       <div style="width: 40px;"></div>
     </header>
 
-    <form @submit.prevent="handleSubmit" class="form">
+    <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
       <!-- Date -->
-      <div class="form-group">
-        <label class="label">日期</label>
-        <input v-model="form.date" type="date" class="input" />
+      <div class="flex flex-col gap-2">
+        <label class="block mb-2 text-sm text-neutral-400">日期</label>
+        <input v-model="form.date" type="date" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base" />
       </div>
 
       <!-- Category -->
-      <div class="form-group">
-        <label class="label">類別</label>
-        <div class="category-grid">
+      <div class="flex flex-col gap-2">
+        <label class="block mb-2 text-sm text-neutral-400">類別</label>
+        <div class="flex flex-wrap gap-2">
           <button
             v-for="cat in categories"
             :key="cat"
             type="button"
-            class="category-btn"
-            :class="{ active: form.category === cat }"
+            class="px-4 py-2.5 rounded-3xl border border-neutral-800 bg-neutral-900 text-white cursor-pointer transition-all duration-200 hover:border-indigo-500"
+            :class="{ 'bg-indigo-500 border-indigo-500': form.category === cat }"
             @click="form.category = cat"
           >
             {{ cat }}
@@ -33,61 +33,61 @@
       </div>
 
       <!-- Items -->
-      <div class="form-group">
-        <label class="label">項目明細</label>
-        <div class="items-list">
-          <div v-for="(item, index) in form.items" :key="index" class="item-row card">
-            <div class="item-inputs">
+      <div class="flex flex-col gap-2">
+        <label class="block mb-2 text-sm text-neutral-400">項目明細</label>
+        <div class="flex flex-col gap-3">
+          <div v-for="(item, index) in form.items" :key="index" class="bg-neutral-900 rounded-2xl p-4 border border-neutral-800">
+            <div class="flex flex-col gap-2">
               <input
                 v-model="item.name"
                 type="text"
-                class="input item-name"
+                class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base font-medium"
                 placeholder="項目名稱"
               />
-              <div class="item-price-row">
+              <div class="flex items-center gap-2">
                 <input
                   v-model.number="item.unit_price"
                   type="number"
-                  class="input item-price"
+                  class="flex-[2] px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base"
                   placeholder="單價"
                 />
-                <span class="multiply">×</span>
+                <span class="text-neutral-400">×</span>
                 <input
                   v-model.number="item.quantity"
                   type="number"
-                  class="input item-qty"
+                  class="flex-1 w-[60px] px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base"
                   placeholder="數量"
                   min="1"
                 />
-                <button type="button" @click="removeItem(index)" class="remove-btn" v-if="form.items.length > 1">
+                <button type="button" @click="removeItem(index)" class="flex justify-center items-center w-9 h-9 rounded-lg bg-red-500 text-white border-0 cursor-pointer hover:bg-red-600 transition-colors" v-if="form.items.length > 1">
                   <Icon icon="mdi:close" />
                 </button>
               </div>
             </div>
-            <div class="item-subtotal">
+            <div class="text-right text-neutral-400 text-sm mt-3">
               {{ currency }} {{ (item.unit_price * item.quantity).toLocaleString() }}
             </div>
           </div>
         </div>
-        <button type="button" @click="addItem" class="add-item-btn">
+        <button type="button" @click="addItem" class="flex justify-center items-center gap-1.5 p-3 border-2 border-dashed border-neutral-800 rounded-xl bg-transparent text-neutral-400 cursor-pointer mt-3 hover:border-indigo-500 hover:text-indigo-500 transition-colors">
           <Icon icon="mdi:plus" /> 新增項目
         </button>
       </div>
 
       <!-- Total -->
-      <div class="total-section card">
+      <div class="flex justify-between items-center text-lg bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
         <span>總計</span>
-        <span class="total-amount">{{ currency }} {{ totalAmount.toLocaleString() }}</span>
+        <span class="text-2xl font-bold text-indigo-500">{{ currency }} {{ totalAmount.toLocaleString() }}</span>
       </div>
 
       <!-- Note -->
-      <div class="form-group">
-        <label class="label">備註</label>
-        <textarea v-model="form.note" class="input textarea" rows="2" placeholder="選填"></textarea>
+      <div class="flex flex-col gap-2">
+        <label class="block mb-2 text-sm text-neutral-400">備註</label>
+        <textarea v-model="form.note" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base resize-none" rows="2" placeholder="選填"></textarea>
       </div>
 
       <!-- Submit -->
-      <button type="submit" class="btn btn-primary btn-block" :disabled="submitting">
+      <button type="submit" class="w-full mt-3 px-6 py-3 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" :disabled="submitting">
         {{ submitting ? '儲存中...' : '儲存' }}
       </button>
     </form>
@@ -185,165 +185,3 @@ onMounted(() => {
   fetchLedger()
 })
 </script>
-
-<style scoped>
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-
-.page-header h1 {
-  font-size: 20px;
-}
-
-.back-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  border: none;
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.back-btn svg {
-  font-size: 24px;
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.category-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.category-btn {
-  padding: 10px 16px;
-  border-radius: 20px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.category-btn.active {
-  background: var(--primary);
-  border-color: var(--primary);
-}
-
-.items-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.item-row {
-  padding: 16px;
-}
-
-.item-inputs {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.item-name {
-  font-weight: 500;
-}
-
-.item-price-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.item-price {
-  flex: 2;
-}
-
-.item-qty {
-  flex: 1;
-  width: 60px;
-}
-
-.multiply {
-  color: var(--text-secondary);
-}
-
-.remove-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: none;
-  background: var(--danger);
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.item-subtotal {
-  margin-top: 12px;
-  text-align: right;
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-.add-item-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 12px;
-  border: 2px dashed var(--border-color);
-  border-radius: 12px;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  margin-top: 12px;
-}
-
-.add-item-btn:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-}
-
-.total-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 18px;
-}
-
-.total-amount {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.textarea {
-  resize: none;
-}
-
-.btn-block {
-  width: 100%;
-  margin-top: 12px;
-}
-</style>

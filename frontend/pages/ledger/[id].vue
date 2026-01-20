@@ -1,49 +1,49 @@
 <template>
   <div class="transaction-detail">
-    <header class="page-header">
-      <button @click="router.back()" class="back-btn">
-        <Icon icon="mdi:arrow-left" />
+    <header class="flex justify-between items-center mb-6">
+      <button @click="router.back()" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-white border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
+        <Icon icon="mdi:arrow-left" class="text-2xl" />
       </button>
-      <h1>交易詳情</h1>
-      <button @click="handleDelete" class="delete-btn">
-        <Icon icon="mdi:delete" />
+      <h1 class="text-xl font-bold">交易詳情</h1>
+      <button @click="handleDelete" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-red-500 border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
+        <Icon icon="mdi:delete" class="text-2xl" />
       </button>
     </header>
 
-    <div v-if="loading" class="loading">載入中...</div>
+    <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
 
     <div v-else-if="transaction" class="content">
-      <div class="header-card card">
-        <div class="category-badge">
-          <Icon :icon="getCategoryIcon(transaction.category)" />
+      <div class="text-center py-8 px-5 mb-6 bg-neutral-900 rounded-2xl border border-neutral-800">
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-800 rounded-3xl mb-4">
+          <Icon :icon="getCategoryIcon(transaction.category)" class="text-xl text-indigo-500" />
           <span>{{ transaction.category || '未分類' }}</span>
         </div>
-        <div class="total-amount">
+        <div class="text-4xl font-bold mb-2">
           {{ transaction.currency }} {{ formatAmount(transaction.total_amount) }}
         </div>
-        <div class="date">{{ formatDate(transaction.date) }}</div>
+        <div class="text-neutral-400">{{ formatDate(transaction.date) }}</div>
       </div>
 
-      <div class="section">
-        <h2>項目明細</h2>
-        <div class="items-list">
-          <div v-for="item in transaction.items" :key="item.id" class="item-row card">
-            <div class="item-info">
-              <span class="item-name">{{ item.name }}</span>
-              <span class="item-qty">× {{ item.quantity }}</span>
+      <div class="mb-6">
+        <h2 class="text-base text-neutral-400 mb-3 font-normal">項目明細</h2>
+        <div class="flex flex-col gap-2">
+          <div v-for="item in transaction.items" :key="item.id" class="flex justify-between items-center p-4 bg-neutral-900 rounded-2xl border border-neutral-800">
+            <div class="flex items-center gap-2">
+              <span class="font-medium">{{ item.name }}</span>
+              <span class="text-neutral-400 text-sm">× {{ item.quantity }}</span>
             </div>
-            <div class="item-price">{{ transaction.currency }} {{ formatAmount(item.amount) }}</div>
+            <div class="font-semibold">{{ transaction.currency }} {{ formatAmount(item.amount) }}</div>
           </div>
         </div>
       </div>
 
-      <div v-if="transaction.note" class="section">
-        <h2>備註</h2>
-        <div class="note-card card">{{ transaction.note }}</div>
+      <div v-if="transaction.note" class="mb-6">
+        <h2 class="text-base text-neutral-400 mb-3 font-normal">備註</h2>
+        <div class="p-4 bg-neutral-900 rounded-2xl border border-neutral-800 text-neutral-400 leading-relaxed">{{ transaction.note }}</div>
       </div>
 
-      <div class="section meta">
-        <p>建立時間：{{ formatDateTime(transaction.created_at) }}</p>
+      <div class="text-neutral-400 text-xs">
+        <p class="mb-1">建立時間：{{ formatDateTime(transaction.created_at) }}</p>
         <p>ID：{{ transaction.id }}</p>
       </div>
     </div>
@@ -132,133 +132,3 @@ onMounted(() => {
   fetchData()
 })
 </script>
-
-<style scoped>
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-
-.page-header h1 {
-  font-size: 20px;
-}
-
-.back-btn,
-.delete-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  border: none;
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.back-btn svg,
-.delete-btn svg {
-  font-size: 24px;
-}
-
-.delete-btn {
-  color: var(--danger);
-}
-
-.loading {
-  text-align: center;
-  color: var(--text-secondary);
-  padding: 40px;
-}
-
-.header-card {
-  text-align: center;
-  padding: 32px 20px;
-  margin-bottom: 24px;
-}
-
-.category-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: var(--bg-tertiary);
-  border-radius: 20px;
-  margin-bottom: 16px;
-}
-
-.category-badge svg {
-  font-size: 20px;
-  color: var(--primary);
-}
-
-.total-amount {
-  font-size: 36px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.date {
-  color: var(--text-secondary);
-}
-
-.section {
-  margin-bottom: 24px;
-}
-
-.section h2 {
-  font-size: 16px;
-  color: var(--text-secondary);
-  margin-bottom: 12px;
-}
-
-.items-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.item-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-}
-
-.item-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.item-name {
-  font-weight: 500;
-}
-
-.item-qty {
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-.item-price {
-  font-weight: 600;
-}
-
-.note-card {
-  padding: 16px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
-
-.meta {
-  color: var(--text-secondary);
-  font-size: 12px;
-}
-
-.meta p {
-  margin-bottom: 4px;
-}
-</style>

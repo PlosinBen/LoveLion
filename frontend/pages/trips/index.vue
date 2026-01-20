@@ -1,16 +1,16 @@
 <template>
   <div class="trips-page">
-    <header class="page-header">
-      <h1>我的旅行</h1>
-      <NuxtLink to="/trips/new" class="btn btn-primary">
+    <header class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">我的旅行</h1>
+      <NuxtLink to="/trips/new" class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors text-sm no-underline">
         <Icon icon="mdi:plus" /> 新增
       </NuxtLink>
     </header>
 
-    <div class="coming-soon card">
-      <Icon icon="mdi:airplane-takeoff" />
-      <h2>即將推出</h2>
-      <p>旅行記帳功能正在開發中...</p>
+    <div class="text-center py-16 px-5 bg-neutral-900 rounded-2xl border border-neutral-800">
+      <Icon icon="mdi:airplane-takeoff" class="text-6xl text-indigo-500 mb-4" />
+      <h2 class="text-xl font-bold mb-2">即將推出</h2>
+      <p class="text-neutral-400">旅行記帳功能正在開發中...</p>
     </div>
   </div>
 </template>
@@ -29,42 +29,3 @@ onMounted(() => {
   }
 })
 </script>
-
-<style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.page-header h1 {
-  font-size: 24px;
-}
-
-.page-header .btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-}
-
-.coming-soon {
-  text-align: center;
-  padding: 60px 20px;
-}
-
-.coming-soon svg {
-  font-size: 64px;
-  color: var(--primary);
-  margin-bottom: 16px;
-}
-
-.coming-soon h2 {
-  margin-bottom: 8px;
-}
-
-.coming-soon p {
-  color: var(--text-secondary);
-}
-</style>
