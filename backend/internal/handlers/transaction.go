@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"lovelion/internal/models"
+	"lovelion/internal/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
@@ -111,8 +111,8 @@ func (h *TransactionHandler) Create(c *gin.Context) {
 		return
 	}
 
-	// Generate NanoID for transaction
-	txnID, err := gonanoid.New(21)
+	// Generate short ID for transaction
+	txnID, err := utils.NewShortID(h.db, "transactions", "id")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate ID"})
 		return

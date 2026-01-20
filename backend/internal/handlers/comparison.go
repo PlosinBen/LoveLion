@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"lovelion/internal/models"
+	"lovelion/internal/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
@@ -96,7 +96,7 @@ func (h *ComparisonHandler) CreateStore(c *gin.Context) {
 		return
 	}
 
-	storeID, err := gonanoid.New(21)
+	storeID, err := utils.NewShortID(h.db, "trip_comparison_stores", "id")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate ID"})
 		return

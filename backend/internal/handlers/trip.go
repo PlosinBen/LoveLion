@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"lovelion/internal/models"
+	"lovelion/internal/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	gonanoid "github.com/matoous/go-nanoid/v2"
 	"gorm.io/gorm"
 )
 
@@ -92,8 +92,8 @@ func (h *TripHandler) Create(c *gin.Context) {
 		return
 	}
 
-	// Generate NanoID
-	tripID, err := gonanoid.New(21)
+	// Generate short ID
+	tripID, err := utils.NewShortID(h.db, "trips", "id")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate ID"})
 		return
