@@ -56,6 +56,10 @@
 
       <!-- Quick Actions -->
       <div class="grid grid-cols-2 gap-3">
+        <NuxtLink :to="`/trips/${trip.id}/ledger`" class="flex flex-col items-center gap-2 p-5 rounded-2xl border border-neutral-800 bg-neutral-900 text-white no-underline transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:border-indigo-500">
+          <Icon icon="mdi:notebook-edit-outline" class="text-3xl text-indigo-500" />
+          <span class="text-sm">公費記帳</span>
+        </NuxtLink>
         <NuxtLink :to="`/trips/${trip.id}/stores`" class="flex flex-col items-center gap-2 p-5 rounded-2xl border border-neutral-800 bg-neutral-900 text-white no-underline transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:border-indigo-500">
           <Icon icon="mdi:store" class="text-3xl text-indigo-500" />
           <span class="text-sm">比價商店</span>

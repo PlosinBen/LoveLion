@@ -24,8 +24,9 @@ type Transaction struct {
 	UpdatedAt     time.Time       `gorm:"autoUpdateTime" json:"updated_at"`
 
 	// Associations
-	Ledger *Ledger           `gorm:"foreignKey:LedgerID" json:"ledger,omitempty"`
-	Items  []TransactionItem `gorm:"foreignKey:TransactionID" json:"items,omitempty"`
+	Ledger *Ledger            `gorm:"foreignKey:LedgerID" json:"ledger,omitempty"`
+	Items  []TransactionItem  `gorm:"foreignKey:TransactionID" json:"items,omitempty"`
+	Splits []TransactionSplit `gorm:"foreignKey:TransactionID" json:"splits,omitempty"`
 }
 
 func (Transaction) TableName() string {

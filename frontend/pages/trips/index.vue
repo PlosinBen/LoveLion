@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-6">
     <header class="flex justify-between items-center">
       <h1 class="text-2xl font-bold">我的旅行</h1>
-      <NuxtLink to="/trips/new" class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors text-sm no-underline">
+      <NuxtLink to="/trips/create" class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors text-sm no-underline">
         <Icon icon="mdi:plus" /> 新增
       </NuxtLink>
     </header>
@@ -13,7 +13,7 @@
       <Icon icon="mdi:airplane-takeoff" class="text-6xl text-indigo-500 mb-4" />
       <h2 class="text-xl font-bold mb-2">開始你的旅程</h2>
       <p class="text-neutral-400 mb-5">建立一個旅行來記錄費用和比價</p>
-      <NuxtLink to="/trips/new" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors text-sm no-underline">
+      <NuxtLink to="/trips/create" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors text-sm no-underline">
         新增旅行
       </NuxtLink>
     </div>

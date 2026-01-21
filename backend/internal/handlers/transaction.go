@@ -28,39 +28,79 @@ type TransactionItemRequest struct {
 	Discount  decimal.Decimal `json:"discount"`
 }
 
+type TransactionSplitRequest struct {
+	MemberID uuid.UUID       `json:"member_id" binding:"required"`
+	Amount   decimal.Decimal `json:"amount"`
+	IsPayer  bool            `json:"is_payer"`
+}
+
 type CreateTransactionRequest struct {
-	Payer         string                   `json:"payer"`
-	Date          *time.Time               `json:"date"`
-	Currency      string                   `json:"currency"`
-	ExchangeRate  decimal.Decimal          `json:"exchange_rate"`
-	BillingAmount decimal.Decimal          `json:"billing_amount"`
-	HandlingFee   decimal.Decimal          `json:"handling_fee"`
-	Category      string                   `json:"category"`
-	PaymentMethod string                   `json:"payment_method"`
-	Note          string                   `json:"note"`
-	Items         []TransactionItemRequest `json:"items"`
+	Payer         string                    `json:"payer"`
+	Date          *time.Time                `json:"date"`
+	Currency      string                    `json:"currency"`
+	ExchangeRate  decimal.Decimal           `json:"exchange_rate"`
+	BillingAmount decimal.Decimal           `json:"billing_amount"`
+	HandlingFee   decimal.Decimal           `json:"handling_fee"`
+	Category      string                    `json:"category"`
+	PaymentMethod string                    `json:"payment_method"`
+	Note          string                    `json:"note"`
+	Items         []TransactionItemRequest  `json:"items"`
+	Splits        []TransactionSplitRequest `json:"splits"`
 }
 
 type UpdateTransactionRequest struct {
-	Payer         string                   `json:"payer"`
-	Date          *time.Time               `json:"date"`
-	Currency      string                   `json:"currency"`
-	ExchangeRate  *decimal.Decimal         `json:"exchange_rate"`
-	BillingAmount *decimal.Decimal         `json:"billing_amount"`
-	HandlingFee   *decimal.Decimal         `json:"handling_fee"`
-	Category      string                   `json:"category"`
-	PaymentMethod string                   `json:"payment_method"`
-	Note          string                   `json:"note"`
-	Items         []TransactionItemRequest `json:"items"`
+	Payer         string                    `json:"payer"`
+	Date          *time.Time                `json:"date"`
+	Currency      string                    `json:"currency"`
+	ExchangeRate  *decimal.Decimal          `json:"exchange_rate"`
+	BillingAmount *decimal.Decimal          `json:"billing_amount"`
+	HandlingFee   *decimal.Decimal          `json:"handling_fee"`
+	Category      string                    `json:"category"`
+	PaymentMethod string                    `json:"payment_method"`
+	Note          string                    `json:"note"`
+	Items         []TransactionItemRequest  `json:"items"`
+	Splits        []TransactionSplitRequest `json:"splits"`
 }
 
 // Helper to verify ledger ownership
+// Helper to verify ledger ownership or access
 func (h *TransactionHandler) verifyLedgerOwnership(ledgerID uuid.UUID, userID uuid.UUID) (*models.Ledger, error) {
 	var ledger models.Ledger
-	if err := h.db.Where("id = ? AND user_id = ?", ledgerID, userID).First(&ledger).Error; err != nil {
+	if err := h.db.Where("id = ?", ledgerID).First(&ledger).Error; err != nil {
 		return nil, err
 	}
-	return &ledger, nil
+
+	// Personal ledger: must match UserID
+	if ledger.Type == "personal" {
+		if ledger.UserID != userID {
+			return nil, gorm.ErrRecordNotFound
+		}
+		return &ledger, nil
+	}
+
+	// Trip ledger: check if user is in the trip
+	if ledger.Type == "trip" {
+		var trip models.Trip
+		if err := h.db.Where("ledger_id = ?", ledgerID).Preload("Members").First(&trip).Error; err != nil {
+			return nil, err
+		}
+
+		// Check if creator
+		if trip.CreatedBy == userID {
+			return &ledger, nil
+		}
+
+		// Check members
+		for _, m := range trip.Members {
+			if m.UserID != nil && *m.UserID == userID {
+				return &ledger, nil
+			}
+		}
+
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	return nil, gorm.ErrRecordNotFound
 }
 
 // List transactions for a ledger
@@ -81,6 +121,8 @@ func (h *TransactionHandler) List(c *gin.Context) {
 	var transactions []models.Transaction
 	if err := h.db.Where("ledger_id = ?", ledgerID).
 		Preload("Items").
+		Preload("Splits").
+		Order("date DESC").
 		Order("date DESC").
 		Find(&transactions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch transactions"})
@@ -172,6 +214,20 @@ func (h *TransactionHandler) Create(c *gin.Context) {
 	txn.TotalAmount = totalAmount
 	txn.Items = items
 
+	// Calculate splits
+	var splits []models.TransactionSplit
+	for _, splitReq := range req.Splits {
+		split := models.TransactionSplit{
+			ID:            uuid.New(),
+			TransactionID: txnID,
+			MemberID:      splitReq.MemberID,
+			Amount:        splitReq.Amount,
+			IsPayer:       splitReq.IsPayer,
+		}
+		splits = append(splits, split)
+	}
+	txn.Splits = splits
+
 	// Use transaction to save both
 	if err := h.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(txn).Error; err != nil {
@@ -205,6 +261,7 @@ func (h *TransactionHandler) Get(c *gin.Context) {
 	var txn models.Transaction
 	if err := h.db.Where("id = ? AND ledger_id = ?", txnID, ledgerID).
 		Preload("Items").
+		Preload("Splits").
 		First(&txn).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found"})
@@ -309,13 +366,32 @@ func (h *TransactionHandler) Update(c *gin.Context) {
 		txn.Items = items
 	}
 
+	// If splits are provided, replace them
+	if req.Splits != nil {
+		// Delete existing splits
+		h.db.Where("transaction_id = ?", txnID).Delete(&models.TransactionSplit{})
+
+		var splits []models.TransactionSplit
+		for _, splitReq := range req.Splits {
+			split := models.TransactionSplit{
+				ID:            uuid.New(),
+				TransactionID: txnID,
+				MemberID:      splitReq.MemberID,
+				Amount:        splitReq.Amount,
+				IsPayer:       splitReq.IsPayer,
+			}
+			splits = append(splits, split)
+		}
+		txn.Splits = splits
+	}
+
 	if err := h.db.Session(&gorm.Session{FullSaveAssociations: true}).Save(&txn).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update transaction"})
 		return
 	}
 
-	// Reload with items
-	h.db.Preload("Items").First(&txn, "id = ?", txnID)
+	// Reload with items and splits
+	h.db.Preload("Items").Preload("Splits").First(&txn, "id = ?", txnID)
 
 	c.JSON(http.StatusOK, txn)
 }

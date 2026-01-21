@@ -143,6 +143,25 @@ func (h *TripHandler) Create(c *gin.Context) {
 			}
 		}
 
+		// Create Trip Ledger
+		ledgerID := uuid.New()
+		ledger := &models.Ledger{
+			ID:     ledgerID,
+			UserID: userID,
+			Name:   trip.Name + " 的帳本",
+			Type:   "trip",
+			// Currencies and Categories can be defaulted or copied from user settings later
+		}
+		if err := tx.Create(ledger).Error; err != nil {
+			return err
+		}
+
+		// Link Ledger to Trip
+		trip.LedgerID = &ledgerID
+		if err := tx.Save(trip).Error; err != nil {
+			return err
+		}
+
 		return nil
 	}); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create trip"})
