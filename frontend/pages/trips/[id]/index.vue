@@ -7,7 +7,8 @@
       <h1 class="text-xl font-bold truncate max-w-48">{{ trip?.name || '載入中...' }}</h1>
       <button @click="showMenu = !showMenu" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-white border-0 cursor-pointer hover:bg-neutral-800 transition-colors relative">
         <Icon icon="mdi:dots-vertical" class="text-2xl" />
-        <div v-if="showMenu" class="absolute top-12 right-0 bg-neutral-800 rounded-xl border border-neutral-700 shadow-lg z-10 overflow-hidden min-w-32">
+        <div v-if="showMenu" class="absolute top-12 right-0 bg-neutral-800 rounded-xl border border-neutral-700 shadow-lg z-10 overflow-hidden min-w-32 py-1">
+          <NuxtLink :to="`/trips/${trip?.id}/edit`" class="block w-full px-4 py-3 text-left text-white hover:bg-neutral-700 transition-colors no-underline">編輯旅行</NuxtLink>
           <button @click="handleDelete" class="w-full px-4 py-3 text-left text-red-500 hover:bg-neutral-700 transition-colors border-0 bg-transparent cursor-pointer">刪除旅行</button>
         </div>
       </button>
@@ -26,6 +27,9 @@
             <h2 class="text-lg font-bold">{{ trip.name }}</h2>
             <p class="text-sm text-neutral-400">{{ formatDateRange(trip.start_date, trip.end_date) }}</p>
           </div>
+          <NuxtLink :to="`/trips/${trip.id}/edit`" class="p-2 text-neutral-400 hover:text-white transition-colors" title="編輯旅行">
+            <Icon icon="mdi:pencil" class="text-xl" />
+          </NuxtLink>
         </div>
         <p v-if="trip.description" class="text-neutral-400 text-sm mb-4">{{ trip.description }}</p>
         <div class="flex items-center gap-2 text-sm text-neutral-400">
