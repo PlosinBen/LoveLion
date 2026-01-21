@@ -1,7 +1,7 @@
 # LoveLion Architecture Reference
 
 ## Tech Stack
-- **Frontend**: Nuxt 4 (Vue.js) + Iconify
+- **Frontend**: Nuxt 4 (Vue.js) + TailwindCSS + Iconify
 - **Backend**: Go (Gin + GORM + golang-migrate)
 - **Database**: PostgreSQL
 
