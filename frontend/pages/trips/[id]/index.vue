@@ -42,7 +42,7 @@
       <div class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-base font-semibold">成員 ({{ trip.members?.length || 0 }})</h3>
-          <button @click="showAddMember = true" class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-500 text-sm border-0 cursor-pointer hover:bg-indigo-500/30 transition-colors">
+          <button @click="router.push(`/trips/${trip.id}/members/add`)" class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-500 text-sm border-0 cursor-pointer hover:bg-indigo-500/30 transition-colors">
             <Icon icon="mdi:plus" /> 新增
           </button>
         </div>
@@ -75,17 +75,7 @@
       </div>
     </template>
 
-    <!-- Add Member Modal -->
-    <div v-if="showAddMember" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" @click.self="showAddMember = false">
-      <div class="bg-neutral-900 rounded-2xl p-5 w-full max-w-sm border border-neutral-800">
-        <h3 class="text-lg font-bold mb-4">新增成員</h3>
-        <BaseInput v-model="newMemberName" placeholder="成員名稱" input-class="mb-4" @keyup.enter="addMember" />
-        <div class="flex gap-2">
-          <button @click="showAddMember = false" class="flex-1 px-4 py-3 rounded-xl bg-neutral-800 text-white border-0 cursor-pointer hover:bg-neutral-700 transition-colors">取消</button>
-          <button @click="addMember" class="flex-1 px-4 py-3 rounded-xl bg-indigo-500 text-white border-0 cursor-pointer hover:bg-indigo-600 transition-colors" :disabled="!newMemberName.trim()">新增</button>
-        </div>
-      </div>
-    </div>
+
   </div>
 </template>
 
@@ -103,8 +93,7 @@ const { isAuthenticated, initAuth } = useAuth()
 const trip = ref<any>(null)
 const loading = ref(true)
 const showMenu = ref(false)
-const showAddMember = ref(false)
-const newMemberName = ref('')
+
 
 const formatDateRange = (start: string | null, end: string | null) => {
   if (!start && !end) return '日期未設定'
@@ -125,17 +114,7 @@ const fetchTrip = async () => {
   }
 }
 
-const addMember = async () => {
-  if (!newMemberName.value.trim()) return
-  try {
-    await api.post(`/api/trips/${route.params.id}/members`, { name: newMemberName.value.trim() })
-    newMemberName.value = ''
-    showAddMember.value = false
-    fetchTrip()
-  } catch (e: any) {
-    alert(e.message || '新增失敗')
-  }
-}
+
 
 const removeMember = async (memberId: string) => {
   if (!confirm('確定要移除此成員？')) return
