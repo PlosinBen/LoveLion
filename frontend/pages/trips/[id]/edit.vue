@@ -47,6 +47,21 @@
         </select>
       </div>
 
+      <div class="border-t border-neutral-800 my-2 pt-4"></div>
+      <h2 class="text-lg font-semibold text-neutral-200">帳本設定</h2>
+
+      <!-- Active Currencies -->
+      <ListEditor v-model="form.currencies" label="使用幣別" placeholder="新增幣別 (如 USD)" />
+
+      <!-- Categories -->
+      <ListEditor v-model="form.categories" label="消費分類" placeholder="新增分類 (如 交通)" />
+
+      <!-- Payment Methods -->
+      <ListEditor v-model="form.payment_methods" label="支付方式" placeholder="新增支付方式 (如 信用卡)" />
+
+      <!-- Ledger Members -->
+      <ListEditor v-model="form.ledger_members" label="旅伴 (Ledger Members)" placeholder="新增旅伴 (如 Kevin)" />
+
       <!-- Submit -->
       <button type="submit" class="w-full mt-3 px-6 py-3 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" :disabled="submitting">
         {{ submitting ? '儲存中...' : '儲存變更' }}
@@ -68,12 +83,28 @@ const { isAuthenticated, initAuth } = useAuth()
 
 const loading = ref(true)
 const submitting = ref(false)
-const form = ref({
+interface TripForm {
+  name: string
+  description: string
+  start_date: string
+  end_date: string
+  base_currency: string
+  currencies: string[]
+  categories: string[]
+  payment_methods: string[]
+  ledger_members: string[]
+}
+
+const form = ref<TripForm>({
   name: '',
   description: '',
   start_date: '',
   end_date: '',
-  base_currency: 'TWD'
+  base_currency: 'TWD',
+  currencies: ['TWD'],
+  categories: [],
+  payment_methods: [],
+  ledger_members: []
 })
 
 const fetchTrip = async () => {
@@ -88,6 +119,13 @@ const fetchTrip = async () => {
     }
     if (trip.end_date) {
       form.value.end_date = new Date(trip.end_date).toISOString().split('T')[0]
+    }
+
+    if (trip.ledger) {
+      form.value.currencies = trip.ledger.currencies || ['TWD']
+      form.value.categories = trip.ledger.categories || []
+      form.value.payment_methods = trip.ledger.payment_methods || []
+      form.value.ledger_members = trip.ledger.members || []
     }
   } catch (e) {
     console.error('Failed to fetch trip:', e)
@@ -105,7 +143,11 @@ const handleSubmit = async () => {
     const payload: any = {
       name: form.value.name,
       description: form.value.description,
-      base_currency: form.value.base_currency
+      base_currency: form.value.base_currency,
+      currencies: form.value.currencies,
+      categories: form.value.categories,
+      payment_methods: form.value.payment_methods,
+      ledger_members: form.value.ledger_members
     }
     if (form.value.start_date) {
       payload.start_date = new Date(form.value.start_date).toISOString()

@@ -103,6 +103,19 @@ func main() {
 	fmt.Println("✓ Created 3 sample transactions")
 
 	// 4. Create a trip
+	tripLedger := &models.Ledger{
+		ID:             uuid.New(),
+		UserID:         user.ID,
+		Name:           "2024 日本旅行 帳本",
+		Type:           "trip",
+		Currencies:     datatypes.JSON([]byte(`["JPY"]`)),
+		Categories:     datatypes.JSON([]byte(`["住宿", "交通", "飲食", "購物", "門票"]`)),
+		PaymentMethods: datatypes.JSON([]byte(`["現金", "信用卡"]`)),
+		Members:        datatypes.JSON([]byte(`[]`)),
+	}
+	db.Create(tripLedger)
+	fmt.Println("✓ Created ledger for trip: 2024 日本旅行 帳本")
+
 	trip := &models.Trip{
 		ID:           "japan24",
 		Name:         "2024 日本旅行",
@@ -111,6 +124,7 @@ func main() {
 		StartDate:    timePtr(now.AddDate(0, 1, 0)),
 		EndDate:      timePtr(now.AddDate(0, 1, 5)),
 		CreatedBy:    user.ID,
+		LedgerID:     &tripLedger.ID,
 	}
 	db.Create(trip)
 	fmt.Println("✓ Created trip: 2024 日本旅行")

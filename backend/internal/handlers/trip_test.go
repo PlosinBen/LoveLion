@@ -8,6 +8,7 @@ import (
 	"lovelion/internal/testutil"
 
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 )
 
 func createTestTrip(t *testing.T, db interface{}, userID uuid.UUID) *models.Trip {
@@ -109,11 +110,52 @@ func TestTripHandler_Get(t *testing.T) {
 	testutil.ParseResponse(t, w, &created)
 	tripID := created["id"].(string)
 
+	// Manually update the ledger with some data
+	var trip models.Trip
+	if err := db.Where("id = ?", tripID).First(&trip).Error; err != nil {
+		t.Fatalf("Failed to fetch trip: %v", err)
+	}
+
+	if trip.LedgerID == nil {
+		t.Fatal("Trip should have a LedgerID")
+	}
+
+	// Update Ledger directly using SQL or GORM to ensure data exists
+	// Note: We need to use valid JSON for jsonb/json columns.
+	// In GORM/SQLite (which testutil likely uses?), it might store as text.
+	// datatypes.JSON usually handles this, but let's be explicit.
+	err := db.Model(&models.Ledger{}).Where("id = ?", *trip.LedgerID).Updates(map[string]interface{}{
+		"categories":      datatypes.JSON(`["Food", "Travel"]`),
+		"payment_methods": datatypes.JSON(`["Cash"]`),
+	}).Error
+	if err != nil {
+		t.Fatalf("Failed to update ledger: %v", err)
+	}
+
 	// Get the trip
 	w = httptest.NewRecorder()
 	req = testutil.JSONRequest("GET", "/api/trips/"+tripID, nil)
 	router.ServeHTTP(w, req)
 	testutil.ExpectStatus(t, w, 200)
+
+	var response map[string]interface{}
+	testutil.ParseResponse(t, w, &response)
+
+	if response["ledger"] == nil {
+		t.Fatal("Response should contain ledger")
+	}
+
+	ledger := response["ledger"].(map[string]interface{})
+
+	// Debug print
+	t.Logf("Ledger response: %+v", ledger)
+
+	categories, ok := ledger["categories"].([]interface{})
+	if !ok {
+		t.Errorf("categories should be a list, got %T: %v", ledger["categories"], ledger["categories"])
+	} else if len(categories) != 2 {
+		t.Errorf("Expected 2 categories, got %d", len(categories))
+	}
 }
 
 func TestTripHandler_Get_NotFound(t *testing.T) {
@@ -150,11 +192,41 @@ func TestTripHandler_Update(t *testing.T) {
 	tripID := created["id"].(string)
 
 	// Update the trip
-	updateBody := map[string]interface{}{"name": "Updated Trip"}
+	updateBody := map[string]interface{}{
+		"name":            "Updated Trip",
+		"currencies":      []string{"USD", "EUR"},
+		"categories":      []string{"Food", "Transport"},
+		"payment_methods": []string{"Cash", "Credit Card"},
+	}
 	w = httptest.NewRecorder()
 	req = testutil.JSONRequest("PUT", "/api/trips/"+tripID, updateBody)
 	router.ServeHTTP(w, req)
 	testutil.ExpectStatus(t, w, 200)
+
+	var updatedTrip map[string]interface{}
+	testutil.ParseResponse(t, w, &updatedTrip)
+
+	if updatedTrip["ledger"] == nil {
+		t.Error("Expected ledger in response")
+	} else {
+		ledger := updatedTrip["ledger"].(map[string]interface{})
+
+		// Helper to check slice content
+		checkSlice := func(key string, expected []string) {
+			val, ok := ledger[key].([]interface{})
+			if !ok {
+				t.Errorf("Expected %s to be array, got %T", key, ledger[key])
+				return
+			}
+			if len(val) != len(expected) {
+				t.Errorf("Expected %d %s, got %d", len(expected), key, len(val))
+			}
+		}
+
+		checkSlice("currencies", []string{"USD", "EUR"})
+		checkSlice("categories", []string{"Food", "Transport"})
+		checkSlice("payment_methods", []string{"Cash", "Credit Card"})
+	}
 }
 
 func TestTripHandler_Delete(t *testing.T) {

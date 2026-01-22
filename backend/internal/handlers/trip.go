@@ -30,11 +30,15 @@ type CreateTripRequest struct {
 }
 
 type UpdateTripRequest struct {
-	Name         string     `json:"name" binding:"omitempty,min=1,max=100"`
-	Description  string     `json:"description"`
-	StartDate    *time.Time `json:"start_date"`
-	EndDate      *time.Time `json:"end_date"`
-	BaseCurrency string     `json:"base_currency"`
+	Name           string     `json:"name" binding:"omitempty,min=1,max=100"`
+	Description    string     `json:"description"`
+	StartDate      *time.Time `json:"start_date"`
+	EndDate        *time.Time `json:"end_date"`
+	BaseCurrency   string     `json:"base_currency"`
+	Currencies     []string   `json:"currencies"`
+	Categories     []string   `json:"categories"`
+	PaymentMethods []string   `json:"payment_methods"`
+	LedgerMembers  []string   `json:"ledger_members"`
 }
 
 type AddMemberRequest struct {
@@ -45,7 +49,7 @@ type AddMemberRequest struct {
 // Helper to verify trip access
 func (h *TripHandler) verifyTripAccess(tripID string, userID uuid.UUID) (*models.Trip, error) {
 	var trip models.Trip
-	if err := h.db.Where("id = ?", tripID).Preload("Members").First(&trip).Error; err != nil {
+	if err := h.db.Where("id = ?", tripID).Preload("Members").Preload("Ledger").First(&trip).Error; err != nil {
 		return nil, err
 	}
 
@@ -205,21 +209,61 @@ func (h *TripHandler) Update(c *gin.Context) {
 		return
 	}
 
-	if req.Name != "" {
-		trip.Name = req.Name
-	}
-	trip.Description = req.Description
-	if req.StartDate != nil {
-		trip.StartDate = req.StartDate
-	}
-	if req.EndDate != nil {
-		trip.EndDate = req.EndDate
-	}
-	if req.BaseCurrency != "" {
-		trip.BaseCurrency = req.BaseCurrency
-	}
+	// Start transaction
+	if err := h.db.Transaction(func(tx *gorm.DB) error {
+		if req.Name != "" {
+			trip.Name = req.Name
+		}
+		trip.Description = req.Description
+		if req.StartDate != nil {
+			trip.StartDate = req.StartDate
+		}
+		if req.EndDate != nil {
+			trip.EndDate = req.EndDate
+		}
+		if req.BaseCurrency != "" {
+			trip.BaseCurrency = req.BaseCurrency
+		}
 
-	if err := h.db.Save(trip).Error; err != nil {
+		if err := tx.Save(trip).Error; err != nil {
+			return err
+		}
+
+		// Update Ledger if exists
+		if trip.LedgerID != nil {
+			var ledger models.Ledger
+			if err := tx.First(&ledger, "id = ?", *trip.LedgerID).Error; err != nil {
+				return err
+			}
+
+			updated := false
+			if req.Currencies != nil {
+				ledger.Currencies = toJSON(req.Currencies)
+				updated = true
+			}
+			if req.Categories != nil {
+				ledger.Categories = toJSON(req.Categories)
+				updated = true
+			}
+			if req.PaymentMethods != nil {
+				ledger.PaymentMethods = toJSON(req.PaymentMethods)
+				updated = true
+			}
+			if req.LedgerMembers != nil {
+				ledger.Members = toJSON(req.LedgerMembers)
+				updated = true
+			}
+
+			if updated {
+				if err := tx.Save(&ledger).Error; err != nil {
+					return err
+				}
+				// Refresh trip's ledger data for response
+				trip.Ledger = &ledger
+			}
+		}
+		return nil
+	}); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update trip"})
 		return
 	}
