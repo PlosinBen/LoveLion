@@ -47,7 +47,7 @@
     <div v-if="showAddStore" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" @click.self="showAddStore = false">
       <div class="bg-neutral-900 rounded-2xl p-5 w-full max-w-sm border border-neutral-800">
         <h3 class="text-lg font-bold mb-4">新增商店</h3>
-        <input v-model="newStoreName" type="text" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 mb-4" placeholder="商店名稱" @keyup.enter="addStore" />
+        <BaseInput v-model="newStoreName" placeholder="商店名稱" input-class="mb-4" @keyup.enter="addStore" />
         <div class="flex gap-2">
           <button @click="showAddStore = false" class="flex-1 px-4 py-3 rounded-xl bg-neutral-800 text-white border-0 cursor-pointer hover:bg-neutral-700 transition-colors">取消</button>
           <button @click="addStore" class="flex-1 px-4 py-3 rounded-xl bg-indigo-500 text-white border-0 cursor-pointer hover:bg-indigo-600 transition-colors" :disabled="!newStoreName.trim()">新增</button>

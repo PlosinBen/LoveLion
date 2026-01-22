@@ -10,13 +10,11 @@
         <h2 class="mb-6 text-center text-xl font-semibold">登入</h2>
 
         <div class="mb-4">
-          <label class="block mb-2 text-sm text-neutral-400">帳號</label>
-          <input v-model="username" type="text" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base" placeholder="請輸入帳號" />
+          <BaseInput v-model="username" label="帳號" placeholder="請輸入帳號" />
         </div>
 
         <div class="mb-4">
-          <label class="block mb-2 text-sm text-neutral-400">密碼</label>
-          <input v-model="password" type="password" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base" placeholder="請輸入密碼" />
+          <BaseInput v-model="password" type="password" label="密碼" placeholder="請輸入密碼" />
         </div>
 
         <div v-if="error" class="text-red-500 text-sm mt-2">{{ error }}</div>
@@ -34,18 +32,15 @@
         <h2 class="mb-6 text-center text-xl font-semibold">註冊</h2>
 
         <div class="mb-4">
-          <label class="block mb-2 text-sm text-neutral-400">帳號</label>
-          <input v-model="username" type="text" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base" placeholder="請輸入帳號" />
+          <BaseInput v-model="username" label="帳號" placeholder="請輸入帳號" />
         </div>
 
         <div class="mb-4">
-          <label class="block mb-2 text-sm text-neutral-400">顯示名稱</label>
-          <input v-model="displayName" type="text" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base" placeholder="請輸入顯示名稱" />
+          <BaseInput v-model="displayName" label="顯示名稱" placeholder="請輸入顯示名稱" />
         </div>
 
         <div class="mb-4">
-          <label class="block mb-2 text-sm text-neutral-400">密碼</label>
-          <input v-model="password" type="password" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base" placeholder="請輸入密碼" />
+          <BaseInput v-model="password" type="password" label="密碼" placeholder="請輸入密碼" />
         </div>
 
         <div v-if="error" class="text-red-500 text-sm mt-2">{{ error }}</div>

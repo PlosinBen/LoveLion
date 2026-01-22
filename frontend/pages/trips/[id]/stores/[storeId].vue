@@ -43,9 +43,9 @@
       <div class="bg-neutral-900 rounded-2xl p-5 w-full max-w-sm border border-neutral-800">
         <h3 class="text-lg font-bold mb-4">新增商品</h3>
         <div class="flex flex-col gap-3">
-          <input v-model="newProduct.name" type="text" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400" placeholder="商品名稱" />
+          <BaseInput v-model="newProduct.name" placeholder="商品名稱" />
           <div class="grid grid-cols-2 gap-2">
-            <input v-model.number="newProduct.price" type="number" step="0.01" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400" placeholder="價格" />
+            <BaseInput v-model.number="newProduct.price" type="number" step="0.01" placeholder="價格" />
             <select v-model="newProduct.currency" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500">
               <option value="TWD">TWD</option>
               <option value="JPY">JPY</option>
@@ -53,8 +53,8 @@
             </select>
           </div>
           <div class="grid grid-cols-2 gap-2">
-            <input v-model.number="newProduct.quantity" type="number" min="1" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400" placeholder="數量" />
-            <input v-model="newProduct.unit" type="text" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400" placeholder="單位 (如: 盒)" />
+            <BaseInput v-model.number="newProduct.quantity" type="number" min="1" placeholder="數量" />
+            <BaseInput v-model="newProduct.unit" placeholder="單位 (如: 盒)" />
           </div>
         </div>
         <div class="flex gap-2 mt-4">

@@ -14,10 +14,7 @@
 
     <form v-else @submit.prevent="handleSubmit" class="flex flex-col gap-5">
       <!-- Date -->
-      <div class="flex flex-col gap-2">
-        <label class="block mb-1 text-sm text-neutral-400">日期</label>
-        <input v-model="form.date" type="date" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base" />
-      </div>
+      <BaseInput v-model="form.date" type="date" label="日期" />
 
       <!-- Category -->
       <div class="flex flex-col gap-2">
@@ -42,26 +39,25 @@
         <div class="flex flex-col gap-3">
           <div v-for="(item, index) in form.items" :key="index" class="bg-neutral-900 rounded-2xl p-4 border border-neutral-800">
             <div class="flex flex-col gap-2">
-              <input
+              <BaseInput
                 v-model="item.name"
-                type="text"
-                class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base font-medium"
                 placeholder="項目名稱"
+                input-class="font-medium"
               />
               <div class="flex items-center gap-2">
-                <input
+                <BaseInput
                   v-model.number="item.unit_price"
                   type="number"
-                  class="flex-[2] px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base"
                   placeholder="單價"
+                  input-class="flex-[2]"
                 />
                 <span class="text-neutral-400">×</span>
-                <input
+                <BaseInput
                   v-model.number="item.quantity"
                   type="number"
-                  class="flex-1 w-[60px] px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base"
                   placeholder="數量"
                   min="1"
+                  input-class="flex-1 w-[60px]"
                 />
                 <button type="button" @click="removeItem(index)" class="flex justify-center items-center w-9 h-9 rounded-lg bg-red-500 text-white border-0 cursor-pointer hover:bg-red-600 transition-colors" v-if="form.items.length > 1">
                   <Icon icon="mdi:close" />

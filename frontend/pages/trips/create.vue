@@ -10,10 +10,7 @@
 
     <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
       <!-- Name -->
-      <div class="flex flex-col gap-2">
-        <label class="text-sm text-neutral-400">旅行名稱 *</label>
-        <input v-model="form.name" type="text" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400" placeholder="例如：日本東京五日遊" required />
-      </div>
+      <BaseInput v-model="form.name" label="旅行名稱 *" placeholder="例如：日本東京五日遊" required />
 
       <!-- Description -->
       <div class="flex flex-col gap-2">
@@ -23,14 +20,8 @@
 
       <!-- Dates -->
       <div class="grid grid-cols-2 gap-3">
-        <div class="flex flex-col gap-2">
-          <label class="text-sm text-neutral-400">開始日期</label>
-          <input v-model="form.start_date" type="date" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500" />
-        </div>
-        <div class="flex flex-col gap-2">
-          <label class="text-sm text-neutral-400">結束日期</label>
-          <input v-model="form.end_date" type="date" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500" />
-        </div>
+        <BaseInput v-model="form.start_date" type="date" label="開始日期" />
+        <BaseInput v-model="form.end_date" type="date" label="結束日期" />
       </div>
 
       <!-- Base Currency -->
@@ -50,7 +41,7 @@
         <label class="text-sm text-neutral-400">旅行成員</label>
         <div class="flex flex-col gap-2">
           <div v-for="(member, idx) in form.members" :key="idx" class="flex items-center gap-2">
-            <input v-model="form.members[idx]" type="text" class="flex-1 px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400" :placeholder="`成員 ${idx + 1}`" />
+            <BaseInput v-model="form.members[idx]" :placeholder="`成員 ${idx + 1}`" input-class="flex-1" />
             <button type="button" @click="removeMember(idx)" class="flex justify-center items-center w-10 h-10 rounded-xl bg-red-500/20 text-red-500 border-0 cursor-pointer hover:bg-red-500/30 transition-colors" v-if="form.members.length > 1">
               <Icon icon="mdi:close" />
             </button>
