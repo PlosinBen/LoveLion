@@ -17,6 +17,23 @@
         <input v-model="form.date" type="date" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base" />
       </div>
 
+      <!-- Currency -->
+      <div class="flex flex-col gap-2">
+        <label class="block mb-1 text-sm text-neutral-400">幣別</label>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="cur in currencies"
+            :key="cur"
+            type="button"
+            class="px-4 py-2.5 rounded-3xl border border-neutral-800 bg-neutral-900 text-white cursor-pointer transition-all duration-200 hover:border-indigo-500"
+            :class="{ 'bg-indigo-500 border-indigo-500': form.currency === cur }"
+            @click="form.currency = cur"
+          >
+            {{ cur }}
+          </button>
+        </div>
+      </div>
+
       <!-- Category -->
       <div class="flex flex-col gap-2">
         <label class="block mb-1 text-sm text-neutral-400">類別</label>
@@ -139,6 +156,23 @@
         </div>
       </div>
 
+      <!-- Payment Method -->
+      <div v-if="paymentMethods.length > 0" class="flex flex-col gap-2">
+        <label class="block mb-1 text-sm text-neutral-400">付款方式</label>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="method in paymentMethods"
+            :key="method"
+            type="button"
+            class="px-4 py-2.5 rounded-3xl border border-neutral-800 bg-neutral-900 text-white cursor-pointer transition-all duration-200 hover:border-indigo-500"
+            :class="{ 'bg-indigo-500 border-indigo-500': form.payment_method === method }"
+            @click="form.payment_method = method"
+          >
+            {{ method }}
+          </button>
+        </div>
+      </div>
+
       <!-- Note -->
       <div class="flex flex-col gap-2">
         <label class="block mb-1 text-sm text-neutral-400">備註</label>
@@ -167,12 +201,29 @@ const { isAuthenticated, initAuth } = useAuth()
 const trip = ref<any>(null)
 const loading = ref(true)
 const submitting = ref(false)
-const categories = ['餐飲', '交通', '購物', '娛樂', '住宿', '生活', '其他']
 const splitMode = ref<'even' | 'custom'>('even')
+
+const defaultCategories = ['餐飲', '交通', '購物', '娛樂', '住宿', '生活', '其他']
+
+const categories = computed(() => {
+  const ledgerCategories = trip.value?.ledger?.categories
+  return ledgerCategories?.length > 0 ? ledgerCategories : defaultCategories
+})
+
+const currencies = computed(() => {
+  const ledgerCurrencies = trip.value?.ledger?.currencies
+  return ledgerCurrencies?.length > 0 ? ledgerCurrencies : ['TWD']
+})
+
+const paymentMethods = computed(() => {
+  return trip.value?.ledger?.payment_methods || []
+})
 
 const form = ref({
   date: new Date().toISOString().split('T')[0],
   category: '餐飲',
+  currency: '',
+  payment_method: '',
   note: '',
   items: [{ name: '', unit_price: 0, quantity: 1 }],
   payer: '' // Member ID
@@ -229,6 +280,19 @@ const fetchTrip = async () => {
     }
     
     trip.value = data
+    
+    // Set default currency from trip
+    form.value.currency = data.base_currency || 'TWD'
+    
+    // Set default category from ledger categories
+    if (data.ledger?.categories?.length > 0) {
+      form.value.category = data.ledger.categories[0]
+    }
+    
+    // Set default payment method from ledger
+    if (data.ledger?.payment_methods?.length > 0) {
+      form.value.payment_method = data.ledger.payment_methods[0]
+    }
   } catch (e) {
     console.error('Failed to fetch trip:', e)
     router.push('/trips')
@@ -306,7 +370,8 @@ const handleSubmit = async () => {
       category: form.value.category,
       note: form.value.note,
       payer: payerMember?.name || 'Unknown', // Legacy string
-      currency: trip.value.base_currency,
+      currency: form.value.currency || trip.value.base_currency,
+      payment_method: form.value.payment_method,
       items: form.value.items.filter(item => item.name && item.unit_price > 0),
       splits: splits
     }
