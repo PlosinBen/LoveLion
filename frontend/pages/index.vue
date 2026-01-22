@@ -1,10 +1,5 @@
 <template>
   <div class="flex flex-col gap-6">
-    <header class="mb-6">
-      <h1 class="text-3xl font-bold bg-gradient-to-br from-indigo-500 to-purple-500 bg-clip-text text-transparent">LoveLion</h1>
-      <p class="text-neutral-400 mt-1">嗨，{{ user?.display_name || '使用者' }}！</p>
-    </header>
-
     <div class="flex items-center gap-4 mb-6 p-5 rounded-2xl border bg-neutral-900 duration-200" :class="statusClasses">
       <div class="text-3xl" :class="statusIconColor">
         <Icon :icon="statusIcon" />

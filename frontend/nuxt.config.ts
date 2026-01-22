@@ -6,8 +6,8 @@ export default defineNuxtConfig({
   // Modules
   modules: ['@nuxtjs/tailwindcss'],
 
-  // Enable SSR
-  ssr: true,
+  // Disable SSR (SPA mode)
+  ssr: false,
 
   // Runtime config for API base URL
   runtimeConfig: {
@@ -32,6 +32,16 @@ export default defineNuxtConfig({
   devServer: {
     host: '0.0.0.0',
     port: 3000
+  },
+
+  // Enable polling for Docker HMR
+  vite: {
+    server: {
+      watch: {
+        usePolling: true,
+        interval: 1000
+      }
+    }
   },
 
   // App configuration
