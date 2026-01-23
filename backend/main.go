@@ -40,12 +40,12 @@ func main() {
 			users.POST("/login", authHandler.Login)
 
 			// Protected routes
-			users.GET("/me", middleware.AuthRequired(cfg.JWTSecret), authHandler.GetMe)
+			users.GET("/me", middleware.AuthRequiredWithDB(cfg.JWTSecret, db), authHandler.GetMe)
 		}
 
 		// Protected ledger routes
 		ledgers := api.Group("/ledgers")
-		ledgers.Use(middleware.AuthRequired(cfg.JWTSecret))
+		ledgers.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db))
 		{
 			ledgerHandler := handlers.NewLedgerHandler(db)
 			ledgers.GET("", ledgerHandler.List)
@@ -65,7 +65,7 @@ func main() {
 
 		// Protected trip routes
 		trips := api.Group("/trips")
-		trips.Use(middleware.AuthRequired(cfg.JWTSecret))
+		trips.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db))
 		{
 			tripHandler := handlers.NewTripHandler(db)
 			trips.GET("", tripHandler.List)

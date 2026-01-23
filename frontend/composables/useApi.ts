@@ -11,6 +11,15 @@ export function useApi() {
         return null
     }
 
+    const clearAuthAndRedirect = () => {
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+            // Redirect to login page
+            window.location.href = '/login'
+        }
+    }
+
     const request = async <T>(
         endpoint: string,
         options: RequestInit = {}
@@ -33,6 +42,12 @@ export function useApi() {
                 ...options,
                 headers,
             })
+
+            // Handle 401 Unauthorized - token is invalid or user doesn't exist
+            if (response.status === 401) {
+                clearAuthAndRedirect()
+                throw new Error('Session expired. Please login again.')
+            }
 
             const data = await response.json()
 

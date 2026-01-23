@@ -4,12 +4,20 @@ import (
 	"net/http"
 	"strings"
 
+	"lovelion/internal/models"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func AuthRequired(jwtSecret string) gin.HandlerFunc {
+	return AuthRequiredWithDB(jwtSecret, nil)
+}
+
+// AuthRequiredWithDB validates JWT and optionally verifies user exists in database
+func AuthRequiredWithDB(jwtSecret string, db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -62,6 +70,20 @@ func AuthRequired(jwtSecret string) gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID format"})
 			c.Abort()
 			return
+		}
+
+		// Verify user exists in database (if db is provided)
+		if db != nil {
+			var user models.User
+			if err := db.First(&user, "id = ?", userID).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+				} else {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+				}
+				c.Abort()
+				return
+			}
 		}
 
 		// Set user ID in context

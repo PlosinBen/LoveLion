@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Run database migrations without resetting
+
+set -e
+
+echo "📋 Running database migrations..."
+docker compose exec backend go run cmd/migrate/main.go
+
+echo ""
+echo "✅ Migrations complete!"

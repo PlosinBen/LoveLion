@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# Refresh Database Script
+# Combines: drop database, migration, and seed operations
+
+set -e  # Exit on any error
+
+echo "🔄 Starting database refresh..."
+
+# Step 1: Stop backend to release DB connections
+echo "🛑 Stopping backend..."
+docker compose stop backend
+
+# Step 2: Drop existing database
+echo "🗑️  Dropping existing database..."
+docker compose exec postgres psql -U postgres -c "DROP DATABASE IF EXISTS lovelion"
+
+# Step 3: Create fresh database
+echo "📦 Creating fresh database..."
+docker compose exec postgres psql -U postgres -c "CREATE DATABASE lovelion"
+
+# Step 4: Start backend
+echo "🚀 Starting backend..."
+docker compose start backend
+
+# Wait for backend to be ready
+echo "⏳ Waiting for backend to be ready..."
+sleep 3
+
+# Step 5: Run all migrations
+echo "📋 Running migrations..."
+docker compose exec backend go run cmd/migrate/main.go
+
+# Step 6: Seed test data via API
+echo "🌱 Seeding test data via API..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+"$SCRIPT_DIR/seed"
+
+echo ""
+echo "✅ Database refresh complete!"
+echo ""
+echo "📝 Test account:"
+echo "   Username: dev"
+echo "   Password: dev123"
