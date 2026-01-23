@@ -5,35 +5,15 @@
 
 set -e
 
+# Ensure UTF-8 encoding
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
 API_BASE="${API_BASE:-http://localhost:8080/api}"
 
 echo "🌱 Starting API-based seeding..."
 echo "   API Base: $API_BASE"
 echo ""
-
-# Helper function to make API calls
-api_call() {
-    local method=$1
-    local endpoint=$2
-    local data=$3
-    local token=$4
-    
-    local auth_header=""
-    if [ -n "$token" ]; then
-        auth_header="-H \"Authorization: Bearer $token\""
-    fi
-    
-    if [ -n "$data" ]; then
-        eval curl -s -X "$method" "$API_BASE$endpoint" \
-            -H "Content-Type: application/json" \
-            $auth_header \
-            -d "'$data'"
-    else
-        eval curl -s -X "$method" "$API_BASE$endpoint" \
-            -H "Content-Type: application/json" \
-            $auth_header
-    fi
-}
 
 # Check API health
 echo "🔍 Checking API health..."
@@ -45,14 +25,43 @@ fi
 echo "✓ API is healthy"
 echo ""
 
+# Helper function to perform API requests
+# Uses a temporary file for the data body to avoid command-line encoding issues on Windows
+api_request() {
+    local method=$1
+    local endpoint=$2
+    local token=$3
+    local data=$4
+    
+    local tmp_file
+    tmp_file=$(mktemp)
+    
+    # Write data to temporary file
+    # printf avoids some echo inconsistencies
+    printf "%s" "$data" > "$tmp_file"
+    
+    local auth_args=()
+    if [ -n "$token" ]; then
+        auth_args=(-H "Authorization: Bearer $token")
+    fi
+    
+    # Execute curl reading from the file (@$tmp_file)
+    curl -s -X "$method" "$API_BASE$endpoint" \
+        -H "Content-Type: application/json; charset=utf-8" \
+        "${auth_args[@]}" \
+        -d @"$tmp_file"
+        
+    rm -f "$tmp_file"
+}
+
 # ===== 1. Register User =====
 echo "👤 Registering user: dev..."
-REGISTER_RESULT=$(api_call POST "/users/register" '{"username":"dev","password":"dev123","display_name":"Developer"}')
+REGISTER_RESULT=$(api_request POST "/users/register" "" '{"username":"dev","password":"dev123","display_name":"Developer"}')
 
 # Check if user already exists (conflict error)
 if echo "$REGISTER_RESULT" | grep -q "already exists"; then
     echo "   User 'dev' already exists, logging in instead..."
-    LOGIN_RESULT=$(api_call POST "/users/login" '{"username":"dev","password":"dev123"}')
+    LOGIN_RESULT=$(api_request POST "/users/login" "" '{"username":"dev","password":"dev123"}')
     TOKEN=$(echo "$LOGIN_RESULT" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
 else
     TOKEN=$(echo "$REGISTER_RESULT" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
@@ -68,17 +77,11 @@ echo ""
 
 # ===== 2. Create Personal Ledger =====
 echo "📒 Creating personal ledger: 我的帳本..."
-LEDGER_RESULT=$(api_call POST "/ledgers" '{
-    "name": "我的帳本",
-    "type": "personal",
-    "currencies": ["TWD", "JPY", "USD"],
-    "categories": ["食物", "交通", "購物", "娛樂"],
-    "payment_methods": ["現金", "信用卡", "Line Pay"]
-}' "$TOKEN")
+LEDGER_RESULT=$(api_request POST "/ledgers" "$TOKEN" '{"name":"我的帳本","type":"personal","currencies":["TWD","JPY","USD"],"categories":["食物","交通","購物","娛樂"],"payment_methods":["現金","信用卡","Line Pay"]}')
 
 LEDGER_ID=$(echo "$LEDGER_RESULT" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
 if [ -z "$LEDGER_ID" ]; then
-    echo "⚠️  Ledger may already exist or creation failed"
+    echo "⚠️  Ledger creation failed"
     echo "   Response: $LEDGER_RESULT"
 else
     echo "✓ Created ledger: $LEDGER_ID"
@@ -87,86 +90,45 @@ else
     echo "💰 Creating sample transactions..."
     
     # Transaction 1: 午餐
-    TXN1=$(api_call POST "/ledgers/$LEDGER_ID/transactions" '{
-        "payer": "Me",
-        "currency": "TWD",
-        "exchange_rate": 1,
-        "category": "食物",
-        "payment_method": "現金",
-        "note": "午餐",
-        "items": [{"name": "午餐", "unit_price": 150, "quantity": 1}]
-    }' "$TOKEN")
+    api_request POST "/ledgers/$LEDGER_ID/transactions" "$TOKEN" '{"payer":"Me","currency":"TWD","exchange_rate":1,"category":"食物","payment_method":"現金","note":"午餐","items":[{"name":"午餐","unit_price":150,"quantity":1}]}' > /dev/null
     echo "   ✓ 午餐 - TWD 150"
     
     # Transaction 2: 捷運
-    TXN2=$(api_call POST "/ledgers/$LEDGER_ID/transactions" '{
-        "payer": "Me",
-        "currency": "TWD",
-        "exchange_rate": 1,
-        "category": "交通",
-        "payment_method": "悠遊卡",
-        "note": "捷運",
-        "items": [{"name": "捷運", "unit_price": 35, "quantity": 1}]
-    }' "$TOKEN")
+    api_request POST "/ledgers/$LEDGER_ID/transactions" "$TOKEN" '{"payer":"Me","currency":"TWD","exchange_rate":1,"category":"交通","payment_method":"悠遊卡","note":"捷運","items":[{"name":"捷運","unit_price":35,"quantity":1}]}' > /dev/null
     echo "   ✓ 捷運 - TWD 35"
     
     # Transaction 3: 生活用品
-    TXN3=$(api_call POST "/ledgers/$LEDGER_ID/transactions" '{
-        "payer": "Me",
-        "currency": "TWD",
-        "exchange_rate": 1,
-        "category": "購物",
-        "payment_method": "信用卡",
-        "note": "生活用品",
-        "items": [{"name": "生活用品", "unit_price": 299, "quantity": 1}]
-    }' "$TOKEN")
+    api_request POST "/ledgers/$LEDGER_ID/transactions" "$TOKEN" '{"payer":"Me","currency":"TWD","exchange_rate":1,"category":"購物","payment_method":"信用卡","note":"生活用品","items":[{"name":"生活用品","unit_price":299,"quantity":1}]}' > /dev/null
     echo "   ✓ 生活用品 - TWD 299"
 fi
 echo ""
 
 # ===== 4. Create Trip =====
 echo "✈️  Creating trip: 2024 日本旅行..."
-TRIP_RESULT=$(api_call POST "/trips" '{
-    "name": "2024 日本旅行",
-    "description": "東京 + 大阪 5天4夜",
-    "base_currency": "JPY",
-    "members": ["小明", "小美"]
-}' "$TOKEN")
+TRIP_RESULT=$(api_request POST "/trips" "$TOKEN" '{"name":"2024 日本旅行","description":"東京 + 大阪 5天4夜","base_currency":"JPY","members":["小明","小美"]}')
 
 TRIP_ID=$(echo "$TRIP_RESULT" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
 TRIP_LEDGER_ID=$(echo "$TRIP_RESULT" | grep -o '"ledger_id":"[^"]*"' | head -1 | cut -d'"' -f4)
 
 if [ -z "$TRIP_ID" ]; then
-    echo "⚠️  Trip creation may have failed"
+    echo "⚠️  Trip creation failed"
     echo "   Response: $TRIP_RESULT"
 else
-    echo "✓ Created trip: $TRIP_ID"
+    echo "✓ Created trip: $TRIP_ID (ledger: $TRIP_LEDGER_ID)"
     
     # ===== 5. Update Trip Ledger Settings =====
-    if [ -n "$TRIP_LEDGER_ID" ]; then
-        echo "📋 Updating trip settings..."
-        UPDATE_RESULT=$(api_call PUT "/trips/$TRIP_ID" '{
-            "currencies": ["JPY"],
-            "categories": ["住宿", "交通", "飲食", "購物", "門票"],
-            "payment_methods": ["現金", "信用卡"]
-        }' "$TOKEN")
-        echo "✓ Updated trip ledger settings"
-    fi
+    echo "📋 Updating trip settings..."
+    api_request PUT "/trips/$TRIP_ID" "$TOKEN" '{"currencies":["JPY"],"categories":["住宿","交通","飲食","購物","門票"],"payment_methods":["現金","信用卡"]}' > /dev/null
+    echo "✓ Updated trip ledger settings"
     
     # ===== 6. Create Comparison Stores =====
     echo "🏪 Creating comparison stores..."
     
-    STORE1_RESULT=$(api_call POST "/trips/$TRIP_ID/stores" '{
-        "name": "唐吉軻德 新宿店",
-        "location": "新宿"
-    }' "$TOKEN")
+    STORE1_RESULT=$(api_request POST "/trips/$TRIP_ID/stores" "$TOKEN" '{"name":"唐吉軻德 新宿店","location":"新宿"}')
     STORE1_ID=$(echo "$STORE1_RESULT" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
     echo "   ✓ 唐吉軻德 新宿店"
     
-    STORE2_RESULT=$(api_call POST "/trips/$TRIP_ID/stores" '{
-        "name": "Bic Camera 有楽町",
-        "location": "有楽町"
-    }' "$TOKEN")
+    STORE2_RESULT=$(api_request POST "/trips/$TRIP_ID/stores" "$TOKEN" '{"name":"Bic Camera 有楽町","location":"有楽町"}')
     STORE2_ID=$(echo "$STORE2_RESULT" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
     echo "   ✓ Bic Camera 有楽町"
     
@@ -174,26 +136,39 @@ else
     if [ -n "$STORE1_ID" ] && [ -n "$STORE2_ID" ]; then
         echo "📦 Creating comparison products..."
         
-        api_call POST "/trips/$TRIP_ID/stores/$STORE1_ID/products" '{
-            "name": "藥妝",
-            "price": 2980,
-            "currency": "JPY"
-        }' "$TOKEN" > /dev/null
+        api_request POST "/trips/$TRIP_ID/stores/$STORE1_ID/products" "$TOKEN" '{"name":"藥妝","price":2980,"currency":"JPY"}' > /dev/null
         echo "   ✓ 藥妝 @ 唐吉軻德 - ¥2980"
         
-        api_call POST "/trips/$TRIP_ID/stores/$STORE1_ID/products" '{
-            "name": "零食組合",
-            "price": 1500,
-            "currency": "JPY"
-        }' "$TOKEN" > /dev/null
+        api_request POST "/trips/$TRIP_ID/stores/$STORE1_ID/products" "$TOKEN" '{"name":"零食組合","price":1500,"currency":"JPY"}' > /dev/null
         echo "   ✓ 零食組合 @ 唐吉軻德 - ¥1500"
         
-        api_call POST "/trips/$TRIP_ID/stores/$STORE2_ID/products" '{
-            "name": "藥妝",
-            "price": 3200,
-            "currency": "JPY"
-        }' "$TOKEN" > /dev/null
+        api_request POST "/trips/$TRIP_ID/stores/$STORE2_ID/products" "$TOKEN" '{"name":"藥妝","price":3200,"currency":"JPY"}' > /dev/null
         echo "   ✓ 藥妝 @ Bic Camera - ¥3200"
+    fi
+    
+    # ===== 8. Create Trip Ledger Transactions =====
+    if [ -n "$TRIP_LEDGER_ID" ]; then
+        echo "💴 Creating trip transactions..."
+        
+        # Transaction 1: 飯店
+        api_request POST "/ledgers/$TRIP_LEDGER_ID/transactions" "$TOKEN" '{"payer":"Me","currency":"JPY","exchange_rate":0.22,"category":"住宿","payment_method":"信用卡","note":"東京飯店 2晚","items":[{"name":"東京飯店","unit_price":28000,"quantity":2}]}' > /dev/null
+        echo "   ✓ 東京飯店 - ¥56,000"
+        
+        # Transaction 2: 拉麵
+        api_request POST "/ledgers/$TRIP_LEDGER_ID/transactions" "$TOKEN" '{"payer":"Me","currency":"JPY","exchange_rate":0.22,"category":"飲食","payment_method":"現金","note":"一蘭拉麵","items":[{"name":"一蘭拉麵","unit_price":980,"quantity":3}]}' > /dev/null
+        echo "   ✓ 一蘭拉麵 x3 - ¥2,940"
+        
+        # Transaction 3: 地鐵
+        api_request POST "/ledgers/$TRIP_LEDGER_ID/transactions" "$TOKEN" '{"payer":"Me","currency":"JPY","exchange_rate":0.22,"category":"交通","payment_method":"現金","note":"東京地鐵一日券","items":[{"name":"地鐵一日券","unit_price":800,"quantity":3}]}' > /dev/null
+        echo "   ✓ 地鐵一日券 x3 - ¥2,400"
+        
+        # Transaction 4: 迪士尼門票
+        api_request POST "/ledgers/$TRIP_LEDGER_ID/transactions" "$TOKEN" '{"payer":"Me","currency":"JPY","exchange_rate":0.22,"category":"門票","payment_method":"信用卡","note":"東京迪士尼門票","items":[{"name":"迪士尼門票","unit_price":8400,"quantity":3}]}' > /dev/null
+        echo "   ✓ 迪士尼門票 x3 - ¥25,200"
+        
+        # Transaction 5: 伴手禮
+        api_request POST "/ledgers/$TRIP_LEDGER_ID/transactions" "$TOKEN" '{"payer":"Me","currency":"JPY","exchange_rate":0.22,"category":"購物","payment_method":"現金","note":"伴手禮","items":[{"name":"白色戀人","unit_price":1200,"quantity":2},{"name":"東京芭娜娜","unit_price":1080,"quantity":1}]}' > /dev/null
+        echo "   ✓ 伴手禮 - ¥3,480"
     fi
 fi
 

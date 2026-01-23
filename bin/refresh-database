@@ -3,7 +3,11 @@
 # Refresh Database Script
 # Combines: drop database, migration, and seed operations
 
-set -e  # Exit on any error
+set -e
+
+# Ensure UTF-8 encoding
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 
 echo "🔄 Starting database refresh..."
 
