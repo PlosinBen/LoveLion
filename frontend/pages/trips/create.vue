@@ -28,7 +28,7 @@
         <BaseInput v-model="form.end_date" type="date" label="結束日期" />
       </div>
 
-      <div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-2">
         <BaseSelect 
           v-model="form.base_currency" 
           label="基準貨幣"
@@ -43,20 +43,19 @@
       </div>
 
       <!-- Members -->
-      <div class="flex flex-col gap-2">
-        <label class="text-sm text-neutral-400">旅行成員</label>
-        <div class="flex flex-col gap-2">
-          <div v-for="(member, idx) in form.members" :key="idx" class="flex items-center gap-2">
-            <BaseInput v-model="form.members[idx]" :placeholder="`成員 ${idx + 1}`" input-class="flex-1" />
-            <button type="button" @click="removeMember(idx)" class="flex justify-center items-center w-10 h-10 rounded-xl bg-red-500/20 text-red-500 border-0 cursor-pointer hover:bg-red-500/30 transition-colors" v-if="form.members.length > 1">
-              <Icon icon="mdi:close" />
-            </button>
-          </div>
-        </div>
-        <button type="button" @click="addMember" class="flex justify-center items-center gap-1.5 p-3 border-2 border-dashed border-neutral-800 rounded-xl bg-transparent text-neutral-400 cursor-pointer mt-2 hover:border-indigo-500 hover:text-indigo-500 transition-colors">
-          <Icon icon="mdi:plus" /> 新增成員
-        </button>
-      </div>
+      <ListEditor v-model="form.members" label="旅行成員" placeholder="新增成員 (如 Kevin)" />
+
+      <div class="border-t border-neutral-800 my-2 pt-4"></div>
+      <h2 class="text-lg font-semibold text-neutral-200">帳本設定</h2>
+
+      <!-- Active Currencies -->
+      <ListEditor v-model="form.currencies" label="使用幣別" placeholder="新增幣別 (如 USD)" />
+
+      <!-- Categories -->
+      <ListEditor v-model="form.categories" label="消費分類" placeholder="新增分類 (如 交通)" />
+
+      <!-- Payment Methods -->
+      <ListEditor v-model="form.payment_methods" label="支付方式" placeholder="新增支付方式 (如 信用卡)" />
 
       <!-- Submit -->
       <button type="submit" class="w-full mt-3 px-6 py-3 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" :disabled="submitting">
@@ -83,16 +82,11 @@ const form = ref({
   start_date: '',
   end_date: '',
   base_currency: 'TWD',
-  members: ['']
+  members: [] as string[],
+  currencies: ['TWD'],
+  categories: [],
+  payment_methods: []
 })
-
-const addMember = () => {
-  form.value.members.push('')
-}
-
-const removeMember = (idx: number) => {
-  form.value.members.splice(idx, 1)
-}
 
 const handleSubmit = async () => {
   if (!form.value.name.trim()) return
@@ -103,7 +97,10 @@ const handleSubmit = async () => {
       name: form.value.name,
       description: form.value.description,
       base_currency: form.value.base_currency,
-      members: form.value.members.filter(m => m.trim())
+      members: form.value.members,
+      currencies: form.value.currencies,
+      categories: form.value.categories,
+      payment_methods: form.value.payment_methods
     }
     if (form.value.start_date) {
       payload.start_date = new Date(form.value.start_date).toISOString()

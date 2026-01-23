@@ -21,12 +21,15 @@ func NewTripHandler(db *gorm.DB) *TripHandler {
 }
 
 type CreateTripRequest struct {
-	Name         string     `json:"name" binding:"required,min=1,max=100"`
-	Description  string     `json:"description"`
-	StartDate    *time.Time `json:"start_date"`
-	EndDate      *time.Time `json:"end_date"`
-	BaseCurrency string     `json:"base_currency"`
-	Members      []string   `json:"members"` // Member names
+	Name           string     `json:"name" binding:"required,min=1,max=100"`
+	Description    string     `json:"description"`
+	StartDate      *time.Time `json:"start_date"`
+	EndDate        *time.Time `json:"end_date"`
+	BaseCurrency   string     `json:"base_currency"`
+	Members        []string   `json:"members"` // Member names
+	Currencies     []string   `json:"currencies"`
+	Categories     []string   `json:"categories"`
+	PaymentMethods []string   `json:"payment_methods"`
 }
 
 type UpdateTripRequest struct {
@@ -154,8 +157,29 @@ func (h *TripHandler) Create(c *gin.Context) {
 			UserID: userID,
 			Name:   trip.Name + " 的帳本",
 			Type:   "trip",
-			// Currencies and Categories can be defaulted or copied from user settings later
 		}
+
+		if len(req.Currencies) > 0 {
+			ledger.Currencies = toJSON(req.Currencies)
+		} else {
+			ledger.Currencies = toJSON([]string{trip.BaseCurrency})
+		}
+
+		if len(req.Categories) > 0 {
+			ledger.Categories = toJSON(req.Categories)
+		}
+
+		if len(req.PaymentMethods) > 0 {
+			ledger.PaymentMethods = toJSON(req.PaymentMethods)
+		}
+
+		// Initialize Ledger Members with Trip Members (including owner)
+		lMembers := []string{"Me"}
+		if len(req.Members) > 0 {
+			lMembers = append(lMembers, req.Members...)
+		}
+		ledger.Members = toJSON(lMembers)
+
 		if err := tx.Create(ledger).Error; err != nil {
 			return err
 		}
