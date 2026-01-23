@@ -10,7 +10,17 @@
 
     <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
       <!-- Date -->
-      <BaseInput v-model="form.date" type="date" label="日期" />
+      <VueDatePicker 
+        v-model="form.date" 
+        :dark="true"
+        :formats="{input: 'yyyy-MM-dd HH:mm'}"
+        :enable-seconds="false"
+        time-picker-inline
+        cancel-text="取消"
+        select-text="確定"
+        placeholder="日期與時間"
+        class="date-picker-dark"
+      />
 
       <!-- Category -->
       <div class="flex flex-col gap-2">
@@ -99,6 +109,8 @@ import { ref, computed, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { VueDatePicker } from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css'
 
 const router = useRouter()
 const route = useRoute()
@@ -112,7 +124,7 @@ const ledgerId = ref('')
 const submitting = ref(false)
 
 const form = ref({
-  date: new Date().toISOString().split('T')[0],
+  date: new Date(),
   category: '',
   note: '',
   items: [{ name: '', unit_price: 0, quantity: 1 }]
@@ -142,7 +154,7 @@ const handleSubmit = async () => {
 
   try {
     const payload = {
-      date: new Date(form.value.date).toISOString(),
+      date: form.value.date.toISOString(),
       category: form.value.category,
       note: form.value.note,
       items: form.value.items.filter(item => item.name && item.unit_price > 0)

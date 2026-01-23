@@ -41,7 +41,7 @@ defineOptions({
 defineProps<{
   modelValue: string | number | null | undefined
   label?: string
-  type?: 'text' | 'password' | 'email' | 'number' | 'date' | 'tel'
+  type?: 'text' | 'password' | 'email' | 'number' | 'date' | 'tel' | 'datetime-local' | 'time'
   placeholder?: string
   required?: boolean
   disabled?: boolean

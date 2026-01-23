@@ -71,10 +71,12 @@ const getCategoryIcon = (category: string) => {
 
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr)
-  return date.toLocaleDateString('zh-TW', {
-    month: 'short',
+  return date.toLocaleString('zh-TW', {
+    month: 'numeric',
     day: 'numeric',
-    weekday: 'short'
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
   })
 }
 

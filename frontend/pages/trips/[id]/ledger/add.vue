@@ -12,7 +12,19 @@
 
     <form v-else @submit.prevent="handleSubmit" class="flex flex-col gap-5">
       <!-- Date -->
-      <BaseInput v-model="form.date" type="date" label="日期" />
+      <!-- Date & Time -->
+      <!-- Date & Time -->
+      <VueDatePicker 
+        v-model="form.date" 
+        :dark="true"
+        :formats="{input: 'yyyy-MM-dd HH:mm'}"
+        :enable-seconds="false"
+        time-picker-inline
+        cancel-text="取消"
+        select-text="確定"
+        placeholder="日期與時間"
+        class="date-picker-dark"
+      />
 
       <!-- Currency -->
       <div class="flex flex-col gap-2">
@@ -193,6 +205,11 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import BaseSelect from '~/components/BaseSelect.vue'
+import BaseTextarea from '~/components/BaseTextarea.vue'
+import BaseInput from '~/components/BaseInput.vue'
+import { VueDatePicker } from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css'
 
 const router = useRouter()
 const route = useRoute()
@@ -203,6 +220,8 @@ const trip = ref<any>(null)
 const loading = ref(true)
 const submitting = ref(false)
 const splitMode = ref<'even' | 'custom'>('even')
+
+// hourOptions/minuteOptions/manual time logic removed
 
 const defaultCategories = ['餐飲', '交通', '購物', '娛樂', '住宿', '生活', '其他']
 
@@ -221,7 +240,7 @@ const paymentMethods = computed(() => {
 })
 
 const form = ref({
-  date: new Date().toISOString().split('T')[0],
+  date: new Date(),
   category: '餐飲',
   currency: '',
   payment_method: '',
@@ -367,7 +386,7 @@ const handleSubmit = async () => {
     })
 
     const payload = {
-      date: new Date(form.value.date || new Date().toISOString()).toISOString(),
+      date: form.value.date.toISOString(),
       category: form.value.category,
       note: form.value.note,
       payer: payerMember?.name || 'Unknown', // Legacy string

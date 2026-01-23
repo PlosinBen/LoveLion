@@ -14,7 +14,19 @@
 
     <form v-else @submit.prevent="handleSubmit" class="flex flex-col gap-5">
       <!-- Date -->
-      <BaseInput v-model="form.date" type="date" label="日期" />
+      <!-- Date & Time -->
+      <!-- Date & Time -->
+      <VueDatePicker 
+        v-model="form.date" 
+        :dark="true"
+        :formats="{input: 'yyyy-MM-dd HH:mm'}"
+        :enable-seconds="false"
+        time-picker-inline
+        cancel-text="取消"
+        select-text="確定"
+        placeholder="日期與時間"
+        class="date-picker-dark"
+      />
 
       <!-- Category -->
       <div class="flex flex-col gap-2">
@@ -161,6 +173,11 @@ import { ref, computed, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import BaseSelect from '~/components/BaseSelect.vue'
+import BaseTextarea from '~/components/BaseTextarea.vue'
+import BaseInput from '~/components/BaseInput.vue'
+import { VueDatePicker } from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css'
 
 const router = useRouter()
 const route = useRoute()
@@ -174,8 +191,12 @@ const submitting = ref(false)
 const categories = ['餐飲', '交通', '購物', '娛樂', '住宿', '生活', '其他']
 const splitMode = ref<'even' | 'custom'>('even')
 
+// hourOptions and minuteOptions removed
+
+
+
 const form = ref({
-  date: new Date().toISOString().split('T')[0],
+  date: new Date(),
   category: '餐飲',
   note: '',
   items: [{ name: '', unit_price: 0, quantity: 1 }],
@@ -223,7 +244,9 @@ const fetchData = async () => {
     transaction.value = txn
     
     // 3. Populate Form
-    form.value.date = new Date(txn.date).toISOString().split('T')[0]
+    form.value.date = new Date(txn.date)
+
+    
     form.value.category = txn.category
     form.value.note = txn.note || ''
     form.value.items = txn.items.map((i: any) => ({
@@ -348,7 +371,7 @@ const handleSubmit = async () => {
 
     const payload = {
       payer: payerMember?.name || 'Unknown',
-      date: new Date(form.value.date || new Date().toISOString()).toISOString(),
+      date: form.value.date.toISOString(),
       category: form.value.category,
       note: form.value.note,
       currency: trip.value.base_currency,

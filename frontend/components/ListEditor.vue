@@ -1,26 +1,32 @@
 <template>
-  <div class="flex flex-col gap-2">
+  <div class="flex flex-col gap-3">
     <label class="text-sm text-neutral-400">{{ label }}</label>
-    <div class="flex flex-wrap gap-2">
-      <div v-for="(item, index) in modelValue" :key="index" class="flex items-center gap-1 bg-neutral-700 px-3 py-1 rounded-full text-sm">
+    
+    <div v-if="modelValue.length" class="flex flex-wrap gap-2">
+      <div v-for="(item, index) in modelValue" :key="index" class="flex items-center gap-1 bg-neutral-700 px-3 py-1 rounded text-sm text-white">
         <span>{{ item }}</span>
-        <button type="button" @click="remove(index)" class="text-neutral-400 hover:text-white">
+        <button type="button" @click="remove(index)" class="text-neutral-400 hover:text-white transition-colors">
           <Icon icon="mdi:close" class="text-base" />
         </button>
       </div>
-      <div class="relative flex items-center">
-        <input 
-          v-model="newItem" 
-          type="text" 
-          class="bg-transparent border border-neutral-700 rounded-full px-3 py-1 text-sm text-white focus:outline-none focus:border-indigo-500 w-32 placeholder-neutral-600"
-          :placeholder="placeholder"
-          @keydown.enter.prevent="add"
-          @blur="add"
-        />
-        <button type="button" @click="add" class="absolute right-2 text-neutral-400 hover:text-white" :class="{ 'hidden': !newItem }">
-            <Icon icon="mdi:plus" class="text-base" />
-        </button>
-      </div>
+    </div>
+
+    <div class="relative">
+      <BaseInput
+        v-model="newItem" 
+        :placeholder="placeholder"
+        class="pr-10"
+        @keydown.enter.prevent="add"
+        @blur="add"
+      />
+      <button 
+        type="button" 
+        @click="add" 
+        class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-all"
+        :class="{ 'opacity-0 scale-75 pointer-events-none': !newItem, 'opacity-100 scale-100': newItem }"
+      >
+        <Icon icon="mdi:plus" class="text-xl" />
+      </button>
     </div>
   </div>
 </template>

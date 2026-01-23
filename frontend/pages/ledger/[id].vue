@@ -83,17 +83,20 @@ const formatAmount = (amount: string | number) => {
 
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr)
-  return date.toLocaleDateString('zh-TW', {
+  return date.toLocaleString('zh-TW', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-    weekday: 'long'
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
   })
 }
 
 const formatDateTime = (dateStr: string) => {
   const date = new Date(dateStr)
-  return date.toLocaleString('zh-TW')
+  return date.toLocaleString('zh-TW', { hour12: false })
 }
 
 const fetchData = async () => {
