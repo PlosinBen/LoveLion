@@ -16,8 +16,12 @@
 
       <!-- Description -->
       <div class="flex flex-col gap-2">
-        <label class="text-sm text-neutral-400">描述</label>
-        <textarea v-model="form.description" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 resize-none" rows="2" placeholder="旅行簡介（選填）"></textarea>
+        <BaseTextarea 
+          v-model="form.description" 
+          label="描述" 
+          rows="2" 
+          placeholder="旅行簡介（選填）" 
+        />
       </div>
 
       <!-- Dates -->
@@ -26,16 +30,18 @@
         <BaseInput v-model="form.end_date" type="date" label="結束日期" />
       </div>
 
-      <!-- Base Currency -->
       <div class="flex flex-col gap-2">
-        <label class="text-sm text-neutral-400">基準貨幣</label>
-        <select v-model="form.base_currency" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500">
-          <option value="TWD">TWD - 新台幣</option>
-          <option value="JPY">JPY - 日圓</option>
-          <option value="USD">USD - 美元</option>
-          <option value="EUR">EUR - 歐元</option>
-          <option value="KRW">KRW - 韓元</option>
-        </select>
+        <BaseSelect 
+          v-model="form.base_currency" 
+          label="基準貨幣"
+          :options="[
+            { label: 'TWD - 新台幣', value: 'TWD' },
+            { label: 'JPY - 日圓', value: 'JPY' },
+            { label: 'USD - 美元', value: 'USD' },
+            { label: 'EUR - 歐元', value: 'EUR' },
+            { label: 'KRW - 韓元', value: 'KRW' }
+          ]"
+        />
       </div>
 
       <div class="border-t border-neutral-800 my-2 pt-4"></div>
@@ -106,10 +112,10 @@ const fetchTrip = async () => {
     form.value.base_currency = trip.base_currency || 'TWD'
     
     if (trip.start_date) {
-      form.value.start_date = new Date(trip.start_date).toISOString().split('T')[0]
+      form.value.start_date = new Date(trip.start_date as string).toISOString().split('T')[0]
     }
     if (trip.end_date) {
-      form.value.end_date = new Date(trip.end_date).toISOString().split('T')[0]
+      form.value.end_date = new Date(trip.end_date as string).toISOString().split('T')[0]
     }
 
     if (trip.ledger) {

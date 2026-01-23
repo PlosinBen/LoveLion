@@ -85,9 +85,10 @@
         <!-- Payer -->
         <div class="flex flex-col gap-2">
           <label class="text-sm text-neutral-400">誰付錢？</label>
-          <select v-model="form.payer" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500">
-             <option v-for="m in trip.members" :key="m.id" :value="m.id">{{ m.name }}</option>
-          </select>
+          <BaseSelect 
+            v-model="form.payer" 
+            :options="trip.members.map((m: any) => ({ label: m.name, value: m.id }))"
+          />
         </div>
 
         <hr class="border-t border-neutral-800 my-1" />
@@ -140,7 +141,11 @@
       <!-- Note -->
       <div class="flex flex-col gap-2">
         <label class="block mb-1 text-sm text-neutral-400">備註</label>
-        <textarea v-model="form.note" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base resize-none" rows="2" placeholder="選填"></textarea>
+        <BaseTextarea 
+          v-model="form.note" 
+          rows="2" 
+          placeholder="選填" 
+        />
       </div>
 
       <!-- Submit -->

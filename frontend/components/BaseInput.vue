@@ -11,7 +11,7 @@
       :min="min"
       :max="max"
       :step="step"
-      class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white text-base focus:outline-none focus:border-indigo-500 placeholder-neutral-400 disabled:opacity-50 disabled:cursor-not-allowed"
+      class="w-full px-4 py-3 rounded-md border border-neutral-800 bg-neutral-800 text-white text-base focus:outline-none focus:border-indigo-500 placeholder-neutral-400 disabled:opacity-50 disabled:cursor-not-allowed"
       :class="inputClass"
       v-bind="$attrs"
     />
@@ -27,7 +27,7 @@
     :min="min"
     :max="max"
     :step="step"
-    class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white text-base focus:outline-none focus:border-indigo-500 placeholder-neutral-400 disabled:opacity-50 disabled:cursor-not-allowed"
+    class="w-full px-4 py-3 rounded-md border border-neutral-800 bg-neutral-800 text-white text-base focus:outline-none focus:border-indigo-500 placeholder-neutral-400 disabled:opacity-50 disabled:cursor-not-allowed"
     :class="inputClass"
     v-bind="$attrs"
   />

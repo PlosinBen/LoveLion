@@ -79,7 +79,11 @@
       <!-- Note -->
       <div class="flex flex-col gap-2">
         <label class="block mb-2 text-sm text-neutral-400">備註</label>
-        <textarea v-model="form.note" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500 placeholder-neutral-400 text-base resize-none" rows="2" placeholder="選填"></textarea>
+        <BaseTextarea 
+          v-model="form.note" 
+          rows="2" 
+          placeholder="選填" 
+        />
       </div>
 
       <!-- Submit -->

@@ -13,11 +13,10 @@
         <BaseInput v-model="form.name" placeholder="商品名稱" :auto-focus="true" />
         <div class="grid grid-cols-2 gap-2">
           <BaseInput v-model.number="form.price" type="number" step="0.01" placeholder="價格" />
-          <select v-model="form.currency" class="w-full px-4 py-3 rounded-xl border border-neutral-800 bg-neutral-800 text-white focus:outline-none focus:border-indigo-500">
-            <option value="TWD">TWD</option>
-            <option value="JPY">JPY</option>
-            <option value="USD">USD</option>
-          </select>
+          <BaseSelect 
+            v-model="form.currency" 
+            :options="['TWD', 'JPY', 'USD']"
+          />
         </div>
         <div class="grid grid-cols-2 gap-2">
           <BaseInput v-model.number="form.quantity" type="number" min="1" placeholder="數量" />
