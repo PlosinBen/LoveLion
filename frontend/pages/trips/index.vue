@@ -26,8 +26,9 @@
         @click="router.push(`/trips/${trip.id}`)"
       >
         <div class="flex items-center gap-3">
-          <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-500/20">
-            <Icon icon="mdi:airplane" class="text-2xl text-indigo-500" />
+          <div class="relative flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-500/20 overflow-hidden">
+             <img v-if="tripCovers[trip.id]" :src="getImageUrl(tripCovers[trip.id] || '')" class="w-full h-full object-cover" />
+             <Icon v-else icon="mdi:airplane" class="text-2xl text-indigo-500" />
           </div>
           <div class="flex-1">
             <h3 class="text-base font-semibold mb-1">{{ trip.name }}</h3>
@@ -51,12 +52,15 @@ import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { useImages } from '~/composables/useImages'
 
 const router = useRouter()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
 
 const trips = ref<any[]>([])
+const tripCovers = ref<Record<string, string>>({})
+const { getImagesBatch, getImageUrl } = useImages()
 const loading = ref(true)
 
 const formatDateRange = (start: string | null, end: string | null) => {
@@ -70,6 +74,23 @@ const formatDateRange = (start: string | null, end: string | null) => {
 const fetchTrips = async () => {
   try {
     trips.value = await api.get<any[]>('/api/trips')
+
+    // Fetch covers
+    if (trips.value.length > 0) {
+        const ids = trips.value.map(t => t.id)
+        const images = await getImagesBatch(ids, 'trip')
+        const map: Record<string, string> = {}
+        // Since sorted by order, the first one found for each entity is logically the cover (or first uploaded)
+        // We iterate and assign if not exists (so we keep the first one we see if list is flattened? 
+        // Backend returns one list. If Image A (sort 0) and Image B (sort 1) both in list for Trip X.
+        // We want A.
+        images.forEach(img => {
+            if (!map[img.entity_id]) {
+                map[img.entity_id] = img.file_path
+            }
+        })
+        tripCovers.value = map
+    }
   } catch (e) {
     console.error('Failed to fetch trips:', e)
   } finally {

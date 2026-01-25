@@ -122,6 +122,7 @@ func (h *TransactionHandler) List(c *gin.Context) {
 	if err := h.db.Where("ledger_id = ?", ledgerID).
 		Preload("Items").
 		Preload("Splits").
+		Preload("Images", "entity_type = ?", "transaction").
 		Order("date DESC").
 		Order("date DESC").
 		Find(&transactions).Error; err != nil {

@@ -29,8 +29,11 @@ export function useApi() {
 
         const token = getToken()
         const headers: HeadersInit = {
-            'Content-Type': 'application/json',
             ...options.headers,
+        }
+
+        if (!(options.body instanceof FormData)) {
+            (headers as Record<string, string>)['Content-Type'] = 'application/json'
         }
 
         if (token) {
@@ -69,6 +72,9 @@ export function useApi() {
     const post = <T>(endpoint: string, body: any) =>
         request<T>(endpoint, { method: 'POST', body: JSON.stringify(body) })
 
+    const upload = <T>(endpoint: string, body: FormData) =>
+        request<T>(endpoint, { method: 'POST', body })
+
     const put = <T>(endpoint: string, body: any) =>
         request<T>(endpoint, { method: 'PUT', body: JSON.stringify(body) })
 
@@ -81,5 +87,6 @@ export function useApi() {
         post,
         put,
         del,
+        upload,
     }
 }

@@ -30,6 +30,17 @@
         <BaseInput v-model="form.end_date" type="date" label="結束日期" />
       </div>
 
+      <!-- Cover Image -->
+      <div class="flex flex-col gap-2">
+        <label class="block text-sm font-medium text-neutral-400">封面照片</label>
+        <ImageManager 
+          :entity-id="route.params.id as string" 
+          entity-type="trip" 
+          :max-count="1" 
+          :allow-reorder="false"
+        />
+      </div>
+
       <div class="flex flex-col gap-2">
         <BaseSelect 
           v-model="form.base_currency" 
@@ -72,6 +83,7 @@ import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import ImageManager from '~/components/ImageManager.vue'
 
 const router = useRouter()
 const route = useRoute()

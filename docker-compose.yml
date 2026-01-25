@@ -20,10 +20,8 @@ services:
     image: golang:1.25-alpine
     container_name: lovelion-backend
     working_dir: /app
-    environment:
-      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/lovelion?sslmode=disable}
-      JWT_SECRET: ${JWT_SECRET:-dev-secret-key}
-      PORT: ${PORT:-8080}
+    env_file:
+      - .env-backend
     ports:
       - "8080:8080"
     volumes:

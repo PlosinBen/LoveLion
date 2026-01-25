@@ -41,8 +41,14 @@
           @click="router.push(`/trips/${trip.id}/ledger/${txn.id}`)"
         >
           <div class="flex items-center gap-3">
-            <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-neutral-800">
-              <Icon :icon="getCategoryIcon(txn.category)" class="text-xl text-indigo-500" />
+            <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-neutral-800 overflow-hidden shrink-0">
+              <img 
+                v-if="txn.images && txn.images.length > 0" 
+                :src="getImageUrl(txn.images[0].file_path)" 
+                class="w-full h-full object-cover" 
+                alt="Txn" 
+              />
+              <Icon v-else :icon="getCategoryIcon(txn.category)" class="text-xl text-indigo-500" />
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex justify-between items-start mb-0.5">
@@ -73,11 +79,13 @@ import { ref, computed, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { useImages } from '~/composables/useImages'
 
 const router = useRouter()
 const route = useRoute()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
+const { getImageUrl } = useImages()
 
 const trip = ref<any>(null)
 const transactions = ref<any[]>([])

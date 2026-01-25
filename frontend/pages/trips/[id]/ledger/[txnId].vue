@@ -179,6 +179,18 @@
         />
       </div>
 
+      <!-- Images -->
+      <div class="flex flex-col gap-2">
+        <label class="block mb-1 text-sm text-neutral-400">照片 / 收據</label>
+        <ImageManager 
+          ref="imageManager"
+          :entity-id="route.params.txnId as string" 
+          entity-type="transaction" 
+          :allow-reorder="true"
+          :instant-delete="false"
+        />
+      </div>
+
       <!-- Submit -->
       <button type="submit" class="w-full mt-3 px-6 py-3 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" :disabled="submitting">
         {{ submitting ? '更新' : '更新' }}
@@ -195,6 +207,7 @@ import { useAuth } from '~/composables/useAuth'
 import BaseSelect from '~/components/BaseSelect.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
 import BaseInput from '~/components/BaseInput.vue'
+import ImageManager from '~/components/ImageManager.vue'
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 
@@ -207,6 +220,7 @@ const trip = ref<any>(null)
 const transaction = ref<any>(null)
 const loading = ref(true)
 const submitting = ref(false)
+const imageManager = ref<any>(null)
 const categories = ['餐飲', '交通', '購物', '娛樂', '住宿', '生活', '其他']
 const splitMode = ref<'even' | 'custom'>('even')
 
@@ -400,6 +414,12 @@ const handleSubmit = async () => {
     }
 
     await api.put(`/api/ledgers/${trip.value.ledger_id}/transactions/${transaction.value.id}`, payload)
+    
+    // Commit Image Deletes
+    if (imageManager.value) {
+        await imageManager.value.commit()
+    }
+
     router.push(`/trips/${trip.value.id}/ledger`)
   } catch (e: any) {
     alert(e.message || '更新失敗')

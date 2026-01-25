@@ -32,6 +32,10 @@
           >
             <div class="flex items-center gap-2">
               <Icon v-if="item.isCheapest" icon="mdi:check-circle" class="text-green-500" />
+              <!-- Store Thumbnail -->
+              <div class="w-6 h-6 rounded bg-neutral-700 overflow-hidden flex-shrink-0" v-if="storeImages[item.store_id]">
+                  <img :src="getImageUrl(storeImages[item.store_id] || '')" class="w-full h-full object-cover" />
+              </div>
               <span class="text-sm">{{ item.store_name }}</span>
             </div>
             <div class="text-right">
@@ -54,6 +58,7 @@ import { ref, computed, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { useImages } from '~/composables/useImages'
 
 const router = useRouter()
 const route = useRoute()
@@ -61,6 +66,8 @@ const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
 
 const products = ref<any[]>([])
+const storeImages = ref<Record<string, string>>({})
+const { getImagesBatch, getImageUrl } = useImages()
 const loading = ref(true)
 
 const uniqueProducts = computed(() => {
@@ -85,6 +92,17 @@ const formatPrice = (price: number | string) => {
 const fetchProducts = async () => {
   try {
     products.value = await api.get<any[]>(`/api/trips/${route.params.id}/products`)
+    
+    // Fetch Store Images
+    if (products.value.length > 0) {
+        const storeIds = [...new Set(products.value.map(p => p.store_id))]
+        const images = await getImagesBatch(storeIds as string[], 'store')
+        const map: Record<string, string> = {}
+        images.forEach(img => {
+            if (!map[img.entity_id]) map[img.entity_id] = img.file_path
+        })
+        storeImages.value = map
+    }
   } catch (e) {
     console.error('Failed to fetch products:', e)
   } finally {

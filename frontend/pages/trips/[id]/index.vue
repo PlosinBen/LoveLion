@@ -1,41 +1,53 @@
 <template>
   <div class="flex flex-col gap-6">
-    <header class="flex justify-between items-center">
-      <button @click="router.push('/trips')" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-white border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
-        <Icon icon="mdi:arrow-left" class="text-2xl" />
-      </button>
-      <h1 class="text-xl font-bold truncate max-w-48">{{ trip?.name || '載入中...' }}</h1>
-      <button @click="showMenu = !showMenu" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-white border-0 cursor-pointer hover:bg-neutral-800 transition-colors relative">
-        <Icon icon="mdi:dots-vertical" class="text-2xl" />
-        <div v-if="showMenu" class="absolute top-12 right-0 bg-neutral-800 rounded-xl border border-neutral-700 shadow-lg z-10 overflow-hidden min-w-32 py-1">
-          <NuxtLink :to="`/trips/${trip?.id}/edit`" class="block w-full px-4 py-3 text-left text-white hover:bg-neutral-700 transition-colors no-underline">編輯旅行</NuxtLink>
-          <button @click="handleDelete" class="w-full px-4 py-3 text-left text-red-500 hover:bg-neutral-700 transition-colors border-0 bg-transparent cursor-pointer">刪除旅行</button>
-        </div>
-      </button>
-    </header>
+    <!-- Immersive Header Area -->
+    <div class="relative w-full h-64 rounded-2xl overflow-hidden shrink-0 bg-neutral-800">
+       <!-- Background: Image or Fallback -->
+       <img v-if="coverImage" :src="getImageUrl(coverImage)" class="absolute inset-0 w-full h-full object-cover" alt="Trip Cover" />
+       
+       <!-- Gradient Overlays -->
+       <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent"></div> <!-- Top shadow for buttons -->
+       <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div> <!-- Bottom shadow for text -->
+
+       <!-- Header Controls (Top) -->
+       <header class="relative z-10 flex justify-between items-center p-3">
+          <button @click="router.push('/trips')" class="flex justify-center items-center w-10 h-10 rounded-xl bg-black/20 text-white backdrop-blur-md border-0 cursor-pointer hover:bg-black/40 transition-colors">
+             <Icon icon="mdi:arrow-left" class="text-2xl" />
+          </button>
+
+          <button @click="showMenu = !showMenu" class="flex justify-center items-center w-10 h-10 rounded-xl bg-black/20 text-white backdrop-blur-md border-0 cursor-pointer hover:bg-black/40 transition-colors relative">
+             <Icon icon="mdi:dots-vertical" class="text-2xl" />
+             <div v-if="showMenu" class="absolute top-12 right-0 bg-neutral-800 rounded-xl border border-neutral-700 shadow-lg z-20 overflow-hidden min-w-32 py-1">
+               <NuxtLink :to="`/trips/${trip?.id}/edit`" class="block w-full px-4 py-3 text-left text-white hover:bg-neutral-700 transition-colors no-underline">編輯旅行</NuxtLink>
+               <button @click="handleDelete" class="w-full px-4 py-3 text-left text-red-500 hover:bg-neutral-700 transition-colors border-0 bg-transparent cursor-pointer">刪除旅行</button>
+             </div>
+          </button>
+       </header>
+
+       <!-- Title & Date (Bottom Overlay) -->
+       <div class="absolute bottom-0 left-0 w-full p-5 z-10">
+          <h1 class="text-2xl font-bold text-white mb-1 shadow-sm">{{ trip?.name || '載入中...' }}</h1>
+          <div class="flex items-center gap-2 text-neutral-300 text-sm">
+             <Icon icon="mdi:calendar-range" class="text-indigo-400" />
+             <span>{{ formatDateRange(trip?.start_date, trip?.end_date) }}</span>
+          </div>
+       </div>
+    </div>
 
     <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
 
     <template v-else-if="trip">
-      <!-- Trip Info Card -->
-      <div class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="flex items-center justify-center w-14 h-14 rounded-xl bg-indigo-500/20">
-            <Icon icon="mdi:airplane" class="text-3xl text-indigo-500" />
-          </div>
-          <div class="flex-1">
-            <h2 class="text-lg font-bold">{{ trip.name }}</h2>
-            <p class="text-sm text-neutral-400">{{ formatDateRange(trip.start_date, trip.end_date) }}</p>
-          </div>
-          <NuxtLink :to="`/trips/${trip.id}/edit`" class="p-2 text-neutral-400 hover:text-white transition-colors" title="編輯旅行">
-            <Icon icon="mdi:pencil" class="text-xl" />
-          </NuxtLink>
-        </div>
-        <p v-if="trip.description" class="text-neutral-400 text-sm mb-4">{{ trip.description }}</p>
-        <div class="flex items-center gap-2 text-sm text-neutral-400">
-          <Icon icon="mdi:currency-usd" class="text-lg" />
-          <span>基準貨幣: {{ trip.base_currency }}</span>
-        </div>
+      <!-- Simplified Info Bar -->
+      <div class="flex flex-col gap-4 px-1">
+         <p v-if="trip.description" class="text-neutral-400 text-sm leading-relaxed">{{ trip.description }}</p>
+         
+         <div class="flex items-center gap-2">
+             <div class="px-3 py-1.5 rounded-lg bg-neutral-800 border border-neutral-700 text-xs text-neutral-300 flex items-center gap-1.5">
+                 <Icon icon="mdi:currency-usd" class="text-indigo-400" />
+                 <span>{{ trip.base_currency }}</span>
+             </div>
+             <!-- Add more stats here later if needed -->
+         </div>
       </div>
 
       <!-- Members Section -->
@@ -84,6 +96,7 @@ import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { useImages } from '~/composables/useImages'
 
 const router = useRouter()
 const route = useRoute()
@@ -93,6 +106,8 @@ const { isAuthenticated, initAuth } = useAuth()
 const trip = ref<any>(null)
 const loading = ref(true)
 const showMenu = ref(false)
+const coverImage = ref<string | null>(null)
+const { getImages, getImageUrl } = useImages()
 
 
 const formatDateRange = (start: string | null, end: string | null) => {
@@ -106,6 +121,12 @@ const formatDateRange = (start: string | null, end: string | null) => {
 const fetchTrip = async () => {
   try {
     trip.value = await api.get<any>(`/api/trips/${route.params.id}`)
+    
+    // Fetch cover image
+    const images = await getImages(trip.value.id, 'trip')
+    if (images.length > 0) {
+        coverImage.value = images[0].file_path
+    }
   } catch (e) {
     console.error('Failed to fetch trip:', e)
     router.push('/trips')

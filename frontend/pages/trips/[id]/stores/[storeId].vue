@@ -12,7 +12,20 @@
 
     <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
 
-    <div v-else-if="store?.products?.length === 0" class="text-center py-16 px-5 bg-neutral-900 rounded-2xl border border-neutral-800">
+
+
+    <!-- Store Cover -->
+    <div v-if="store" class="bg-neutral-900 rounded-2xl p-4 border border-neutral-800">
+       <h3 class="text-sm font-medium text-neutral-400 mb-2">商店照片</h3>
+       <ImageManager 
+          :entity-id="route.params.storeId as string" 
+          entity-type="store" 
+          :max-count="1" 
+          :allow-reorder="false"
+       />
+    </div>
+
+    <div v-if="store?.products?.length === 0 && !loading" class="text-center py-16 px-5 bg-neutral-900 rounded-2xl border border-neutral-800">
       <Icon icon="mdi:package-variant" class="text-6xl text-neutral-500 mb-4" />
       <h2 class="text-lg font-semibold mb-2">還沒有商品</h2>
       <p class="text-neutral-400 mb-5">新增商品來記錄價格</p>
@@ -35,6 +48,16 @@
             <Icon icon="mdi:delete" />
           </button>
         </div>
+        
+        <!-- Product Images -->
+        <div class="mt-4 pt-4 border-t border-neutral-800">
+           <label class="text-xs text-neutral-500 mb-2 block">商品照片</label>
+           <ImageManager 
+             :entity-id="product.id" 
+             entity-type="product" 
+             :max-count="5" 
+           />
+        </div>
       </div>
     </div>
 
@@ -47,6 +70,7 @@ import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import ImageManager from '~/components/ImageManager.vue'
 
 const router = useRouter()
 const route = useRoute()

@@ -211,6 +211,19 @@
         />
       </div>
 
+      <!-- Images -->
+      <div class="flex flex-col gap-2">
+        <label class="block mb-1 text-sm text-neutral-400">照片 / 收據</label>
+        <ImageManager 
+          ref="imageManager"
+          entity-id="temp-new-txn" 
+          entity-type="transaction" 
+          :allow-reorder="true"
+          :instant-delete="false"
+          :instant-upload="false"
+        />
+      </div>
+
       <!-- Submit -->
       <button type="submit" class="w-full mt-3 px-6 py-3 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" :disabled="submitting">
         {{ submitting ? '儲存中...' : '儲存' }}
@@ -227,6 +240,7 @@ import { useAuth } from '~/composables/useAuth'
 import BaseSelect from '~/components/BaseSelect.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
 import BaseInput from '~/components/BaseInput.vue'
+import ImageManager from '~/components/ImageManager.vue'
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 
@@ -238,6 +252,7 @@ const { isAuthenticated, initAuth } = useAuth()
 const trip = ref<any>(null)
 const loading = ref(true)
 const submitting = ref(false)
+const imageManager = ref<any>(null)
 const splitMode = ref<'even' | 'custom'>('even')
 
 // hourOptions/minuteOptions/manual time logic removed
@@ -415,7 +430,13 @@ const handleSubmit = async () => {
       splits: splits
     }
 
-    await api.post(`/api/ledgers/${trip.value.ledger_id}/transactions`, payload)
+    const res = await api.post<{ id: string }>(`/api/ledgers/${trip.value.ledger_id}/transactions`, payload)
+    
+    // Commit Images with new ID
+    if (imageManager.value) {
+        await imageManager.value.commit(res.id)
+    }
+
     router.push(`/trips/${trip.value.id}/ledger`)
   } catch (e: any) {
     alert(e.message || '儲存失敗')

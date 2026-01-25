@@ -90,6 +90,22 @@ func main() {
 			trips.PUT("/:id/stores/:store_id/products/:product_id", comparisonHandler.UpdateProduct)
 			trips.DELETE("/:id/stores/:store_id/products/:product_id", comparisonHandler.DeleteProduct)
 		}
+
+		// Image routes
+		images := api.Group("/images")
+		// Optional: Protect routes if needed, or leave public. Assuming protected for write operations at least.
+		// For simplicity, let's allow public access or consistent with others.
+		// Given images are for trips/transactions which are user specific, maybe auth is good?
+		// But "Get" might need to be public/shared?
+		// Let's assume Auth required for now.
+		images.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db))
+		{
+			imageHandler := handlers.NewImageHandler(db)
+			images.POST("", imageHandler.Upload)
+			images.GET("", imageHandler.List)
+			images.PUT("/order", imageHandler.Reorder)
+			images.DELETE("/:id", imageHandler.Delete)
+		}
 	}
 	// Start server
 	port := cfg.Port
