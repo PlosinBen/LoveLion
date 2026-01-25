@@ -50,37 +50,56 @@
         <label class="block mb-1 text-sm text-neutral-400">項目明細</label>
         <div class="flex flex-col gap-3">
           <div v-for="(item, index) in form.items" :key="index" class="bg-neutral-900 rounded-2xl p-4 border border-neutral-800">
-            <div class="flex flex-col gap-2">
-              <BaseInput
-                v-model="item.name"
-                placeholder="項目名稱"
-                input-class="font-medium"
-              />
-              <div class="flex items-center gap-2">
-                <BaseInput
-                  v-model.number="item.unit_price"
-                  type="number"
-                  placeholder="單價"
-                  input-class="flex-[2]"
-                />
-                <span class="text-neutral-400">×</span>
-                <BaseInput
-                  v-model.number="item.quantity"
-                  type="number"
-                  placeholder="數量"
-                  min="1"
-                  input-class="flex-1 w-[60px]"
-                />
-                <button type="button" @click="removeItem(index)" class="flex justify-center items-center w-9 h-9 rounded-lg bg-red-500 text-white border-0 cursor-pointer hover:bg-red-600 transition-colors" v-if="form.items.length > 1">
-                  <Icon icon="mdi:close" />
+            <div class="flex flex-col gap-3">
+              <div class="flex items-end gap-2">
+                <div class="flex-1">
+                  <BaseInput
+                    v-model="item.name"
+                    placeholder="項目名稱"
+                    label="項目名稱"
+                    input-class="font-medium"
+                  />
+                </div>
+                <button type="button" @click="removeItem(index)" class="flex justify-center items-center w-9 h-9 rounded-lg text-neutral-400 hover:text-red-500 hover:bg-neutral-800 transition-colors" v-if="form.items.length > 1">
+                  <Icon icon="mdi:close" class="text-xl" />
                 </button>
               </div>
+              <div class="grid grid-cols-3 gap-2">
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs text-neutral-400">單價</label>
+                  <BaseInput
+                    v-model.number="item.unit_price"
+                    type="number"
+                    placeholder="0"
+                  />
+                </div>
+                <!-- - -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs text-neutral-400">折扣</label>
+                   <BaseInput
+                    v-model.number="item.discount"
+                    type="number"
+                    placeholder="0"
+                  />
+                </div>
+                <!-- * -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs text-neutral-400">數量</label>
+                  <BaseInput
+                    v-model.number="item.quantity"
+                    type="number"
+                    placeholder="1"
+                    min="1"
+                  />
+                </div>
+              </div>
             </div>
-            <div class="text-right text-neutral-400 text-sm mt-3">
-              {{ currency }} {{ (item.unit_price * item.quantity).toLocaleString() }}
+            <div class="flex justify-end items-center gap-2 mt-2 pt-2 border-t border-neutral-800">
+               <span class="text-neutral-500 text-xs">( {{ item.unit_price || 0 }} - {{ item.discount || 0 }} ) × {{ item.quantity || 1 }} = </span>
+               <span class="text-neutral-300 font-medium">{{ currency }} {{ ((item.unit_price - (item.discount || 0)) * item.quantity).toLocaleString() }}</span>
+            </div>
             </div>
           </div>
-        </div>
         <button type="button" @click="addItem" class="flex justify-center items-center gap-1.5 p-3 border-2 border-dashed border-neutral-800 rounded-xl bg-transparent text-neutral-400 cursor-pointer mt-3 hover:border-indigo-500 hover:text-indigo-500 transition-colors">
           <Icon icon="mdi:plus" /> 新增項目
         </button>
@@ -199,7 +218,7 @@ const form = ref({
   date: new Date(),
   category: '餐飲',
   note: '',
-  items: [{ name: '', unit_price: 0, quantity: 1 }],
+  items: [{ name: '', unit_price: 0, quantity: 1, discount: 0 }],
   payer: '' // Member ID
 })
 
@@ -207,12 +226,12 @@ const currency = computed(() => trip.value?.base_currency || 'TWD')
 
 const totalAmount = computed(() => {
   return form.value.items.reduce((sum, item) => {
-    return sum + (item.unit_price * item.quantity)
+    return sum + ((item.unit_price - (item.discount || 0)) * item.quantity)
   }, 0)
 })
 
 const addItem = () => {
-  form.value.items.push({ name: '', unit_price: 0, quantity: 1 })
+  form.value.items.push({ name: '', unit_price: 0, quantity: 1, discount: 0 })
 }
 
 const removeItem = (index: number) => {
@@ -252,7 +271,8 @@ const fetchData = async () => {
     form.value.items = txn.items.map((i: any) => ({
       name: i.name,
       unit_price: Number(i.unit_price),
-      quantity: Number(i.quantity)
+      quantity: Number(i.quantity),
+      discount: Number(i.discount || 0)
     }))
     
     // 4. Parse Splits

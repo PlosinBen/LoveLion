@@ -7,7 +7,7 @@
         @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
         :required="required"
         :disabled="disabled"
-        class="w-full px-4 py-3 rounded-md border border-neutral-800 bg-neutral-800 text-white text-base focus:outline-none focus:border-indigo-500 placeholder-neutral-400 disabled:opacity-50 disabled:cursor-not-allowed appearance-none"
+        class="w-full px-2 py-1.5 rounded-md border border-neutral-800 bg-neutral-800 text-white text-base focus:outline-none focus:border-indigo-500 placeholder-neutral-400 disabled:opacity-50 disabled:cursor-not-allowed appearance-none"
         :class="selectClass"
         v-bind="$attrs"
       >
@@ -34,7 +34,7 @@
       @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
       :required="required"
       :disabled="disabled"
-      class="w-full px-4 py-3 rounded-md border border-neutral-800 bg-neutral-800 text-white text-base focus:outline-none focus:border-indigo-500 placeholder-neutral-400 disabled:opacity-50 disabled:cursor-not-allowed appearance-none"
+      class="w-full px-2 py-1.5 rounded-md border border-neutral-800 bg-neutral-800 text-white text-base focus:outline-none focus:border-indigo-500 placeholder-neutral-400 disabled:opacity-50 disabled:cursor-not-allowed appearance-none"
       :class="selectClass"
       v-bind="$attrs"
     >

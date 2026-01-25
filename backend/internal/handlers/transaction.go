@@ -196,7 +196,7 @@ func (h *TransactionHandler) Create(c *gin.Context) {
 			quantity = decimal.NewFromInt(1)
 		}
 
-		amount := itemReq.UnitPrice.Mul(quantity).Sub(itemReq.Discount)
+		amount := itemReq.UnitPrice.Sub(itemReq.Discount).Mul(quantity)
 
 		item := models.TransactionItem{
 			ID:            uuid.New(),
@@ -347,7 +347,7 @@ func (h *TransactionHandler) Update(c *gin.Context) {
 				quantity = decimal.NewFromInt(1)
 			}
 
-			amount := itemReq.UnitPrice.Mul(quantity).Sub(itemReq.Discount)
+			amount := itemReq.UnitPrice.Sub(itemReq.Discount).Mul(quantity)
 
 			item := models.TransactionItem{
 				ID:            uuid.New(),
