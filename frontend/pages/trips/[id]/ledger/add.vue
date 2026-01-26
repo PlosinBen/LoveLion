@@ -139,48 +139,41 @@
 
         <hr class="border-t border-neutral-800 my-1" />
 
-        <!-- Split Mode -->
-        <div class="flex flex-col gap-2">
-          <label class="text-sm text-neutral-400">分攤方式</label>
-          <div class="flex gap-2 p-1 bg-neutral-800 rounded-xl">
-             <button
-               type="button" 
-               class="flex-1 py-1.5 rounded-lg text-sm font-medium transition-all"
-               :class="splitMode === 'even' ? 'bg-indigo-500 text-white shadow' : 'text-neutral-400 hover:text-white'"
-               @click="splitMode = 'even'"
-             >
-               平分
-             </button>
-             <button
-               type="button" 
-               class="flex-1 py-1.5 rounded-lg text-sm font-medium transition-all"
-               :class="splitMode === 'custom' ? 'bg-indigo-500 text-white shadow' : 'text-neutral-400 hover:text-white'"
-               @click="splitMode = 'custom'"
-             >
-               自訂
-             </button>
-          </div>
-        </div>
-
-        <!-- Members Split -->
+        <!-- Split Toggle -->
         <div class="flex flex-col gap-3">
-           <div v-for="m in trip.members" :key="m.id" class="flex items-center gap-3">
-             <input type="checkbox" v-model="m.involved" class="w-5 h-5 accent-indigo-500" @change="recalculateSplits" />
-             <div class="flex-1">
-               <div class="text-base">{{ m.name }}</div>
-             </div>
-             <div v-if="splitMode === 'even'" class="text-neutral-400 text-sm">
-               {{ m.involved ? formatCurrency(evenSplitAmount) : '-' }}
-             </div>
-             <div v-else class="w-24">
-               <input 
-                 v-model.number="m.customAmount" 
-                 type="number" 
-                 class="w-full px-2 py-1.5 rounded-lg border border-neutral-700 bg-neutral-800 text-white text-right focus:outline-none focus:border-indigo-500 text-sm"
-                 :disabled="!m.involved"
-               />
-             </div>
-           </div>
+            <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" v-model="isSplitEnabled" class="w-5 h-5 accent-indigo-500 rounded" @change="handleSplitToggle" />
+                    <span class="text-sm text-neutral-200">多人分攤 (均分/自訂)</span>
+                </label>
+                <div v-if="isSplitEnabled" class="text-xs text-neutral-400">
+                    剩餘: <span :class="remainingAmount !== 0 ? 'text-red-500 font-bold' : 'text-green-500'">{{ formatCurrency(remainingAmount) }}</span>
+                </div>
+            </div>
+
+             <!-- Members Split List -->
+            <div v-if="isSplitEnabled" class="flex flex-col gap-3 mt-1 bg-neutral-800/30 p-3 rounded-xl">
+                 <div class="flex justify-end mb-2">
+                    <button type="button" @click="resetToEven" class="text-xs text-indigo-400 hover:text-indigo-300">
+                        重設為均分
+                    </button>
+                 </div>
+                 <div v-for="m in splitList" :key="m.name" class="flex items-center gap-3">
+                     <input type="checkbox" v-model="m.involved" class="w-5 h-5 accent-indigo-500" @change="recalculateSplits(false)" />
+                     <div class="flex-1">
+                        <div class="text-base">{{ m.name }}</div>
+                     </div>
+                     <div class="w-28 relative">
+                         <input 
+                           v-model.number="m.customAmount" 
+                           type="number" 
+                           class="w-full px-2 py-1.5 rounded-lg border border-neutral-700 bg-neutral-800 text-white text-right focus:outline-none focus:border-indigo-500 text-sm"
+                           :disabled="!m.involved"
+                           @input="handleAmountInput"
+                         />
+                     </div>
+                 </div>
+            </div>
         </div>
       </div>
 
@@ -253,7 +246,7 @@ const trip = ref<any>(null)
 const loading = ref(true)
 const submitting = ref(false)
 const imageManager = ref<any>(null)
-const splitMode = ref<'even' | 'custom'>('even')
+const isSplitEnabled = ref(false)
 
 // hourOptions/minuteOptions/manual time logic removed
 
@@ -291,6 +284,14 @@ const totalAmount = computed(() => {
   }, 0)
 })
 
+const splitList = ref<{ name: string, involved: boolean, customAmount: number }[]>([])
+
+const remainingAmount = computed(() => {
+    if (!isSplitEnabled.value) return 0
+    const allocated = splitList.value.reduce((sum, m) => sum + (m.involved ? (m.customAmount || 0) : 0), 0)
+    return totalAmount.value - allocated
+})
+
 const addItem = () => {
   form.value.items.push({ name: '', unit_price: 0, quantity: 1, discount: 0 })
 }
@@ -299,30 +300,81 @@ const removeItem = (index: number) => {
   form.value.items.splice(index, 1)
 }
 
-const evenSplitAmount = computed(() => {
-  if (!trip.value?.members) return 0
-  const count = trip.value.members.filter((m: any) => m.involved).length
-  if (count === 0) return 0
-  return Math.round(totalAmount.value / count) // Simple rounding
-})
+const resetToEven = () => {
+    recalculateSplits(true)
+}
 
-const recalculateSplits = () => {
-  // Triggered when checkbox changes, computed property updates automatically
+const handleSplitToggle = () => {
+    if (isSplitEnabled.value) {
+        // Enable: Reset to even
+        splitList.value.forEach(m => m.involved = true)
+        recalculateSplits(true)
+    }
+}
+
+const handleAmountInput = () => {
+    // Just allow typing. Validation happens on submit/remaining check
+}
+
+const recalculateSplits = (forceEven: boolean) => {
+  if (splitList.value.length === 0) return
+  const involved = splitList.value.filter(m => m.involved)
+  const count = involved.length
+  if (count === 0) return
+
+  const total = totalAmount.value
+  const base = Math.floor(total / count)
+  const remainder = total - (base * count)
+
+  splitList.value.forEach(m => {
+      if (m.involved) {
+          m.customAmount = base
+      } else {
+          m.customAmount = 0
+      }
+  })
+  
+  // Distribute remainder to first involved
+  let distributed = 0
+  for (const m of splitList.value) {
+      if (m.involved && distributed < remainder) {
+          m.customAmount += 1
+          distributed++
+      }
+  }
 }
 
 const formatCurrency = (val: number) => {
   return val.toLocaleString()
 }
 
+// Watch total amount to auto-update splits if they haven't been manually touched too much?
+// Simple rule: If split is enabled, always re-run even split when total changes? 
+// Or better: If total changes, we should probably warn or re-even. 
+// For now let's watch total and re-even if it matches the sum of previous. 
+// Actually, simple UX: create/add items -> total changes. Split amounts become stale.
+// Let's re-run even split whenever total changes for simplicity in this version, unless user locked it?
+// User said "Default even".
+watch(totalAmount, () => {
+    if (isSplitEnabled.value) {
+        recalculateSplits(true)
+    }
+})
+
+
 const fetchTrip = async () => {
   try {
     const data = await api.get<any>(`/api/trips/${route.params.id}`)
-    // Initialize members involved state
-    data.members = data.members.map((m: any) => ({
-      ...m,
-      involved: true,
-      customAmount: 0
-    }))
+    trip.value = data
+
+    // Initialize Split List (Ledger Members)
+    const ledgerMembers: string[] = data.ledger?.members || []
+    if (ledgerMembers.length > 0) {
+        splitList.value = ledgerMembers.map(name => ({ name, involved: true, customAmount: 0 }))
+    } else {
+        // Fallback to Trip Members
+        splitList.value = data.members.map((m: any) => ({ name: m.name, involved: true, customAmount: 0 }))
+    }
     
     // Set default payer to current user
     const currentUser = await api.get<any>('/api/users/me')
@@ -332,8 +384,6 @@ const fetchTrip = async () => {
     } else if (data.members.length > 0) {
       form.value.payer = data.members[0].id
     }
-    
-    trip.value = data
     
     // Set default currency from trip
     form.value.currency = data.base_currency || 'TWD'
@@ -366,12 +416,11 @@ const handleSubmit = async () => {
   }
   
   // Validate total split if custom
-  if (splitMode.value === 'custom') {
-    const customTotal = trip.value.members
-      .filter((m: any) => m.involved)
-      .reduce((sum: number, m: any) => sum + (m.customAmount || 0), 0)
+  if (isSplitEnabled.value) {
+    const customTotal = splitList.value
+      .filter((m) => m.involved)
+      .reduce((sum, m) => sum + (m.customAmount || 0), 0)
     
-    // Allow small difference? No, exact matches are better.
     if (Math.abs(customTotal - totalAmount.value) > 1) {
       alert(`分攤金額總和 (${customTotal}) 與 總金額 (${totalAmount.value}) 不符`)
       return
@@ -387,37 +436,35 @@ const handleSubmit = async () => {
     const splits = []
     
     // 1. Payer Split (Payment)
+    // Payer is always a Trip Member (User) in this UI, but we record Name.
     splits.push({
       member_id: form.value.payer,
+      name: payerMember?.name || 'Unknown',
       amount: totalAmount.value,
       is_payer: true
     })
     
     // 2. Consumer Splits (Expenses)
-    const involvedMembers = trip.value.members.filter((m: any) => m.involved)
-    const count = involvedMembers.length
+    if (isSplitEnabled.value) {
+        splitList.value.forEach((m) => {
+            if (m.involved && m.customAmount > 0) {
+                splits.push({
+                    name: m.name,
+                    amount: m.customAmount,
+                    is_payer: false
+                })
+            }
+        })
+    } else {
+        // No split -> Payer is sole consumer
+        splits.push({
+            member_id: form.value.payer,
+            name: payerMember?.name || 'Unknown',
+            amount: totalAmount.value,
+            is_payer: false
+        })
+    }
     
-    let allocated = 0
-    involvedMembers.forEach((m: any, index: number) => {
-      let amount = 0
-      if (splitMode.value === 'even') {
-        if (index === count - 1) {
-           // Last one takes remainder to ensure exact match
-           amount = totalAmount.value - allocated
-        } else {
-           amount = Math.floor(totalAmount.value / count)
-        }
-        allocated += amount
-      } else {
-        amount = m.customAmount || 0
-      }
-      
-      splits.push({
-        member_id: m.id,
-        amount: amount,
-        is_payer: false
-      })
-    })
 
     const payload = {
       date: form.value.date.toISOString(),

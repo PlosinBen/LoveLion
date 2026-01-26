@@ -31,7 +31,7 @@
              <Icon v-else icon="mdi:airplane" class="text-2xl text-indigo-500" />
           </div>
           <div class="flex-1">
-            <h3 class="text-base font-semibold mb-1">{{ trip.name }}</h3>
+            <h3 class="text-base font-bold mb-1">{{ trip.name }}</h3>
             <p class="text-xs text-neutral-400">
               {{ formatDateRange(trip.start_date, trip.end_date) }}
               <span v-if="trip.members?.length" class="ml-2">• {{ trip.members.length }} 位成員</span>

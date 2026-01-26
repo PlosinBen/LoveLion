@@ -37,13 +37,13 @@
             <div v-for="group in uniqueProducts" :key="group.name" 
                  class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
                  <!-- Header -->
-                 <div class="p-3 flex items-center gap-3 cursor-pointer" @click="group.expanded = !group.expanded">
-                     <div class="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center text-neutral-500">
-                         <Icon icon="mdi:tag-outline" class="text-xl" />
+                 <div class="p-4 flex items-center gap-3 cursor-pointer" @click="group.expanded = !group.expanded">
+                     <div class="w-12 h-12 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold">
+                         <Icon icon="mdi:tag-outline" class="text-2xl" />
                      </div>
                      <div class="flex-1">
-                         <h3 class="font-bold text-sm">{{ group.name }}</h3>
-                         <div class="text-xs text-neutral-400 mt-0.5 flex gap-2">
+                         <h3 class="font-bold text-base">{{ group.name }}</h3>
+                         <div class="text-xs text-neutral-400 mt-1 flex gap-2">
                              <span>{{ group.items.length }} 家販售</span>
                              <span class="text-indigo-400 font-medium">
                                  {{ group.currency }} 
@@ -52,7 +52,7 @@
                              </span>
                          </div>
                      </div>
-                     <Icon :icon="group.expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'" class="text-neutral-500" />
+                     <Icon :icon="group.expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'" class="text-neutral-500 text-xl" />
                  </div>
 
                  <!-- Expanded List -->

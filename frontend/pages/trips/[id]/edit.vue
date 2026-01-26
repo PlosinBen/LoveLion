@@ -67,6 +67,8 @@
       <!-- Payment Methods -->
       <ListEditor v-model="form.payment_methods" label="支付方式" placeholder="新增支付方式 (如 信用卡)" />
 
+
+
       <!-- Ledger Members -->
       <ListEditor v-model="form.ledger_members" label="旅伴 (Ledger Members)" placeholder="新增旅伴 (如 Kevin)" />
 
@@ -124,10 +126,10 @@ const fetchTrip = async () => {
     form.value.base_currency = trip.base_currency || 'TWD'
     
     if (trip.start_date) {
-      form.value.start_date = new Date(trip.start_date as string).toISOString().split('T')[0]
+      form.value.start_date = new Date(String(trip.start_date)).toISOString().split('T')[0]
     }
     if (trip.end_date) {
-      form.value.end_date = new Date(trip.end_date as string).toISOString().split('T')[0]
+      form.value.end_date = new Date(String(trip.end_date)).toISOString().split('T')[0]
     }
 
     if (trip.ledger) {

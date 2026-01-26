@@ -5,7 +5,7 @@
       <button @click="router.back()" class="flex justify-center items-center w-10 h-10 rounded-full bg-neutral-800 text-white border-0 cursor-pointer hover:bg-neutral-700 transition-colors">
         <Icon icon="mdi:arrow-left" class="text-xl" />
       </button>
-      <h1 class="text-lg font-bold">編輯商店</h1>
+      <h1 class="text-xl font-bold">編輯商店</h1>
       <button @click="saveStore" class="flex justify-center items-center px-4 h-10 rounded-lg bg-indigo-600 text-white border-0 cursor-pointer hover:bg-indigo-500 transition-colors font-medium">
         儲存
       </button>

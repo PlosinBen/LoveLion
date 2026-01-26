@@ -29,7 +29,8 @@ type TransactionItemRequest struct {
 }
 
 type TransactionSplitRequest struct {
-	MemberID uuid.UUID       `json:"member_id" binding:"required"`
+	MemberID *uuid.UUID      `json:"member_id"`
+	Name     string          `json:"name" binding:"required"`
 	Amount   decimal.Decimal `json:"amount"`
 	IsPayer  bool            `json:"is_payer"`
 }
@@ -222,6 +223,7 @@ func (h *TransactionHandler) Create(c *gin.Context) {
 			ID:            uuid.New(),
 			TransactionID: txnID,
 			MemberID:      splitReq.MemberID,
+			Name:          splitReq.Name,
 			Amount:        splitReq.Amount,
 			IsPayer:       splitReq.IsPayer,
 		}
@@ -378,6 +380,7 @@ func (h *TransactionHandler) Update(c *gin.Context) {
 				ID:            uuid.New(),
 				TransactionID: txnID,
 				MemberID:      splitReq.MemberID,
+				Name:          splitReq.Name,
 				Amount:        splitReq.Amount,
 				IsPayer:       splitReq.IsPayer,
 			}
