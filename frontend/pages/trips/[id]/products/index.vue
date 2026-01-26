@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-[calc(100vh-64px)]">
+  <div class="flex flex-col h-full">
     <header class="flex-none p-4 pb-2 bg-neutral-900/50 backdrop-blur-md sticky top-0 z-10">
       <div class="flex justify-between items-center mb-4">
         <button @click="router.push(`/trips/${route.params.id}`)" class="flex justify-center items-center w-10 h-10 rounded-full bg-neutral-800 text-white border-0 cursor-pointer hover:bg-neutral-700 transition-colors">
@@ -135,5 +135,9 @@ onMounted(() => {
     return
   }
   fetchData()
+})
+
+definePageMeta({
+  layout: 'app'
 })
 </script>

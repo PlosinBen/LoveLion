@@ -8,12 +8,13 @@ import (
 )
 
 type ComparisonStore struct {
-	ID        string    `gorm:"type:varchar(21);primary_key" json:"id"`
-	TripID    string    `gorm:"type:varchar(21);not null" json:"trip_id"`
-	Name      string    `gorm:"type:varchar(100);not null" json:"name"`
-	Location  string    `gorm:"type:text" json:"location"`
-	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
+	ID           string    `gorm:"type:varchar(21);primary_key" json:"id"`
+	TripID       string    `gorm:"type:varchar(21);not null" json:"trip_id"`
+	Name         string    `gorm:"type:varchar(100);not null" json:"name"`
+	GoogleMapURL string    `gorm:"type:text" json:"google_map_url"`
+	Location     string    `gorm:"type:text" json:"location"`
+	CreatedAt    time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt    time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 
 	// Associations
 	Trip     *Trip               `gorm:"foreignKey:TripID" json:"trip,omitempty"`

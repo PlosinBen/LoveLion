@@ -1,0 +1,2 @@
+ALTER TABLE trip_comparison_stores
+DROP COLUMN google_map_url;

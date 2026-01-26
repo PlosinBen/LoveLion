@@ -22,6 +22,10 @@
                 <label class="text-sm text-neutral-400 font-medium">商店名稱</label>
                 <input v-model="form.name" type="text" placeholder="輸入商店名稱" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors" />
             </div>
+             <div class="space-y-2">
+                <label class="text-sm text-neutral-400 font-medium">Google Maps URL</label>
+                <input v-model="form.google_map_url" type="text" placeholder="輸入 Google Maps URL" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors" />
+            </div>
         </div>
 
         <div class="border-t border-neutral-800 my-4"></div>
@@ -70,7 +74,8 @@ const { isAuthenticated, initAuth } = useAuth()
 
 const loading = ref(true)
 const form = ref({
-    name: ''
+    name: '',
+    google_map_url: ''
 })
 const imageManagerRef = ref<InstanceType<typeof ImageManager> | null>(null)
 
@@ -78,6 +83,7 @@ const fetchStore = async () => {
     try {
         const store = await api.get<any>(`/api/trips/${route.params.id}/stores/${route.params.storeId}`)
         form.value.name = store.name
+        form.value.google_map_url = store.google_map_url || ''
     } catch (e) {
         console.error('Failed to fetch store', e)
     } finally {
@@ -86,16 +92,22 @@ const fetchStore = async () => {
 }
 
 const saveStore = async () => {
-    // 1. Update basic info (TODO: Add backend support for Name update if needed)
-    // currently we assume the user mainly edits images via this page as per previous context
-    // or we can invoke a name update API if it existed.
-    
-    // 2. Commit images
-    if (imageManagerRef.value) {
-        await imageManagerRef.value.commit()
-    }
+    try {
+        // 1. Update info
+        await api.put(`/api/trips/${route.params.id}/stores/${route.params.storeId}`, {
+            name: form.value.name,
+            google_map_url: form.value.google_map_url
+        })
 
-    router.back()
+        // 2. Commit images
+        if (imageManagerRef.value) {
+            await imageManagerRef.value.commit()
+        }
+
+        router.back()
+    } catch (e: any) {
+        alert(e.message || '儲存失敗')
+    }
 }
 
 const deleteStore = async () => {

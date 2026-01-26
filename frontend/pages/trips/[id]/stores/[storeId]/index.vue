@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-[calc(100vh-64px)] relative bg-black">
+  <div class="flex flex-col h-full relative bg-black">
     
     <!-- Hero Header -->
     <div class="relative w-full h-64 shrink-0">
@@ -30,7 +30,12 @@
 
             <!-- Bottom Text -->
             <div class="pb-2">
-                <h1 class="text-2xl font-bold text-white shadow-sm mb-1">{{ store?.name || '載入中...' }}</h1>
+                <div class="flex items-center gap-2 mb-1">
+                    <h1 class="text-2xl font-bold text-white shadow-sm">{{ store?.name || '載入中...' }}</h1>
+                    <button v-if="store?.google_map_url" @click="windowOpen(store.google_map_url)" class="w-8 h-8 rounded-full bg-neutral-800/80 backdrop-blur-md text-neutral-400 hover:text-green-500 hover:bg-neutral-800 flex items-center justify-center transition-all">
+                        <Icon icon="mdi:google-maps" />
+                    </button>
+                </div>
                 <div class="flex items-center gap-2 text-sm text-neutral-300">
                     <span class="flex items-center gap-1">
                         <Icon icon="mdi:package-variant-closed" /> {{ store?.products?.length || 0 }} 個商品
@@ -123,7 +128,7 @@
     <!-- FAB -->
     <button 
         @click="router.push(`/trips/${route.params.id}/stores/${route.params.storeId}/products/add`)" 
-        class="absolute bottom-6 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20"
+        class="absolute bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20"
     >
         <Icon icon="mdi:plus" class="text-3xl" />
     </button>
@@ -212,6 +217,10 @@ const fetchStoreImages = async () => {
     }
 }
 
+const windowOpen = (url: string) => {
+    window.open(url, '_blank')
+}
+
 const fetchStore = async () => {
   try {
     store.value = await api.get<any>(`/api/trips/${route.params.id}/stores/${route.params.storeId}`)
@@ -241,5 +250,9 @@ onMounted(() => {
     return
   }
   fetchStore()
+})
+
+definePageMeta({
+  layout: 'app'
 })
 </script>

@@ -7,21 +7,20 @@ description: Rules for when and how to run tests during development
 
 Rules that AI should automatically follow during development.
 
-## Backend API Testing
+## Backend Testing
 
-When **adding or modifying Backend API**:
+When **modifying ANY backend code** (handlers, services, models, utils, etc.):
 
-1. Ensure corresponding test file exists (`*_test.go`)
-2. New APIs must include test cases
-3. Run all Go tests:
+1. **Rule**: You MUST run unit tests to verify your changes.
+2. **Policy**: If *any* test fails, you MUST fix it **immediately** before proceeding. Do not ignore test failures.
+3. Ensure corresponding test file exists (`*_test.go`). If not, create one.
+
+### Running Tests
+Run all Go tests using Docker:
 ```bash
 docker compose exec backend go test ./...
 ```
-4. All tests must pass before completion
 
-### Test File Locations
-- Handler tests: `internal/handlers/*_test.go`
-- Service tests: `internal/services/*_test.go`
 
 ---
 

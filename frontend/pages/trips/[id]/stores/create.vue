@@ -10,6 +10,7 @@
 
     <div class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
       <BaseInput v-model="name" placeholder="商店名稱" input-class="mb-4" @keyup.enter="handleSubmit" :auto-focus="true" />
+      <BaseInput v-model="googleMapUrl" placeholder="Google Maps URL (選填)" input-class="mb-4" />
       
       <div class="mb-4">
           <label class="text-sm text-neutral-400 font-medium mb-2 block">商店照片</label>
@@ -46,6 +47,7 @@ const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
 
 const name = ref('')
+const googleMapUrl = ref('')
 const submitting = ref(false)
 const imageManagerRef = ref<InstanceType<typeof ImageManager> | null>(null)
 
@@ -54,7 +56,10 @@ const handleSubmit = async () => {
   
   submitting.value = true
   try {
-    const store = await api.post<any>(`/api/trips/${route.params.id}/stores`, { name: name.value.trim() })
+    const store = await api.post<any>(`/api/trips/${route.params.id}/stores`, { 
+        name: name.value.trim(),
+        google_map_url: googleMapUrl.value.trim() 
+    })
     
     // Upload images if any
     if (imageManagerRef.value) {

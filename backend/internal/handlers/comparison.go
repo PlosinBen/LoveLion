@@ -21,8 +21,15 @@ func NewComparisonHandler(db *gorm.DB) *ComparisonHandler {
 }
 
 type CreateStoreRequest struct {
-	Name     string `json:"name" binding:"required,min=1,max=100"`
-	Location string `json:"location"`
+	Name         string `json:"name" binding:"required,min=1,max=100"`
+	GoogleMapURL string `json:"google_map_url"`
+	Location     string `json:"location"`
+}
+
+type UpdateStoreRequest struct {
+	Name         string `json:"name"`
+	GoogleMapURL string `json:"google_map_url"`
+	Location     string `json:"location"`
 }
 
 type CreateProductRequest struct {
@@ -103,10 +110,11 @@ func (h *ComparisonHandler) CreateStore(c *gin.Context) {
 	}
 
 	store := &models.ComparisonStore{
-		ID:       storeID,
-		TripID:   tripID,
-		Name:     req.Name,
-		Location: req.Location,
+		ID:           storeID,
+		TripID:       tripID,
+		Name:         req.Name,
+		GoogleMapURL: req.GoogleMapURL,
+		Location:     req.Location,
 	}
 
 	if err := h.db.Create(store).Error; err != nil {
@@ -115,6 +123,47 @@ func (h *ComparisonHandler) CreateStore(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, store)
+}
+
+// Update a store
+func (h *ComparisonHandler) UpdateStore(c *gin.Context) {
+	userID := c.MustGet("userID").(uuid.UUID)
+	tripID := c.Param("id")
+	storeID := c.Param("store_id")
+
+	if err := h.verifyTripAccess(tripID, userID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Trip not found"})
+		return
+	}
+
+	var store models.ComparisonStore
+	if err := h.db.Where("id = ? AND trip_id = ?", storeID, tripID).First(&store).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Store not found"})
+		return
+	}
+
+	var req UpdateStoreRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if req.Name != "" {
+		store.Name = req.Name
+	}
+	// Allow clearing if sent as empty string? Or only update if present?
+	// Struct doesn't support "update if present but allow empty" cleanly without pointers.
+	// For now assume if they send empty string it's a clear or no-op?
+	// Let's assume always update provided fields.
+	store.GoogleMapURL = req.GoogleMapURL
+	store.Location = req.Location
+
+	if err := h.db.Save(&store).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update store"})
+		return
+	}
+
+	c.JSON(http.StatusOK, store)
 }
 
 // Get a store with products
