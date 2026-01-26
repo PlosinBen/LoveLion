@@ -22,6 +22,17 @@
           <BaseInput v-model.number="form.quantity" type="number" min="1" placeholder="數量" />
           <BaseInput v-model="form.unit" placeholder="單位 (如: 盒)" />
         </div>
+        
+        <div class="mt-2">
+           <label class="text-sm text-neutral-400 font-medium mb-2 block">商品照片</label>
+           <ImageManager 
+             ref="imageManagerRef"
+             entity-id="" 
+             entity-type="product" 
+             :max-count="5" 
+             :instant-upload="false"
+           />
+        </div>
       </div>
       
       <button 
@@ -40,6 +51,7 @@ import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import ImageManager from '~/components/ImageManager.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -47,6 +59,7 @@ const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
 
 const submitting = ref(false)
+const imageManagerRef = ref<InstanceType<typeof ImageManager> | null>(null)
 const form = ref({
   name: '',
   price: 0,
@@ -60,7 +73,13 @@ const handleSubmit = async () => {
   
   submitting.value = true
   try {
-    await api.post(`/api/trips/${route.params.id}/stores/${route.params.storeId}/products`, form.value)
+    const product = await api.post<any>(`/api/trips/${route.params.id}/stores/${route.params.storeId}/products`, form.value)
+    
+    // Upload images
+    if (imageManagerRef.value) {
+        await imageManagerRef.value.commit(product.id)
+    }
+
     router.push(`/trips/${route.params.id}/stores/${route.params.storeId}`)
   } catch (e: any) {
     alert(e.message || '新增失敗')

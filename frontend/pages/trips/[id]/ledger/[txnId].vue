@@ -188,6 +188,7 @@
           entity-type="transaction" 
           :allow-reorder="true"
           :instant-delete="false"
+          :instant-upload="false"
         />
       </div>
 
