@@ -23,6 +23,10 @@ docker compose exec postgres psql -U postgres -c "DROP DATABASE IF EXISTS loveli
 echo "📦 Creating fresh database..."
 docker compose exec postgres psql -U postgres -c "CREATE DATABASE lovelion"
 
+# Step 3.5: Clean up R2 Bucket
+echo "🧹 Cleaning up R2 bucket..."
+docker compose run --rm backend go run cmd/cleanup-r2/main.go
+
 # Step 4: Start backend
 echo "🚀 Starting backend..."
 docker compose start backend
