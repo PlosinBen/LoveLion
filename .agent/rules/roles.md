@@ -28,14 +28,9 @@ trigger: always_on
 
 在任務完成提交時，請使用以下格式總結：
 
-```markdown
 ### 🟢 角色職責檢查報告 (Role Quality Check)
 
 **1. 👩‍💼 PM**: [Pass/Fail] - [評語]
-
 **2. 🎨 Frontend**: [Pass/Fail] - [評語]
-
 **3. ⚙️ Backend**: [Pass/Fail] - [評語]
-
 **4. 🧐 Code Reviewer**: [Pass/Fail] - [評語]
-```
