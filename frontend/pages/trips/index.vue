@@ -2,10 +2,15 @@
   <div class="flex flex-col gap-6">
     <header class="flex justify-between items-center">
       <h1 class="text-2xl font-bold">我的旅行</h1>
-      <NuxtLink to="/trips/create" class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors text-sm no-underline">
-        <Icon icon="mdi:plus" /> 新增
-      </NuxtLink>
     </header>
+
+    <!-- FAB -->
+    <NuxtLink 
+        to="/trips/create" 
+        class="fixed bottom-6 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20 cursor-pointer border-0"
+    >
+        <Icon icon="mdi:plus" class="text-3xl" />
+    </NuxtLink>
 
     <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
 

@@ -66,7 +66,7 @@
     <!-- FAB -->
     <button 
         @click="router.push(`/trips/${route.params.id}/stores/create`)" 
-        class="fixed bottom-6 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20 cursor-pointer border-0"
+        class="fixed bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20 cursor-pointer border-0"
     >
         <Icon icon="mdi:store-plus" class="text-2xl" />
     </button>
