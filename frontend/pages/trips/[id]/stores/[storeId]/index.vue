@@ -1,11 +1,12 @@
 <template>
-  <div class="flex flex-col h-full relative bg-black">
+  <div class="flex flex-col gap-6">
     
     <!-- Hero Header -->
     <!-- Hero Header -->
     <ImmersiveHeader
         :image="coverImage"
         fallback-icon="mdi:store"
+        class="rounded-2xl"
     >
         <template #top-left>
              <button @click="router.push(`/trips/${route.params.id}/stores`)" class="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/50 transition-colors border-0 cursor-pointer">
@@ -42,15 +43,15 @@
     </ImmersiveHeader>
 
 
-    <div v-if="loading" class="flex-1 flex justify-center items-center text-neutral-400">
+    <div v-if="loading" class="flex justify-center items-center text-neutral-400 py-10">
       <Icon icon="eos-icons:loading" class="text-3xl animate-spin" />
     </div>
 
     <!-- Store Content (Product List) -->
-    <div v-else class="flex-1 overflow-y-auto px-4 py-4 pb-24 -mt-4 relative bg-neutral-950 rounded-t-3xl min-h-0 z-10 border-t border-white/5 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+    <div v-else class="">
       
       <!-- Empty State -->
-      <div v-if="store?.products?.length === 0" class="flex flex-col items-center justify-center py-20 text-neutral-500">
+      <div v-if="!store?.products || store?.products?.length === 0" class="flex flex-col items-center justify-center py-20 text-neutral-500">
         <Icon icon="mdi:package-variant" class="text-6xl mb-4 opacity-20" />
         <p>還沒有商品</p>
       </div>
@@ -82,7 +83,7 @@
                 </div>
 
                 <!-- Delete -->
-                <button @click.stop="deleteProduct(product.id)" class="w-8 h-8 flex items-center justify-center text-neutral-500 hover:text-red-500 hover:bg-neutral-800 rounded-full transition-colors">
+                <button @click.stop="deleteProduct(product.id)" class="w-8 h-8 flex items-center justify-center text-neutral-500 hover:text-red-500 hover:bg-neutral-800 rounded-full transition-colors border-0 cursor-pointer bg-transparent">
                     <Icon icon="mdi:trash-can-outline" class="text-lg" />
                 </button>
             </div>
@@ -120,7 +121,7 @@
     <!-- FAB -->
     <button 
         @click="router.push(`/trips/${route.params.id}/stores/${route.params.storeId}/products/add`)" 
-        class="absolute bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20"
+        class="fixed bottom-6 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20 cursor-pointer border-0"
     >
         <Icon icon="mdi:plus" class="text-3xl" />
     </button>
@@ -243,9 +244,5 @@ onMounted(() => {
     return
   }
   fetchStore()
-})
-
-definePageMeta({
-  layout: 'app'
 })
 </script>

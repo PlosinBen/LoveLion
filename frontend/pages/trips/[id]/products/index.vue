@@ -1,6 +1,6 @@
 <template>
-  <div class="flex flex-col h-full">
-    <header class="flex-none p-4 pb-2 bg-neutral-900/50 backdrop-blur-md sticky top-0 z-10">
+  <div class="flex flex-col gap-4">
+    <header class="flex-none pb-2 bg-neutral-900/90 backdrop-blur-md sticky top-0 z-10 -mx-4 px-4 pt-2 border-b border-white/5">
       <div class="flex justify-between items-center mb-4">
         <button @click="router.push(`/trips/${route.params.id}`)" class="flex justify-center items-center w-10 h-10 rounded-full bg-neutral-800 text-white border-0 cursor-pointer hover:bg-neutral-700 transition-colors">
           <Icon icon="mdi:arrow-left" class="text-xl" />
@@ -22,19 +22,19 @@
       </div>
     </header>
 
-    <div v-if="loading" class="flex-1 flex justify-center items-center text-neutral-400">
+    <div v-if="loading" class="flex justify-center items-center text-neutral-400 py-10">
        <Icon icon="eos-icons:loading" class="text-3xl animate-spin" />
     </div>
 
     <!-- Mode: Products -->
-    <div v-else class="flex-1 overflow-y-auto px-4 pb-24">
-        <div v-if="uniqueProducts.length === 0" class="flex flex-col items-center justify-center py-20 text-neutral-500">
+    <div v-else class="">
+        <div v-if="productGroups.length === 0" class="flex flex-col items-center justify-center py-20 text-neutral-500">
             <Icon icon="mdi:shopping-search" class="text-6xl mb-4 opacity-20" />
             <p>尚無可比價的商品</p>
         </div>
 
         <div v-else class="flex flex-col gap-3">
-            <div v-for="group in uniqueProducts" :key="group.name" 
+            <div v-for="group in productGroups" :key="group.name" 
                  class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
                  <!-- Header -->
                  <div class="p-4 flex items-center gap-3 cursor-pointer" @click="group.expanded = !group.expanded">
@@ -84,23 +84,17 @@ const route = useRoute()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
 
-const allProducts = ref<any[]>([])
+const productGroups = ref<any[]>([])
 const loading = ref(true)
 
 const fetchData = async () => {
   try {
-    allProducts.value = await api.get<any[]>(`/api/trips/${route.params.id}/products`)
-  } catch (e) {
-    console.error('Failed to fetch data:', e)
-  } finally {
-    loading.value = false
-  }
-}
-
-const uniqueProducts = computed(() => {
+    const products = await api.get<any[]>(`/api/trips/${route.params.id}/products`)
+    
+    // Group products
     const groups: Record<string, any> = {}
     
-    allProducts.value.forEach(p => {
+    products.forEach(p => {
         const nameKey = p.name.trim().toLowerCase()
         if (!groups[nameKey]) {
             groups[nameKey] = {
@@ -117,11 +111,18 @@ const uniqueProducts = computed(() => {
         groups[nameKey].maxPrice = Math.max(groups[nameKey].maxPrice, p.price)
     })
 
-    return Object.values(groups).map(g => {
+    productGroups.value = Object.values(groups).map(g => {
+        // Sort items by price
         g.items.sort((a: any, b: any) => parseFloat(a.price) - parseFloat(b.price))
         return g
     })
-})
+
+  } catch (e) {
+    console.error('Failed to fetch data:', e)
+  } finally {
+    loading.value = false
+  }
+}
 
 const formatPrice = (price: number | string) => {
   const num = typeof price === 'string' ? parseFloat(price) : price
@@ -135,9 +136,5 @@ onMounted(() => {
     return
   }
   fetchData()
-})
-
-definePageMeta({
-  layout: 'app'
 })
 </script>

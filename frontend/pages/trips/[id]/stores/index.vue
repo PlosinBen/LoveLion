@@ -1,6 +1,6 @@
 <template>
-  <div class="flex flex-col h-full">
-    <header class="flex-none p-4 pb-2 bg-neutral-900/50 backdrop-blur-md sticky top-0 z-10">
+  <div class="flex flex-col gap-4">
+    <header class="flex-none pb-2 bg-neutral-900/90 backdrop-blur-md sticky top-0 z-10 -mx-4 px-4 pt-2 border-b border-white/5">
       <div class="flex justify-between items-center mb-4">
         <button @click="router.push(`/trips/${route.params.id}`)" class="flex justify-center items-center w-10 h-10 rounded-full bg-neutral-800 text-white border-0 cursor-pointer hover:bg-neutral-700 transition-colors">
           <Icon icon="mdi:arrow-left" class="text-xl" />
@@ -22,12 +22,12 @@
       </div>
     </header>
 
-    <div v-if="loading" class="flex-1 flex justify-center items-center text-neutral-400">
+    <div v-if="loading" class="flex justify-center items-center text-neutral-400 py-10">
        <Icon icon="eos-icons:loading" class="text-3xl animate-spin" />
     </div>
 
     <!-- Mode: Stores -->
-    <div v-else class="flex-1 overflow-y-auto px-4 pb-24">
+    <div v-else class="">
         <div v-if="stores.length === 0" class="flex flex-col items-center justify-center py-20 text-neutral-500">
            <Icon icon="mdi:store-outline" class="text-6xl mb-4 opacity-20" />
            <p>還沒有商店</p>
@@ -51,11 +51,11 @@
                       <p class="text-xs text-neutral-400 mt-1">{{ store.products?.length || 0 }} 個商品</p>
                    </div>
                    
-                   <button v-if="store.google_map_url" @click.stop="windowOpen(store.google_map_url)" class="w-8 h-8 rounded-full hover:bg-neutral-800 text-neutral-500 hover:text-green-500 flex items-center justify-center transition-colors mr-1">
+                   <button v-if="store.google_map_url" @click.stop="windowOpen(store.google_map_url)" class="w-8 h-8 rounded-full hover:bg-neutral-800 text-neutral-500 hover:text-green-500 flex items-center justify-center transition-colors mr-1 cursor-pointer border-0">
                        <Icon icon="mdi:google-maps" />
                    </button>
 
-                   <button @click.stop="deleteStore(store.id)" class="w-8 h-8 rounded-full hover:bg-red-500/20 text-neutral-500 hover:text-red-500 flex items-center justify-center transition-colors">
+                   <button @click.stop="deleteStore(store.id)" class="w-8 h-8 rounded-full hover:bg-red-500/20 text-neutral-500 hover:text-red-500 flex items-center justify-center transition-colors cursor-pointer border-0">
                        <Icon icon="mdi:trash-can-outline" />
                    </button>
                 </div>
@@ -66,7 +66,7 @@
     <!-- FAB -->
     <button 
         @click="router.push(`/trips/${route.params.id}/stores/create`)" 
-        class="absolute bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20"
+        class="fixed bottom-6 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20 cursor-pointer border-0"
     >
         <Icon icon="mdi:store-plus" class="text-2xl" />
     </button>
@@ -142,9 +142,5 @@ onMounted(() => {
     return
   }
   fetchStores()
-})
-
-definePageMeta({
-  layout: 'app'
 })
 </script>
