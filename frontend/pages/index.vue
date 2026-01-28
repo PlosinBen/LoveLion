@@ -1,50 +1,45 @@
 <template>
   <div class="flex flex-col gap-6">
-    <div class="flex items-center gap-4 mb-6 p-5 rounded-2xl border bg-neutral-900 duration-200" :class="statusClasses">
-      <div class="text-3xl" :class="statusIconColor">
-        <Icon :icon="statusIcon" />
-      </div>
-      <div class="flex flex-col">
-        <h3 class="text-sm text-neutral-400">系統狀態</h3>
-        <p class="text-base mt-1">{{ statusMessage }}</p>
-      </div>
-    </div>
+    <StatusCard
+      :status="backendStatus"
+      :message="statusMessage"
+    />
 
     <div class="grid grid-cols-2 gap-3 mb-6">
-      <NuxtLink to="/ledger/add" class="flex flex-col items-center gap-2 p-5 rounded-2xl border border-neutral-800 bg-neutral-900 text-white no-underline transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:border-indigo-500">
-        <Icon icon="mdi:plus-circle" class="text-3xl text-indigo-500" />
-        <span>新增記帳</span>
-      </NuxtLink>
-      <NuxtLink to="/ledger" class="flex flex-col items-center gap-2 p-5 rounded-2xl border border-neutral-800 bg-neutral-900 text-white no-underline transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:border-indigo-500">
-        <Icon icon="mdi:wallet" class="text-3xl text-indigo-500" />
-        <span>我的帳本</span>
-      </NuxtLink>
-      <NuxtLink to="/trips" class="flex flex-col items-center gap-2 p-5 rounded-2xl border border-neutral-800 bg-neutral-900 text-white no-underline transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:border-indigo-500">
-        <Icon icon="mdi:airplane" class="text-3xl text-indigo-500" />
-        <span>旅行</span>
-      </NuxtLink>
-      <button @click="handleLogout" class="flex flex-col items-center gap-2 p-5 rounded-2xl border border-neutral-800 bg-neutral-900 text-white no-underline transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:border-indigo-500">
-        <Icon icon="mdi:logout" class="text-3xl text-red-500" />
-        <span>登出</span>
-      </button>
+      <DashboardCard
+        to="/ledger/add"
+        icon="mdi:plus-circle"
+        label="新增記帳"
+        icon-color="text-indigo-500"
+      />
+      <DashboardCard
+        to="/ledger"
+        icon="mdi:wallet"
+        label="我的帳本"
+        icon-color="text-indigo-500"
+      />
+      <DashboardCard
+        to="/trips"
+        icon="mdi:airplane"
+        label="旅行"
+        icon-color="text-indigo-500"
+      />
+      <DashboardCard
+        @click="handleLogout"
+        icon="mdi:logout"
+        label="登出"
+        icon-color="text-red-500"
+      />
     </div>
 
     <div v-if="recentTransactions.length > 0" class="flex flex-col gap-2">
       <h2 class="text-lg font-semibold mb-3">最近交易</h2>
       <div class="flex flex-col gap-2">
-        <div
+        <TransactionListItem
           v-for="txn in recentTransactions"
           :key="txn.id"
-          class="flex justify-between items-center p-4 rounded-xl border border-neutral-800 bg-neutral-900"
-        >
-          <div class="flex flex-col">
-            <h4 class="text-sm font-medium">{{ txn.category || '未分類' }}</h4>
-            <p class="text-xs text-neutral-400 mt-1">{{ formatDate(txn.date) }}</p>
-          </div>
-          <div class="font-semibold text-indigo-500">
-            {{ txn.currency }} {{ txn.total_amount }}
-          </div>
-        </div>
+          :transaction="txn"
+        />
       </div>
     </div>
   </div>
@@ -52,37 +47,19 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { Icon } from '@iconify/vue'
+import DashboardCard from '~/components/DashboardCard.vue'
+import StatusCard from '~/components/StatusCard.vue'
+import TransactionListItem from '~/components/TransactionListItem.vue'
 import { useAuth } from '~/composables/useAuth'
 import { useApi } from '~/composables/useApi'
 
 const router = useRouter()
-const { user, isAuthenticated, initAuth, logout } = useAuth()
+const { isAuthenticated, initAuth, logout } = useAuth()
 const api = useApi()
 
 const backendStatus = ref<'checking' | 'online' | 'offline'>('checking')
 const recentTransactions = ref<any[]>([])
 const ledgers = ref<any[]>([])
-
-const statusClasses = computed(() => {
-  if (backendStatus.value === 'online') return 'border-green-500'
-  if (backendStatus.value === 'offline') return 'border-red-500'
-  return 'border-neutral-800'
-})
-
-const statusIconColor = computed(() => {
-  if (backendStatus.value === 'online') return 'text-green-500'
-  if (backendStatus.value === 'offline') return 'text-red-500'
-  return 'text-neutral-500'
-})
-
-const statusIcon = computed(() => {
-  switch (backendStatus.value) {
-    case 'online': return 'mdi:check-circle'
-    case 'offline': return 'mdi:close-circle'
-    default: return 'mdi:loading'
-  }
-})
 
 const statusMessage = computed(() => {
   switch (backendStatus.value) {
@@ -91,11 +68,6 @@ const statusMessage = computed(() => {
     default: return '檢查中...'
   }
 })
-
-const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('zh-TW', { month: 'short', day: 'numeric' })
-}
 
 const checkBackend = async () => {
   try {

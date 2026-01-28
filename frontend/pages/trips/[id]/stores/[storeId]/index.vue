@@ -2,37 +2,29 @@
   <div class="flex flex-col h-full relative bg-black">
     
     <!-- Hero Header -->
-    <div class="relative w-full h-64 shrink-0">
-        <!-- Background Image -->
-        <div class="absolute inset-0 bg-neutral-900 overflow-hidden">
-            <template v-if="coverImage">
-                <img :src="coverImage" class="w-full h-full object-cover opacity-80" />
-                <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
-            </template>
-            <div v-else class="w-full h-full bg-gradient-to-br from-indigo-900 to-neutral-900 flex items-center justify-center opacity-50">
-                <Icon icon="mdi:store" class="text-6xl text-white/20" />
-            </div>
-        </div>
+    <!-- Hero Header -->
+    <ImmersiveHeader
+        :image="coverImage"
+        fallback-icon="mdi:store"
+    >
+        <template #top-left>
+             <button @click="router.push(`/trips/${route.params.id}/stores`)" class="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/50 transition-colors border-0 cursor-pointer">
+                <Icon icon="mdi:arrow-left" class="text-xl" />
+             </button>
+        </template>
 
-        <!-- content overlay -->
-        <div class="absolute inset-0 flex flex-col justify-between p-4 z-10">
-            <!-- Top Bar -->
-            <div class="flex justify-between items-start">
-                 <button @click="router.push(`/trips/${route.params.id}/stores`)" class="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/50 transition-colors">
-                    <Icon icon="mdi:arrow-left" class="text-xl" />
-                 </button>
-                 
-                 <!-- Edit Button -->
-                 <button @click="router.push(`/trips/${route.params.id}/stores/${route.params.storeId}/edit`)" class="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/50 transition-colors">
-                    <Icon icon="mdi:pencil-outline" class="text-xl" />
-                 </button>
-            </div>
+        <template #top-right>
+             <!-- Edit Button -->
+             <button @click="router.push(`/trips/${route.params.id}/stores/${route.params.storeId}/edit`)" class="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/50 transition-colors border-0 cursor-pointer">
+                <Icon icon="mdi:pencil-outline" class="text-xl" />
+             </button>
+        </template>
 
-            <!-- Bottom Text -->
+        <template #bottom>
             <div class="pb-2">
                 <div class="flex items-center gap-2 mb-1">
                     <h1 class="text-2xl font-bold text-white shadow-sm">{{ store?.name || '載入中...' }}</h1>
-                    <button v-if="store?.google_map_url" @click="windowOpen(store.google_map_url)" class="w-8 h-8 rounded-full bg-neutral-800/80 backdrop-blur-md text-neutral-400 hover:text-green-500 hover:bg-neutral-800 flex items-center justify-center transition-all">
+                    <button v-if="store?.google_map_url" @click="windowOpen(store.google_map_url)" class="w-8 h-8 rounded-full bg-neutral-800/80 backdrop-blur-md text-neutral-400 hover:text-green-500 hover:bg-neutral-800 flex items-center justify-center transition-all border-0 cursor-pointer">
                         <Icon icon="mdi:google-maps" />
                     </button>
                 </div>
@@ -46,8 +38,8 @@
                     </span>
                 </div>
             </div>
-        </div>
-    </div>
+        </template>
+    </ImmersiveHeader>
 
 
     <div v-if="loading" class="flex-1 flex justify-center items-center text-neutral-400">
@@ -143,6 +135,7 @@ import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useImages } from '~/composables/useImages'
 import ImageManager from '~/components/ImageManager.vue'
+import ImmersiveHeader from '~/components/ImmersiveHeader.vue'
 
 const router = useRouter()
 const route = useRoute()

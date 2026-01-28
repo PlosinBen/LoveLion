@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Terminal & CLI Rules
 
 ## Usage Preferences

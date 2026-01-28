@@ -1,38 +1,36 @@
 <template>
   <div class="flex flex-col gap-6">
     <!-- Immersive Header Area -->
-    <div class="relative w-full h-64 rounded-2xl overflow-hidden shrink-0 bg-neutral-800">
-       <!-- Background: Image or Fallback -->
-       <img v-if="coverImage" :src="getImageUrl(coverImage)" class="absolute inset-0 w-full h-full object-cover" alt="Trip Cover" />
-       
-       <!-- Gradient Overlays -->
-       <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent"></div> <!-- Top shadow for buttons -->
-       <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div> <!-- Bottom shadow for text -->
+    <!-- Immersive Header Area -->
+    <ImmersiveHeader
+      :image="coverImage"
+      fallback-icon="mdi:airplane"
+      class="rounded-2xl"
+    >
+      <template #top-left>
+        <button @click="router.push('/trips')" class="flex justify-center items-center w-10 h-10 rounded-xl bg-black/20 text-white backdrop-blur-md border-0 cursor-pointer hover:bg-black/40 transition-colors">
+            <Icon icon="mdi:arrow-left" class="text-2xl" />
+        </button>
+      </template>
 
-       <!-- Header Controls (Top) -->
-       <header class="relative z-10 flex justify-between items-center p-3">
-          <button @click="router.push('/trips')" class="flex justify-center items-center w-10 h-10 rounded-xl bg-black/20 text-white backdrop-blur-md border-0 cursor-pointer hover:bg-black/40 transition-colors">
-             <Icon icon="mdi:arrow-left" class="text-2xl" />
-          </button>
+      <template #top-right>
+        <button @click="showMenu = !showMenu" class="flex justify-center items-center w-10 h-10 rounded-xl bg-black/20 text-white backdrop-blur-md border-0 cursor-pointer hover:bg-black/40 transition-colors relative">
+            <Icon icon="mdi:dots-vertical" class="text-2xl" />
+            <div v-if="showMenu" class="absolute top-12 right-0 bg-neutral-800 rounded-xl border border-neutral-700 shadow-lg z-20 overflow-hidden min-w-32 py-1">
+              <NuxtLink :to="`/trips/${trip?.id}/edit`" class="block w-full px-4 py-3 text-left text-white hover:bg-neutral-700 transition-colors no-underline">編輯旅行</NuxtLink>
+              <button @click="handleDelete" class="w-full px-4 py-3 text-left text-red-500 hover:bg-neutral-700 transition-colors border-0 bg-transparent cursor-pointer">刪除旅行</button>
+            </div>
+        </button>
+      </template>
 
-          <button @click="showMenu = !showMenu" class="flex justify-center items-center w-10 h-10 rounded-xl bg-black/20 text-white backdrop-blur-md border-0 cursor-pointer hover:bg-black/40 transition-colors relative">
-             <Icon icon="mdi:dots-vertical" class="text-2xl" />
-             <div v-if="showMenu" class="absolute top-12 right-0 bg-neutral-800 rounded-xl border border-neutral-700 shadow-lg z-20 overflow-hidden min-w-32 py-1">
-               <NuxtLink :to="`/trips/${trip?.id}/edit`" class="block w-full px-4 py-3 text-left text-white hover:bg-neutral-700 transition-colors no-underline">編輯旅行</NuxtLink>
-               <button @click="handleDelete" class="w-full px-4 py-3 text-left text-red-500 hover:bg-neutral-700 transition-colors border-0 bg-transparent cursor-pointer">刪除旅行</button>
-             </div>
-          </button>
-       </header>
-
-       <!-- Title & Date (Bottom Overlay) -->
-       <div class="absolute bottom-0 left-0 w-full p-5 z-10">
-          <h1 class="text-2xl font-bold text-white mb-1 shadow-sm">{{ trip?.name || '載入中...' }}</h1>
-          <div class="flex items-center gap-2 text-neutral-300 text-sm">
-             <Icon icon="mdi:calendar-range" class="text-indigo-400" />
-             <span>{{ formatDateRange(trip?.start_date, trip?.end_date) }}</span>
-          </div>
-       </div>
-    </div>
+      <template #bottom>
+         <h1 class="text-2xl font-bold text-white mb-1 shadow-sm">{{ trip?.name || '載入中...' }}</h1>
+         <div class="flex items-center gap-2 text-neutral-300 text-sm">
+            <Icon icon="mdi:calendar-range" class="text-indigo-400" />
+            <span>{{ formatDateRange(trip?.start_date, trip?.end_date) }}</span>
+         </div>
+      </template>
+    </ImmersiveHeader>
 
     <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
 
@@ -94,6 +92,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
+import ImmersiveHeader from '~/components/ImmersiveHeader.vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useImages } from '~/composables/useImages'
