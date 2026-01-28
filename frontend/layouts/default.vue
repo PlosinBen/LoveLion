@@ -7,7 +7,7 @@
         </h1>
       </NuxtLink>
     </header>
-    <main class="flex-1 w-full max-w-lg mx-auto p-4 pb-20 relative">
+    <main class="flex-1 w-full max-w-lg mx-auto p-4 relative" :class="{'pb-20': showBottomNav, 'pb-4': !showBottomNav}">
 
       <slot />
     </main>
@@ -19,6 +19,13 @@
 import { useAuth } from '~/composables/useAuth'
 
 const { isAuthenticated, initAuth } = useAuth()
+const route = useRoute()
+
+const showBottomNav = computed(() => {
+    const path = route.path
+    // Trip context or Daily Ledger context
+    return (path.startsWith('/trips/') && !!route.params.id) || path.startsWith('/ledger')
+})
 
 onMounted(() => {
   initAuth()
