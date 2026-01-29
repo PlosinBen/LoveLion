@@ -62,10 +62,8 @@ const fetchTrips = async () => {
         const ids = trips.value.map(t => t.id)
         const images = await getImagesBatch(ids, 'trip')
         const map: Record<string, string> = {}
-        // Since sorted by order, the first one found for each entity is logically the cover (or first uploaded)
-        // We iterate and assign if not exists (so we keep the first one we see if list is flattened? 
-        // Backend returns one list. If Image A (sort 0) and Image B (sort 1) both in list for Trip X.
-        // We want A.
+        // Backend sorts all images by sort_order. So sort_order=0 (covers) will appear earlier in the list than sort_order=1.
+        // We take the first image found for each entity, which guarantees we get the intended cover.
         images.forEach(img => {
             if (!map[img.entity_id]) {
                 map[img.entity_id] = img.file_path

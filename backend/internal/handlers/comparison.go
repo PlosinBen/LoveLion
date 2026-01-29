@@ -151,10 +151,7 @@ func (h *ComparisonHandler) UpdateStore(c *gin.Context) {
 	if req.Name != "" {
 		store.Name = req.Name
 	}
-	// Allow clearing if sent as empty string? Or only update if present?
-	// Struct doesn't support "update if present but allow empty" cleanly without pointers.
-	// For now assume if they send empty string it's a clear or no-op?
-	// Let's assume always update provided fields.
+	// Allow clearing if sent as empty string (always update provided fields)
 	store.GoogleMapURL = req.GoogleMapURL
 	store.Location = req.Location
 
