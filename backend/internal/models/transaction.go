@@ -10,6 +10,7 @@ import (
 type Transaction struct {
 	ID            string          `gorm:"type:varchar(21);primary_key" json:"id"`
 	LedgerID      uuid.UUID       `gorm:"type:uuid;not null" json:"ledger_id"`
+	Title         string          `gorm:"type:varchar(100)" json:"title"`
 	Payer         string          `gorm:"type:varchar(50)" json:"payer"`
 	Date          time.Time       `gorm:"not null;default:NOW()" json:"date"`
 	Currency      string          `gorm:"type:varchar(3);not null;default:'TWD'" json:"currency"`

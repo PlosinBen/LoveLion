@@ -51,21 +51,22 @@
               <Icon v-else :icon="getCategoryIcon(txn.category)" class="text-xl text-indigo-500" />
             </div>
             <div class="flex-1 min-w-0">
-              <div class="flex justify-between items-start mb-0.5">
-                <h3 class="font-semibold truncate pr-2">{{ txn.items?.[0]?.name || txn.category || '未分類' }}</h3>
-                <span class="font-bold whitespace-nowrap">{{ formatAmount(txn.total_amount) }}</span>
+              <div class="flex justify-between items-start mb-1">
+                <h3 class="font-bold text-base truncate pr-2">{{ txn.title || txn.items?.[0]?.name || txn.category || '未分類' }}</h3>
+                <div class="flex items-baseline gap-1 shrink-0">
+                   <span class="text-xs text-neutral-400">{{ txn.currency }}</span>
+                   <span class="font-bold text-white">{{ formatAmount(txn.total_amount) }}</span>
+                </div>
               </div>
               <div class="flex justify-between items-center text-xs text-neutral-400">
-                <span>{{ formatDate(txn.date) }} • {{ txn.payer }} 付款</span>
-                <span>{{ txn.currency }}</span>
+                <span>{{ formatDate(txn.date) }}</span>
+                <div class="flex items-center gap-2">
+                    <div class="px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-300">
+                        {{ txn.category }}
+                    </div>
+                    <span>{{ txn.payer }}</span>
+                </div>
               </div>
-            </div>
-          </div>
-          <!-- Splits Preview -->
-          <div v-if="txn.splits?.length" class="mt-3 pt-2 border-t border-neutral-800 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            <span class="text-xs text-neutral-500 whitespace-nowrap">分攤成員:</span>
-            <div v-for="split in txn.splits" :key="split.id" class="flex items-center gap-1 bg-neutral-800 px-2 py-0.5 rounded text-xs text-neutral-300 whitespace-nowrap">
-              <span>{{ getMemberName(split.member_id) }}</span>
             </div>
           </div>
         </div>
@@ -127,13 +128,10 @@ const getCategoryIcon = (category: string) => {
 
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr)
-  return date.toLocaleString('zh-TW', {
-    month: 'numeric',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  })
+  // Format MM-DD (e.g. 01-01)
+  const m = (date.getMonth() + 1).toString().padStart(2, '0')
+  const d = date.getDate().toString().padStart(2, '0')
+  return `${m}-${d}`
 }
 
 const formatAmount = (amount: string | number) => {

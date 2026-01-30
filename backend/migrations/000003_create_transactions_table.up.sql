@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS transactions (
     id VARCHAR(21) PRIMARY KEY,
     ledger_id UUID NOT NULL REFERENCES ledgers (id) ON DELETE CASCADE,
+    title VARCHAR(100),
     payer VARCHAR(50),
     date TIMESTAMPTZ NOT NULL DEFAULT NOW (),
     currency VARCHAR(3) NOT NULL DEFAULT 'TWD',

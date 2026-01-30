@@ -28,21 +28,22 @@
         class="date-picker-dark"
       />
 
-      <!-- Category -->
-      <div class="flex flex-col gap-2">
-        <label class="block mb-1 text-sm text-neutral-400">類別</label>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="cat in categories"
-            :key="cat"
-            type="button"
-            class="px-4 py-2.5 rounded-3xl border border-neutral-800 bg-neutral-900 text-white cursor-pointer transition-all duration-200 hover:border-indigo-500"
-            :class="{ 'bg-indigo-500 border-indigo-500': form.category === cat }"
-            @click="form.category = cat"
-          >
-            {{ cat }}
-          </button>
-        </div>
+      <div class="flex gap-3">
+        <!-- Currency -->
+        <BaseSelect
+          v-model="form.currency"
+          label="幣別"
+          :options="currencies"
+          class="flex-1"
+        />
+
+        <!-- Category -->
+        <BaseSelect
+          v-model="form.category"
+          label="類別"
+          :options="categories"
+          class="flex-1"
+        />
       </div>
 
       <!-- Items -->
@@ -129,7 +130,7 @@
             <div class="flex items-center justify-between">
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" v-model="isSplitEnabled" class="w-5 h-5 accent-indigo-500 rounded" @change="handleSplitToggle" />
-                    <span class="text-sm text-neutral-200">三人分攤 (均分/自訂)</span>
+                    <span class="text-sm text-neutral-200">拆帳</span>
                 </label>
                 <div v-if="isSplitEnabled" class="text-xs text-neutral-400">
                     剩餘: <span :class="remainingAmount !== 0 ? 'text-red-500 font-bold' : 'text-green-500'">{{ formatCurrency(remainingAmount) }}</span>
@@ -215,6 +216,10 @@ const transaction = ref<any>(null)
 const loading = ref(true)
 const submitting = ref(false)
 const imageManager = ref<any>(null)
+const currencies = computed(() => {
+  const ledgerCurrencies = trip.value?.ledger?.currencies
+  return ledgerCurrencies?.length > 0 ? ledgerCurrencies : ['TWD']
+})
 const categories = ['餐飲', '交通', '購物', '娛樂', '住宿', '生活', '其他']
 const isSplitEnabled = ref(false)
 
@@ -224,13 +229,15 @@ const isSplitEnabled = ref(false)
 
 const form = ref({
   date: new Date(),
+  title: '',
   category: '餐飲',
+  currency: '',
   note: '',
   items: [{ name: '', unit_price: 0, quantity: 1, discount: 0 }],
   payer: '' // Member ID
 })
 
-const currency = computed(() => trip.value?.base_currency || 'TWD')
+const currency = computed(() => form.value.currency || trip.value?.base_currency || 'TWD')
 
 const totalAmount = computed(() => {
   return form.value.items.reduce((sum, item) => {
@@ -321,9 +328,11 @@ const fetchData = async () => {
     form.value.date = new Date(txn.date)
 
     
+    form.value.title = txn.title || ''
     form.value.category = txn.category
+    form.value.currency = txn.currency || tripData.base_currency
     form.value.note = txn.note || ''
-    form.value.items = txn.items.map((i: any) => ({
+    form.value.items = (txn.items || []).map((i: any) => ({
       name: i.name,
       unit_price: Number(i.unit_price),
       quantity: Number(i.quantity),
@@ -486,9 +495,10 @@ const handleSubmit = async () => {
     const payload = {
       payer: payerMember?.name || 'Unknown',
       date: form.value.date.toISOString(),
+      title: form.value.title,
       category: form.value.category,
       note: form.value.note,
-      currency: trip.value.base_currency,
+      currency: form.value.currency,
       items: form.value.items.filter(item => item.name && item.unit_price > 0),
       splits: splits
     }

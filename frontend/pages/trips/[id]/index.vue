@@ -1,7 +1,6 @@
 <template>
   <div class="flex flex-col gap-6">
     <!-- Immersive Header Area -->
-    <!-- Immersive Header Area -->
     <ImmersiveHeader
       :image="coverImage"
       fallback-icon="mdi:airplane"
@@ -32,23 +31,99 @@
       </template>
     </ImmersiveHeader>
 
-    <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
+    <div v-if="loading" class="text-center text-neutral-400 p-10">
+        <Icon icon="eos-icons:loading" class="text-3xl animate-spin" />
+    </div>
 
     <template v-else-if="trip">
-      <!-- Simplified Info Bar -->
-      <div class="flex flex-col gap-4 px-1">
-         <p v-if="trip.description" class="text-neutral-400 text-sm leading-relaxed">{{ trip.description }}</p>
-         
-         <div class="flex items-center gap-2">
-             <div class="px-3 py-1.5 rounded-lg bg-neutral-800 border border-neutral-700 text-xs text-neutral-300 flex items-center gap-1.5">
-                 <Icon icon="mdi:currency-usd" class="text-indigo-400" />
-                 <span>{{ trip.base_currency }}</span>
-             </div>
-             <!-- Add more stats here later if needed -->
-         </div>
-      </div>
+      
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-2 gap-3 px-1">
+            <div class="bg-neutral-800 rounded-2xl p-4 flex flex-col justify-center relative overflow-hidden">
+                 <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent z-0"></div>
+                 <span class="text-neutral-400 text-xs mb-1 relative z-10">總支出 ({{ trip.base_currency }})</span>
+                 <div class="text-2xl font-bold text-white tracking-tight relative z-10">
+                    {{ formatNumber(stats.totalSpent) }}
+                 </div>
+            </div>
+            
+            <div class="bg-neutral-800 rounded-2xl p-4 flex flex-col justify-center relative overflow-hidden">
+                 <div class="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent z-0"></div>
+                 <span class="text-neutral-400 text-xs mb-1 relative z-10">每人平均</span>
+                 <div class="text-2xl font-bold text-white tracking-tight relative z-10">
+                    {{ formatNumber(stats.averagePerMember) }}
+                 </div>
+            </div>
+        </div>
 
-      <!-- Members Section -->
+        <!-- Recent Activity (New) -->
+        <div v-if="recentTransactions.length > 0" class="px-1">
+             <div class="flex justify-between items-center mb-3">
+                <h3 class="text-base font-bold flex items-center gap-2">
+                    <Icon icon="mdi:history" class="text-indigo-400" />
+                    最新動態
+                </h3>
+                <NuxtLink :to="`/trips/${trip.id}/ledger`" class="text-xs text-neutral-400 hover:text-white no-underline">查看全部</NuxtLink>
+             </div>
+             
+             <div class="flex flex-col gap-2">
+                <div v-for="txn in recentTransactions" :key="txn.id" class="bg-neutral-900 rounded-xl p-3 border border-neutral-800 flex items-center justify-between" @click="router.push(`/trips/${trip.id}/ledger`)">
+                    <div class="flex items-center gap-3">
+                         <div class="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center text-xl">
+                             <Icon :icon="getCategoryIcon(txn.category)" class="text-neutral-400" />
+                         </div>
+                         <div>
+                             <div class="font-medium text-sm">{{ txn.items?.[0]?.name || txn.category }}</div>
+                             <div class="text-xs text-neutral-500">{{ formatDate(txn.date) }} • {{ txn.payer }} 付款</div>
+                         </div>
+                    </div>
+                    <div class="font-bold text-neutral-200">{{ formatNumber(Number(txn.total_amount)) }}</div>
+                </div>
+             </div>
+        </div>
+
+        <!-- Charts: Spend by Category -->
+        <div class="px-1" v-if="stats.categories.length > 0">
+             <h3 class="text-base font-bold mb-3 flex items-center gap-2">
+                <Icon icon="mdi:shape-outline" class="text-indigo-400" />
+                分類統計
+             </h3>
+             <div class="flex flex-col gap-3">
+                 <div v-for="cat in stats.categories" :key="cat.name" class="bg-neutral-900 rounded-xl p-3 border border-neutral-800">
+                      <div class="flex justify-between items-center mb-2">
+                          <span class="font-medium text-sm">{{ cat.name }}</span>
+                          <div class="text-right">
+                              <span class="font-bold text-sm">{{ formatNumber(cat.amount) }}</span>
+                              <span class="text-xs text-neutral-500 ml-1">{{ cat.percentage }}%</span>
+                          </div>
+                      </div>
+                      <div class="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                          <div class="h-full bg-indigo-500 rounded-full" :style="{ width: cat.percentage + '%' }"></div>
+                      </div>
+                 </div>
+             </div>
+        </div>
+
+        <!-- Charts: Top Spenders (Net Expense) -->
+        <div class="px-1" v-if="stats.memberSpending.length > 0">
+             <h3 class="text-base font-bold mb-3 flex items-center gap-2">
+                <Icon icon="mdi:account-cash-outline" class="text-indigo-400" />
+                個人支出 (分攤後)
+             </h3>
+             <div class="bg-neutral-900 rounded-xl border border-neutral-800 divide-y divide-neutral-800">
+                <div v-for="(spender, index) in stats.memberSpending" :key="spender.name" class="p-3 flex items-center justify-between">
+                     <div class="flex items-center gap-3">
+                         <div class="w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center text-xs font-bold text-neutral-500">
+                             {{ index + 1 }}
+                         </div>
+                         <span class="font-medium text-sm">{{ spender.name }}</span>
+                     </div>
+                     <span class="font-bold text-indigo-400">{{ formatNumber(spender.amount) }}</span>
+                </div>
+            </div>
+        </div>
+
+      <!-- Members Section (Simplified) -->
       <div class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-base font-semibold">成員 ({{ trip.members?.length || 0 }})</h3>
@@ -61,36 +136,16 @@
             <Icon icon="mdi:account" class="text-indigo-500" />
             <span>{{ member.name }}</span>
             <span v-if="member.is_owner" class="text-xs text-indigo-500">(主辦)</span>
-            <button v-if="!member.is_owner" @click="removeMember(member.id)" class="ml-1 text-neutral-500 hover:text-red-500 transition-colors border-0 bg-transparent cursor-pointer p-0">
-              <Icon icon="mdi:close" class="text-sm" />
-            </button>
           </div>
         </div>
       </div>
 
-      <!-- Quick Actions -->
-      <div class="grid grid-cols-2 gap-3">
-        <NuxtLink :to="`/trips/${trip.id}/ledger`" class="flex flex-col items-center gap-2 p-5 rounded-2xl border border-neutral-800 bg-neutral-900 text-white no-underline transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:border-indigo-500">
-          <Icon icon="mdi:notebook-edit-outline" class="text-3xl text-indigo-500" />
-          <span class="text-sm">公費記帳</span>
-        </NuxtLink>
-        <NuxtLink :to="`/trips/${trip.id}/stores`" class="flex flex-col items-center gap-2 p-5 rounded-2xl border border-neutral-800 bg-neutral-900 text-white no-underline transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:border-indigo-500">
-          <Icon icon="mdi:store" class="text-3xl text-indigo-500" />
-          <span class="text-sm">比價商店</span>
-        </NuxtLink>
-        <NuxtLink :to="`/trips/${trip.id}/compare`" class="flex flex-col items-center gap-2 p-5 rounded-2xl border border-neutral-800 bg-neutral-900 text-white no-underline transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:border-indigo-500">
-          <Icon icon="mdi:chart-bar" class="text-3xl text-indigo-500" />
-          <span class="text-sm">價格比較</span>
-        </NuxtLink>
-      </div>
     </template>
-
-
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import ImmersiveHeader from '~/components/ImmersiveHeader.vue'
 import { useApi } from '~/composables/useApi'
@@ -103,11 +158,32 @@ const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
 
 const trip = ref<any>(null)
+const transactions = ref<any[]>([])
 const loading = ref(true)
 const showMenu = ref(false)
 const coverImage = ref<string | null>(null)
 const { getImages, getImageUrl } = useImages()
 
+// Stats Data
+const stats = ref({
+    totalSpent: 0,
+    averagePerMember: 0,
+    categories: [] as any[],
+    memberSpending: [] as any[]
+})
+
+const recentTransactions = computed(() => {
+    return transactions.value.slice(0, 3)
+})
+
+const formatNumber = (num: number) => {
+    return num.toLocaleString(undefined, { maximumFractionDigits: 0 })
+}
+
+const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr)
+    return `${d.getMonth() + 1}/${d.getDate()}`
+}
 
 const formatDateRange = (start: string | null, end: string | null) => {
   if (!start && !end) return '日期未設定'
@@ -117,32 +193,98 @@ const formatDateRange = (start: string | null, end: string | null) => {
   return `${startStr} - ${endStr}`
 }
 
-const fetchTrip = async () => {
+const getCategoryIcon = (category: string) => {
+  const icons: Record<string, string> = {
+    'Food': 'mdi:food',
+    'Transport': 'mdi:train-car',
+    'Shopping': 'mdi:shopping',
+    'Entertainment': 'mdi:movie',
+    '住宿': 'mdi:bed',
+    '餐飲': 'mdi:food',
+    '交通': 'mdi:train-car',
+    '購物': 'mdi:shopping',
+    '娛樂': 'mdi:movie',
+  }
+  return icons[category] || 'mdi:receipt'
+}
+
+const calculateStats = () => {
+    if (!trip.value || !transactions.value) return
+
+    let total = 0
+    const catMap: Record<string, number> = {}
+    const memberExpenseMap: Record<string, number> = {}
+
+    // Init member map
+    trip.value.members.forEach((m: any) => memberExpenseMap[m.name] = 0)
+
+    transactions.value.forEach(txn => {
+        const amount = parseFloat(txn.total_amount)
+        total += amount
+
+        // Category
+        const cat = txn.category || '未分類'
+        catMap[cat] = (catMap[cat] || 0) + amount
+
+        // Net Expense (Splits)
+        // If splits exist, use them. If not, default to Payer = Consumer (Not split) ?? 
+        // Actually if no split, usually means "Payer paid for everyone" or "Payer paid for self"?
+        // In this app context, if "Split" is not enabled, we usually assume Payer paid for THEMSELVES (Personal expense in trip?) OR Payer paid for GROUP (Shared)?
+        // Looking at add.vue: if !isSplitEnabled, we create a split { is_payer: false, amount: total, member_id: payer }. 
+        // So Payer is Consumer. Correct.
+        if (txn.splits && txn.splits.length > 0) {
+            txn.splits.forEach((split: any) => {
+                if (!split.is_payer) {
+                    // This is a consumption split
+                    const name = split.name
+                    memberExpenseMap[name] = (memberExpenseMap[name] || 0) + parseFloat(split.amount)
+                }
+            })
+        }
+    })
+
+    stats.value.totalSpent = total
+    stats.value.averagePerMember = trip.value.members.length > 0 ? total / trip.value.members.length : 0
+
+    // Process Categories
+    stats.value.categories = Object.entries(catMap)
+        .map(([name, amount]) => ({
+            name,
+            amount,
+            percentage: total > 0 ? Math.round((amount / total) * 100) : 0
+        }))
+        .sort((a, b) => b.amount - a.amount)
+
+    // Process Members
+    stats.value.memberSpending = Object.entries(memberExpenseMap)
+        .map(([name, amount]) => ({
+            name,
+            amount
+        }))
+        .sort((a, b) => b.amount - a.amount)
+}
+
+const fetchTripData = async () => {
   try {
+    // 1. Fetch Trip
     trip.value = await api.get<any>(`/api/trips/${route.params.id}`)
     
-    // Fetch cover image
+    // 2. Fetch Images
     const images = await getImages(trip.value.id, 'trip')
-    if (images.length > 0) {
-        coverImage.value = images[0].file_path
+    if (images.length > 0) coverImage.value = images[0].file_path
+
+    // 3. Fetch Transactions (All, for stats)
+    if (trip.value.ledger_id) {
+         const txns = await api.get<any[]>(`/api/ledgers/${trip.value.ledger_id}/transactions`)
+         transactions.value = txns
+         calculateStats()
     }
+
   } catch (e) {
-    console.error('Failed to fetch trip:', e)
+    console.error('Failed to fetch trip data:', e)
     router.push('/trips')
   } finally {
     loading.value = false
-  }
-}
-
-
-
-const removeMember = async (memberId: string) => {
-  if (!confirm('確定要移除此成員？')) return
-  try {
-    await api.del(`/api/trips/${route.params.id}/members/${memberId}`)
-    fetchTrip()
-  } catch (e: any) {
-    alert(e.message || '移除失敗')
   }
 }
 
@@ -162,6 +304,6 @@ onMounted(() => {
     router.push('/login')
     return
   }
-  fetchTrip()
+  fetchTripData()
 })
 </script>

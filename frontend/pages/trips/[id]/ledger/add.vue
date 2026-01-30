@@ -25,39 +25,29 @@
         placeholder="日期與時間"
         class="date-picker-dark"
       />
+      <!-- Title -->
+      <BaseInput
+        v-model="form.title"
+        label="標題 (選填)"
+        placeholder="例如：第一天晚餐、伴手禮"
+      />
 
-      <!-- Currency -->
-      <div class="flex flex-col gap-2">
-        <label class="block mb-1 text-sm text-neutral-400">幣別</label>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="cur in currencies"
-            :key="cur"
-            type="button"
-            class="px-4 py-2.5 rounded-3xl border border-neutral-800 bg-neutral-900 text-white cursor-pointer transition-all duration-200 hover:border-indigo-500"
-            :class="{ 'bg-indigo-500 border-indigo-500': form.currency === cur }"
-            @click="form.currency = cur"
-          >
-            {{ cur }}
-          </button>
-        </div>
-      </div>
+      <div class="flex gap-3">
+        <!-- Currency -->
+        <BaseSelect
+          v-model="form.currency"
+          label="幣別"
+          :options="currencies"
+          class="flex-1"
+        />
 
-      <!-- Category -->
-      <div class="flex flex-col gap-2">
-        <label class="block mb-1 text-sm text-neutral-400">類別</label>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="cat in categories"
-            :key="cat"
-            type="button"
-            class="px-4 py-2.5 rounded-3xl border border-neutral-800 bg-neutral-900 text-white cursor-pointer transition-all duration-200 hover:border-indigo-500"
-            :class="{ 'bg-indigo-500 border-indigo-500': form.category === cat }"
-            @click="form.category = cat"
-          >
-            {{ cat }}
-          </button>
-        </div>
+        <!-- Category -->
+        <BaseSelect
+          v-model="form.category"
+          label="類別"
+          :options="categories"
+          class="flex-1"
+        />
       </div>
 
       <!-- Items -->
@@ -144,7 +134,7 @@
             <div class="flex items-center justify-between">
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" v-model="isSplitEnabled" class="w-5 h-5 accent-indigo-500 rounded" @change="handleSplitToggle" />
-                    <span class="text-sm text-neutral-200">多人分攤 (均分/自訂)</span>
+                    <span class="text-sm text-neutral-200">拆帳</span>
                 </label>
                 <div v-if="isSplitEnabled" class="text-xs text-neutral-400">
                     剩餘: <span :class="remainingAmount !== 0 ? 'text-red-500 font-bold' : 'text-green-500'">{{ formatCurrency(remainingAmount) }}</span>
@@ -268,6 +258,7 @@ const paymentMethods = computed(() => {
 
 const form = ref({
   date: new Date(),
+  title: '',
   category: '餐飲',
   currency: '',
   payment_method: '',
@@ -468,6 +459,7 @@ const handleSubmit = async () => {
 
     const payload = {
       date: form.value.date.toISOString(),
+      title: form.value.title,
       category: form.value.category,
       note: form.value.note,
       payer: payerMember?.name || 'Unknown', // Legacy string

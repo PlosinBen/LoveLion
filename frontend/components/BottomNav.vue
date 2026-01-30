@@ -8,11 +8,9 @@
         <NuxtLink 
             :to="item.to" 
             class="flex flex-col items-center gap-1 text-neutral-500 no-underline text-xs py-2 px-1 transition-colors hover:text-indigo-400 active:text-indigo-400 group" 
-            :class="{ 'text-indigo-400': isActive(item.to) }"
         >
           <div class="relative">
               <Icon :icon="item.icon" class="text-2xl transition-transform group-active:scale-95" />
-              <div v-if="isActive(item.to)" class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-indigo-500 rounded-full"></div>
           </div>
           <span class="font-medium">{{ item.label }}</span>
         </NuxtLink>
@@ -36,9 +34,9 @@ const navItems = computed(() => {
         // Ensure we don't show this nav if we are creating a trip or something not specific to an ID
         // But the route pattern matches /trips/[id], so it should be fine.
         return [
-            { label: '統計分析', icon: 'mdi:chart-pie', to: `/trips/${tripId}/stats` },
-            { label: '商品比價', icon: 'mdi:shopping-search', to: `/trips/${tripId}/stores` },
-            { label: '行程記帳', icon: 'mdi:notebook-edit', to: `/trips/${tripId}` },
+            { label: '概覽', icon: 'mdi:chart-pie', to: `/trips/${tripId}` },
+            { label: '比價', icon: 'mdi:shopping-search', to: `/trips/${tripId}/stores` },
+            { label: '記帳', icon: 'mdi:notebook-edit', to: `/trips/${tripId}/ledger` },
         ]
     }
 

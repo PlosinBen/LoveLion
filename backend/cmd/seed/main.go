@@ -63,6 +63,7 @@ func main() {
 		{
 			ID:            "txn01",
 			LedgerID:      ledger.ID,
+			Title:         "午餐",
 			Payer:         "Me",
 			Date:          now.AddDate(0, 0, -2),
 			Currency:      "TWD",
@@ -75,6 +76,7 @@ func main() {
 		{
 			ID:            "txn02",
 			LedgerID:      ledger.ID,
+			Title:         "捷運儲值",
 			Payer:         "Me",
 			Date:          now.AddDate(0, 0, -1),
 			Currency:      "TWD",
@@ -87,6 +89,7 @@ func main() {
 		{
 			ID:            "txn03",
 			LedgerID:      ledger.ID,
+			Title:         "生活用品採購",
 			Payer:         "Me",
 			Date:          now,
 			Currency:      "TWD",
@@ -167,6 +170,83 @@ func main() {
 		db.Create(&p)
 	}
 	fmt.Println("✓ Created 3 comparison products")
+
+	// 8. Create Trip Transactions with Splits
+	// Members: "我" (Owner), "小明", "小美"
+	// Txn 1: Dinner (Food), Paid by "我", Split: Even (1000 each)
+	txn1 := models.Transaction{
+		ID:            "trip_txn01",
+		LedgerID:      tripLedger.ID,
+		Title:         "第一天晚餐",
+		Payer:         "我",
+		Date:          now.AddDate(0, 0, 1),
+		Currency:      "JPY",
+		TotalAmount:   decimal.NewFromInt(3000),
+		Category:      "飲食",
+		PaymentMethod: "信用卡",
+		Note:          "第一天晚餐",
+	}
+	db.Create(&txn1)
+
+	splits1 := []models.TransactionSplit{
+		{TransactionID: txn1.ID, Name: "我", Amount: decimal.NewFromInt(3000), IsPayer: true, MemberID: &members[0].ID}, // Payer record
+		{TransactionID: txn1.ID, Name: "我", Amount: decimal.NewFromInt(1000), IsPayer: false, MemberID: &members[0].ID},
+		{TransactionID: txn1.ID, Name: "小明", Amount: decimal.NewFromInt(1000), IsPayer: false, MemberID: &members[1].ID},
+		{TransactionID: txn1.ID, Name: "小美", Amount: decimal.NewFromInt(1000), IsPayer: false, MemberID: &members[2].ID},
+	}
+	for _, s := range splits1 {
+		db.Create(&s)
+	}
+
+	// Txn 2: Transport, Paid by "小明", Split: Even (500 each)
+	txn2 := models.Transaction{
+		ID:            "trip_txn02",
+		LedgerID:      tripLedger.ID,
+		Title:         "機場巴士",
+		Payer:         "小明",
+		Date:          now.AddDate(0, 0, 1),
+		Currency:      "JPY",
+		TotalAmount:   decimal.NewFromInt(1500),
+		Category:      "交通",
+		PaymentMethod: "現金",
+		Note:          "機場巴士",
+	}
+	db.Create(&txn2)
+
+	splits2 := []models.TransactionSplit{
+		{TransactionID: txn2.ID, Name: "小明", Amount: decimal.NewFromInt(1500), IsPayer: true, MemberID: &members[1].ID}, // Payer record
+		{TransactionID: txn2.ID, Name: "我", Amount: decimal.NewFromInt(500), IsPayer: false, MemberID: &members[0].ID},
+		{TransactionID: txn2.ID, Name: "小明", Amount: decimal.NewFromInt(500), IsPayer: false, MemberID: &members[1].ID},
+		{TransactionID: txn2.ID, Name: "小美", Amount: decimal.NewFromInt(500), IsPayer: false, MemberID: &members[2].ID},
+	}
+	for _, s := range splits2 {
+		db.Create(&s)
+	}
+
+	// Txn 3: Souvenirs, Paid by "小美", Living (Personal), No Split (or Split to Self)
+	txn3 := models.Transaction{
+		ID:            "trip_txn03",
+		LedgerID:      tripLedger.ID,
+		Title:         "個人伴手禮",
+		Payer:         "小美",
+		Date:          now.AddDate(0, 0, 2),
+		Currency:      "JPY",
+		TotalAmount:   decimal.NewFromInt(5000),
+		Category:      "購物",
+		PaymentMethod: "信用卡",
+		Note:          "個人伴手禮",
+	}
+	db.Create(&txn3)
+
+	splits3 := []models.TransactionSplit{
+		{TransactionID: txn3.ID, Name: "小美", Amount: decimal.NewFromInt(5000), IsPayer: true, MemberID: &members[2].ID},  // Payer
+		{TransactionID: txn3.ID, Name: "小美", Amount: decimal.NewFromInt(5000), IsPayer: false, MemberID: &members[2].ID}, // Consumer
+	}
+	for _, s := range splits3 {
+		db.Create(&s)
+	}
+
+	fmt.Println("✓ Created 3 trip transactions with splits")
 
 	fmt.Println("\n🎉 Seed completed!")
 	fmt.Println("   Login: dev / dev123")
