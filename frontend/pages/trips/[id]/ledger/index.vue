@@ -47,8 +47,18 @@
                 :src="getImageUrl(txn.images[0].file_path)" 
                 class="w-full h-full object-cover" 
                 alt="Txn" 
+                @click.stop="router.push({ 
+                  path: '/image-preview', 
+                  query: { 
+                    id: txn.id,
+                    type: 'transaction'
+                  },
+                  state: {
+                    urls: txn.images.map((img: any) => getImageUrl(img.file_path))
+                  }
+                })"
               />
-              <Icon v-else :icon="getCategoryIcon(txn.category)" class="text-xl text-indigo-500" />
+              <Icon v-else icon="mdi:image-outline" class="text-xl text-neutral-700" />
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex justify-between items-start mb-1">

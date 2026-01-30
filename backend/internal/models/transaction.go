@@ -28,7 +28,7 @@ type Transaction struct {
 	Ledger *Ledger            `gorm:"foreignKey:LedgerID" json:"ledger,omitempty"`
 	Items  []TransactionItem  `gorm:"foreignKey:TransactionID" json:"items,omitempty"`
 	Splits []TransactionSplit `gorm:"foreignKey:TransactionID" json:"splits,omitempty"`
-	Images []Image            `gorm:"polymorphic:Entity;" json:"images,omitempty"`
+	Images []Image            `gorm:"polymorphic:Entity;polymorphicValue:transaction" json:"images,omitempty"`
 }
 
 func (Transaction) TableName() string {
