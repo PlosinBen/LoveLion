@@ -110,9 +110,9 @@
         </button>
       </div>
 
-      <!-- Total -->
-      <div class="flex justify-between items-center text-lg bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
-        <span>總計</span>
+      <!-- Total (Computed) -->
+      <div v-if="hasItems" class="flex justify-between items-center text-lg bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
+        <span>總計 (由明細加總)</span>
         <span class="text-2xl font-bold text-indigo-500">{{ currency }} {{ totalAmount.toLocaleString() }}</span>
       </div>
 
@@ -263,16 +263,24 @@ const form = ref({
   currency: '',
   payment_method: '',
   note: '',
+  manualAmount: 0,
   items: [{ name: '', unit_price: 0, quantity: 1, discount: 0 }],
   payer: '' // Member ID
 })
 
 const currency = computed(() => trip.value?.base_currency || 'TWD')
 
+const hasItems = computed(() => {
+    return form.value.items.some(item => item.name && item.unit_price > 0)
+})
+
 const totalAmount = computed(() => {
-  return form.value.items.reduce((sum, item) => {
-    return sum + ((item.unit_price - (item.discount || 0)) * item.quantity)
-  }, 0)
+  if (hasItems.value) {
+      return form.value.items.reduce((sum, item) => {
+        return sum + ((item.unit_price - (item.discount || 0)) * item.quantity)
+      }, 0)
+  }
+  return form.value.manualAmount
 })
 
 const splitList = ref<{ name: string, involved: boolean, customAmount: number }[]>([])
@@ -397,8 +405,8 @@ const fetchTrip = async () => {
 }
 
 const handleSubmit = async () => {
-  if (!form.value.items.some(item => item.name && item.unit_price > 0)) {
-    alert('請至少填寫一個項目')
+  if (totalAmount.value <= 0) {
+    alert('總金額必須大於 0')
     return
   }
   if (!form.value.payer) {
@@ -462,10 +470,11 @@ const handleSubmit = async () => {
       title: form.value.title,
       category: form.value.category,
       note: form.value.note,
-      payer: payerMember?.name || 'Unknown', // Legacy string
+      payer: payerMember?.name || 'Unknown',
       currency: form.value.currency || trip.value.base_currency,
       payment_method: form.value.payment_method,
-      items: form.value.items.filter(item => item.name && item.unit_price > 0),
+      items: hasItems.value ? form.value.items.filter(item => item.name && item.unit_price > 0) : [],
+      total_amount: totalAmount.value,
       splits: splits
     }
 

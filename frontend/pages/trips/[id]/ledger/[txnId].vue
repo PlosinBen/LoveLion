@@ -28,6 +28,13 @@
         class="date-picker-dark"
       />
 
+      <!-- Title -->
+      <BaseInput
+        v-model="form.title"
+        label="標題 (選填)"
+        placeholder="例如：第一天晚餐"
+      />
+
       <div class="flex gap-3">
         <!-- Currency -->
         <BaseSelect
@@ -45,6 +52,15 @@
           class="flex-1"
         />
       </div>
+
+      <!-- Total Amount (Manual) -->
+      <BaseInput
+         v-if="!hasItems"
+         v-model.number="form.manualAmount"
+         type="number"
+         label="總金額"
+         placeholder="0"
+      />
 
       <!-- Items -->
       <div class="flex flex-col gap-2">
@@ -107,8 +123,8 @@
       </div>
 
       <!-- Total -->
-      <div class="flex justify-between items-center text-lg bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
-        <span>總計</span>
+      <div v-if="hasItems" class="flex justify-between items-center text-lg bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
+        <span>總計 (由明細加總)</span>
         <span class="text-2xl font-bold text-indigo-500">{{ currency }} {{ totalAmount.toLocaleString() }}</span>
       </div>
 
@@ -233,16 +249,24 @@ const form = ref({
   category: '餐飲',
   currency: '',
   note: '',
+  manualAmount: 0,
   items: [{ name: '', unit_price: 0, quantity: 1, discount: 0 }],
   payer: '' // Member ID
 })
 
 const currency = computed(() => form.value.currency || trip.value?.base_currency || 'TWD')
 
+const hasItems = computed(() => {
+    return form.value.items.some(item => item.name && item.unit_price > 0)
+})
+
 const totalAmount = computed(() => {
-  return form.value.items.reduce((sum, item) => {
-    return sum + ((item.unit_price - (item.discount || 0)) * item.quantity)
-  }, 0)
+  if (hasItems.value) {
+    return form.value.items.reduce((sum, item) => {
+      return sum + ((item.unit_price - (item.discount || 0)) * item.quantity)
+    }, 0)
+  }
+  return form.value.manualAmount
 })
 
 const splitList = ref<{ name: string, involved: boolean, customAmount: number }[]>([])
@@ -332,12 +356,17 @@ const fetchData = async () => {
     form.value.category = txn.category
     form.value.currency = txn.currency || tripData.base_currency
     form.value.note = txn.note || ''
-    form.value.items = (txn.items || []).map((i: any) => ({
-      name: i.name,
-      unit_price: Number(i.unit_price),
-      quantity: Number(i.quantity),
-      discount: Number(i.discount || 0)
-    }))
+    if (txn.items && txn.items.length > 0) {
+      form.value.items = txn.items.map((i: any) => ({
+        name: i.name,
+        unit_price: Number(i.unit_price),
+        quantity: Number(i.quantity),
+        discount: Number(i.discount || 0)
+      }))
+    } else {
+        // No items, set manual amount
+        form.value.manualAmount = Number(txn.total_amount)
+    }
     
     // 4. Parse Splits
     // Initialize bases from Ledger Settings
@@ -434,8 +463,8 @@ const handleDelete = async () => {
 }
 
 const handleSubmit = async () => {
-  if (!form.value.items.some(item => item.name && item.unit_price > 0)) {
-    alert('請至少填寫一個項目')
+  if (totalAmount.value <= 0) {
+    alert('總金額必須大於 0')
     return
   }
   if (!form.value.payer) {
@@ -499,7 +528,8 @@ const handleSubmit = async () => {
       category: form.value.category,
       note: form.value.note,
       currency: form.value.currency,
-      items: form.value.items.filter(item => item.name && item.unit_price > 0),
+      items: hasItems.value ? form.value.items.filter(item => item.name && item.unit_price > 0) : [],
+      total_amount: totalAmount.value,
       splits: splits
     }
 

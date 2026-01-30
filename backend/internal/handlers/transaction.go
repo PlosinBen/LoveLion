@@ -39,10 +39,12 @@ type CreateTransactionRequest struct {
 	Payer         string                    `json:"payer"`
 	Date          *time.Time                `json:"date"`
 	Currency      string                    `json:"currency"`
+	TotalAmount   decimal.Decimal           `json:"total_amount"`
 	ExchangeRate  decimal.Decimal           `json:"exchange_rate"`
 	BillingAmount decimal.Decimal           `json:"billing_amount"`
 	HandlingFee   decimal.Decimal           `json:"handling_fee"`
 	Category      string                    `json:"category"`
+	Title         string                    `json:"title"`
 	PaymentMethod string                    `json:"payment_method"`
 	Note          string                    `json:"note"`
 	Items         []TransactionItemRequest  `json:"items"`
@@ -53,10 +55,12 @@ type UpdateTransactionRequest struct {
 	Payer         string                    `json:"payer"`
 	Date          *time.Time                `json:"date"`
 	Currency      string                    `json:"currency"`
+	TotalAmount   *decimal.Decimal          `json:"total_amount"`
 	ExchangeRate  *decimal.Decimal          `json:"exchange_rate"`
 	BillingAmount *decimal.Decimal          `json:"billing_amount"`
 	HandlingFee   *decimal.Decimal          `json:"handling_fee"`
 	Category      string                    `json:"category"`
+	Title         string                    `json:"title"`
 	PaymentMethod string                    `json:"payment_method"`
 	Note          string                    `json:"note"`
 	Items         []TransactionItemRequest  `json:"items"`
@@ -171,6 +175,7 @@ func (h *TransactionHandler) Create(c *gin.Context) {
 		BillingAmount: req.BillingAmount,
 		HandlingFee:   req.HandlingFee,
 		Category:      req.Category,
+		Title:         req.Title,
 		PaymentMethod: req.PaymentMethod,
 		Note:          req.Note,
 	}
@@ -192,28 +197,33 @@ func (h *TransactionHandler) Create(c *gin.Context) {
 	// Calculate items and total
 	totalAmount := decimal.Zero
 	var items []models.TransactionItem
-	for _, itemReq := range req.Items {
-		quantity := itemReq.Quantity
-		if quantity.IsZero() {
-			quantity = decimal.NewFromInt(1)
-		}
 
-		amount := itemReq.UnitPrice.Sub(itemReq.Discount).Mul(quantity)
+	if len(req.Items) > 0 {
+		for _, itemReq := range req.Items {
+			quantity := itemReq.Quantity
+			if quantity.IsZero() {
+				quantity = decimal.NewFromInt(1)
+			}
 
-		item := models.TransactionItem{
-			ID:            uuid.New(),
-			TransactionID: txnID,
-			Name:          itemReq.Name,
-			UnitPrice:     itemReq.UnitPrice,
-			Quantity:      quantity,
-			Discount:      itemReq.Discount,
-			Amount:        amount,
+			amount := itemReq.UnitPrice.Sub(itemReq.Discount).Mul(quantity)
+
+			item := models.TransactionItem{
+				ID:            uuid.New(),
+				TransactionID: txnID,
+				Name:          itemReq.Name,
+				UnitPrice:     itemReq.UnitPrice,
+				Quantity:      quantity,
+				Discount:      itemReq.Discount,
+				Amount:        amount,
+			}
+			items = append(items, item)
+			totalAmount = totalAmount.Add(amount)
 		}
-		items = append(items, item)
-		totalAmount = totalAmount.Add(amount)
+		txn.TotalAmount = totalAmount
+	} else {
+		txn.TotalAmount = req.TotalAmount
 	}
 
-	txn.TotalAmount = totalAmount
 	txn.Items = items
 
 	// Calculate splits
@@ -319,6 +329,9 @@ func (h *TransactionHandler) Update(c *gin.Context) {
 	if req.Currency != "" {
 		txn.Currency = req.Currency
 	}
+	if req.TotalAmount != nil {
+		txn.TotalAmount = *req.TotalAmount
+	}
 	if req.ExchangeRate != nil {
 		txn.ExchangeRate = *req.ExchangeRate
 	}
@@ -330,6 +343,9 @@ func (h *TransactionHandler) Update(c *gin.Context) {
 	}
 	if req.Category != "" {
 		txn.Category = req.Category
+	}
+	if req.Title != "" {
+		txn.Title = req.Title
 	}
 	if req.PaymentMethod != "" {
 		txn.PaymentMethod = req.PaymentMethod
@@ -344,28 +360,44 @@ func (h *TransactionHandler) Update(c *gin.Context) {
 		// Create new items
 		totalAmount := decimal.Zero
 		var items []models.TransactionItem
-		for _, itemReq := range req.Items {
-			quantity := itemReq.Quantity
-			if quantity.IsZero() {
-				quantity = decimal.NewFromInt(1)
-			}
 
-			amount := itemReq.UnitPrice.Sub(itemReq.Discount).Mul(quantity)
+		if len(req.Items) > 0 {
+			for _, itemReq := range req.Items {
+				quantity := itemReq.Quantity
+				if quantity.IsZero() {
+					quantity = decimal.NewFromInt(1)
+				}
 
-			item := models.TransactionItem{
-				ID:            uuid.New(),
-				TransactionID: txnID,
-				Name:          itemReq.Name,
-				UnitPrice:     itemReq.UnitPrice,
-				Quantity:      quantity,
-				Discount:      itemReq.Discount,
-				Amount:        amount,
+				amount := itemReq.UnitPrice.Sub(itemReq.Discount).Mul(quantity)
+
+				item := models.TransactionItem{
+					ID:            uuid.New(),
+					TransactionID: txnID,
+					Name:          itemReq.Name,
+					UnitPrice:     itemReq.UnitPrice,
+					Quantity:      quantity,
+					Discount:      itemReq.Discount,
+					Amount:        amount,
+				}
+				items = append(items, item)
+				totalAmount = totalAmount.Add(amount)
 			}
-			items = append(items, item)
-			totalAmount = totalAmount.Add(amount)
+			txn.TotalAmount = totalAmount
 		}
+		// If req.Items IS provided but empty array, we cleared items.
+		// We should NOT reset TotalAmount to 0 unless explicit?
+		// Actually if user sends empty items list, they probably meant to clear items.
+		// But if they also sent TotalAmount, Update logic above (line 320) handles it.
+		// Wait, line 320 runs BEFORE this.
+		// If Items are provided (even empty), we recalculate totalAmount.
+		// If empty items -> totalAmount = 0.
+		// This overwrites line 320 if `req.Items` is present.
+		// We should only overwrite txn.TotalAmount if items > 0.
+		// If items == 0, we trust line 320.
 
-		txn.TotalAmount = totalAmount
+		// Correction: If req.Items is not nil but empty, it clears items.
+		// If specific items logic runs, it usually implies total changes.
+
 		txn.Items = items
 	}
 

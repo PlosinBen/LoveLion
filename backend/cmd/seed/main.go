@@ -198,6 +198,14 @@ func main() {
 		db.Create(&s)
 	}
 
+	// Txn 1 Items
+	items1 := []models.TransactionItem{
+		{ID: uuid.New(), TransactionID: txn1.ID, Name: "握壽司拼盤", UnitPrice: decimal.NewFromInt(3000), Quantity: decimal.NewFromInt(1), Amount: decimal.NewFromInt(3000)},
+	}
+	for _, i := range items1 {
+		db.Create(&i)
+	}
+
 	// Txn 2: Transport, Paid by "小明", Split: Even (500 each)
 	txn2 := models.Transaction{
 		ID:            "trip_txn02",
@@ -223,6 +231,14 @@ func main() {
 		db.Create(&s)
 	}
 
+	// Txn 2 Items
+	items2 := []models.TransactionItem{
+		{ID: uuid.New(), TransactionID: txn2.ID, Name: "利木津巴士車票", UnitPrice: decimal.NewFromInt(500), Quantity: decimal.NewFromInt(3), Amount: decimal.NewFromInt(1500)},
+	}
+	for _, i := range items2 {
+		db.Create(&i)
+	}
+
 	// Txn 3: Souvenirs, Paid by "小美", Living (Personal), No Split (or Split to Self)
 	txn3 := models.Transaction{
 		ID:            "trip_txn03",
@@ -244,6 +260,14 @@ func main() {
 	}
 	for _, s := range splits3 {
 		db.Create(&s)
+	}
+
+	// Txn 3 Items
+	items3 := []models.TransactionItem{
+		{ID: uuid.New(), TransactionID: txn3.ID, Name: "東京香蕉", UnitPrice: decimal.NewFromInt(1000), Quantity: decimal.NewFromInt(5), Amount: decimal.NewFromInt(5000)},
+	}
+	for _, i := range items3 {
+		db.Create(&i)
 	}
 
 	fmt.Println("✓ Created 3 trip transactions with splits")
