@@ -11,6 +11,7 @@ type Image struct {
 	EntityID   string    `gorm:"type:varchar(50);not null" json:"entity_id"`
 	EntityType string    `gorm:"type:varchar(50);not null" json:"entity_type"`
 	FilePath   string    `gorm:"type:text;not null" json:"file_path"`
+	BlurHash   string    `gorm:"type:varchar(100)" json:"blur_hash"`
 	SortOrder  int       `gorm:"default:0" json:"sort_order"`
 	CreatedAt  time.Time `gorm:"autoCreateTime" json:"created_at"`
 }

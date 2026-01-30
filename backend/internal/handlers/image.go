@@ -3,6 +3,9 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"image"
+	_ "image/jpeg"
+	_ "image/png"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -14,6 +17,7 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/bbrks/go-blurhash"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -88,6 +92,33 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 	}
 	defer f.Close()
 
+	// Generate BlurHash
+	// We need to decode the image first. Since we need to upload the original file reader later,
+	// and decoding consumes the reader, we might need to handle this carefully.
+	// However, multipart.File implements Seek, so we can rewind.
+	imgData, _, err := image.Decode(f)
+	if err != nil {
+		// Log warning but don't fail upload? Or fail?
+		// For now, if not an image we can decode, just skip blurhash or error.
+		// User only uploads jpg/png validated above, so should be fine.
+		fmt.Printf("Failed to decode image for blurhash: %v\n", err)
+	}
+
+	var blurHashStr string
+	if imgData != nil {
+		// Components x=4, y=3 usually good compromise
+		blurHashStr, err = blurhash.Encode(4, 3, imgData)
+		if err != nil {
+			fmt.Printf("Failed to encode blurhash: %v\n", err)
+		}
+	}
+
+	// Rewind file for S3 upload
+	if _, err := f.Seek(0, 0); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process file"})
+		return
+	}
+
 	// Generate key
 	fileUUID := uuid.New()
 	key := fmt.Sprintf("%s/%s%s", entityType, fileUUID.String(), ext)
@@ -112,6 +143,7 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 		EntityID:   entityID,
 		EntityType: entityType,
 		FilePath:   fullURL, // Store Full URL
+		BlurHash:   blurHashStr,
 	}
 
 	// Determine sort order

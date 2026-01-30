@@ -54,7 +54,10 @@
                     type: 'transaction'
                   },
                   state: {
-                    urls: txn.images.map((img: any) => getImageUrl(img.file_path))
+                    images: txn.images.map((img: any) => ({
+                      url: getImageUrl(img.file_path),
+                      hash: img.blur_hash
+                    }))
                   }
                 })"
               />
