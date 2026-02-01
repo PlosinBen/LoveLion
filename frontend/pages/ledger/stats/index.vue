@@ -87,6 +87,10 @@ import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import ImmersiveHeader from '~/components/ImmersiveHeader.vue'
 
+definePageMeta({
+  layout: 'main'
+})
+
 const router = useRouter()
 const loading = ref(true)
 const totalSpent = ref(0)

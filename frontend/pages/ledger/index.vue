@@ -52,6 +52,10 @@ import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 
+definePageMeta({
+  layout: 'main'
+})
+
 const router = useRouter()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()

@@ -80,6 +80,10 @@ import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useImages } from '~/composables/useImages'
 
+definePageMeta({
+  layout: 'main'
+})
+
 const router = useRouter()
 const route = useRoute()
 const api = useApi()

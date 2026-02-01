@@ -1,5 +1,5 @@
 <template>
-  <div class="add-transaction-page">
+  <div class="add-transaction-page min-h-screen bg-neutral-900 text-neutral-50 p-4">
     <header class="flex justify-between items-center mb-6">
       <button @click="router.back()" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-white border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
         <Icon icon="mdi:arrow-left" class="text-2xl" />
@@ -111,6 +111,10 @@ import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
+
+definePageMeta({
+  layout: 'empty'
+})
 
 const router = useRouter()
 const route = useRoute()

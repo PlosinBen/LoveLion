@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-6 min-h-screen bg-neutral-900 text-neutral-50 pb-4">
     
     <!-- Hero Header -->
     <!-- Hero Header -->
@@ -139,6 +139,9 @@ import ImageManager from '~/components/ImageManager.vue'
 import ImmersiveHeader from '~/components/ImmersiveHeader.vue'
 
 const router = useRouter()
+definePageMeta({
+  layout: 'empty'
+})
 const route = useRoute()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()

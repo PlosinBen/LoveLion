@@ -1,7 +1,8 @@
 <template>
-  <div class="flex flex-col justify-center min-h-screen p-6 bg-neutral-950">
+  <div class="flex flex-col justify-center py-6">
+    <!-- Header is provided by layout 'default' -->
     <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold mb-2 bg-gradient-to-br from-indigo-500 to-purple-500 bg-clip-text text-transparent">LoveLion</h1>
+      <!-- Removed duplicate logo -->
       <p class="text-neutral-400">個人記帳 & 旅行助手</p>
     </div>
 
@@ -61,11 +62,10 @@
 import { ref } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 
-definePageMeta({
-  layout: false
-})
-
 const router = useRouter()
+definePageMeta({
+  layout: 'default'
+})
 const { login, register } = useAuth()
 
 const isRegister = ref(false)
