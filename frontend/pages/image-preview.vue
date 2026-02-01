@@ -1,5 +1,5 @@
 <template>
-  <div class="image-preview fixed inset-0 bg-black z-50 flex flex-col h-[100dvh]">
+  <div class="image-preview fixed inset-0 bg-black flex flex-col h-[100dvh]">
     <!-- Header / Close -->
     <header class="absolute top-0 left-0 right-0 p-4 pt-6 transition-opacity duration-300 pointer-events-none bg-gradient-to-b from-black/60 to-transparent flex justify-start items-center z-10" :class="showControls ? 'opacity-100' : 'opacity-0'">
        <!-- Progress Bar -->
