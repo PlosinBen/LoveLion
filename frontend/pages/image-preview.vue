@@ -129,13 +129,13 @@ const prev = () => {
 // Simple swipe detection
 const touchStartX = ref(0)
 const handleTouchStart = (e: TouchEvent) => {
-    if (e.touches.length > 0) {
-        touchStartX.value = e.touches[0].clientX
+    if (e.touches && e.touches.length > 0) {
+        touchStartX.value = e.touches[0]?.clientX ?? 0
     }
 }
 const handleTouchEnd = (e: TouchEvent) => {
-    if (e.changedTouches.length > 0) {
-        const touchEndX = e.changedTouches[0].clientX
+    if (e.changedTouches && e.changedTouches.length > 0) {
+        const touchEndX = e.changedTouches[0]?.clientX ?? 0
         const diff = touchStartX.value - touchEndX
         if (Math.abs(diff) > 50) { // Threshold
             if (diff > 0) next() // Swipe Left -> Next
