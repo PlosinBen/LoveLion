@@ -2,15 +2,6 @@
   <div class="flex flex-col gap-3">
     <label class="text-sm text-neutral-400">{{ label }}</label>
     
-    <div v-if="modelValue.length" class="flex flex-wrap gap-2">
-      <div v-for="(item, index) in modelValue" :key="index" class="flex items-center gap-1 bg-neutral-700 px-3 py-1 rounded text-sm text-white">
-        <span>{{ item }}</span>
-        <button type="button" @click="remove(index)" class="text-neutral-400 hover:text-white transition-colors">
-          <Icon icon="mdi:close" class="text-base" />
-        </button>
-      </div>
-    </div>
-
     <div class="relative">
       <BaseInput
         v-model="newItem" 
@@ -27,6 +18,15 @@
       >
         <Icon icon="mdi:plus" class="text-xl" />
       </button>
+    </div>
+
+    <div v-if="modelValue.length" class="flex flex-wrap gap-2">
+      <div v-for="(item, index) in modelValue" :key="index" class="flex items-center gap-1 bg-neutral-700 px-3 py-1 rounded text-sm text-white">
+        <span>{{ item }}</span>
+        <button type="button" @click="remove(index)" class="text-neutral-400 hover:text-white transition-colors">
+          <Icon icon="mdi:close" class="text-base" />
+        </button>
+      </div>
     </div>
   </div>
 </template>

@@ -22,7 +22,7 @@
           <span class="text-xs text-neutral-400">目前總支出</span>
           <div class="flex items-baseline gap-1">
              <span class="text-2xl font-bold font-mono">{{ trip?.ledger?.base_currency || trip?.base_currency || 'TWD' }}</span>
-             <span class="text-3xl font-bold font-mono">{{ Math.round(metrics.totalExpense || 0).toLocaleString() }}</span>
+             <span class="text-3xl font-bold font-mono">{{ Math.round(totalExpense || 0).toLocaleString() }}</span>
           </div>
         </div>
       </div>

@@ -272,7 +272,100 @@ func main() {
 		db.Create(&i)
 	}
 
-	fmt.Println("✓ Created 3 trip transactions with splits")
+	// Txn 4: Hotel (Foreign Currency Converted), Paid by "我" (Credit Card), Bill in TWD
+	// Rate: 0.22 (Approx)
+	txn4 := models.Transaction{
+		ID:            "trip_txn04",
+		LedgerID:      tripLedger.ID,
+		Title:         "溫泉旅館住宿",
+		Payer:         "我",
+		Date:          now.AddDate(0, 0, 1),
+		Currency:      "JPY",
+		TotalAmount:   decimal.NewFromInt(30000),
+		Category:      "住宿",
+		PaymentMethod: "信用卡",
+		BillingAmount: decimal.NewFromInt(6600), // Converted to TWD
+		ExchangeRate:  decimal.NewFromFloat(0.22),
+		Note:          "已換算台幣",
+	}
+	db.Create(&txn4)
+
+	splits4 := []models.TransactionSplit{
+		{TransactionID: txn4.ID, Name: "我", Amount: decimal.NewFromInt(30000), IsPayer: true, MemberID: &members[0].ID},
+		{TransactionID: txn4.ID, Name: "我", Amount: decimal.NewFromInt(10000), IsPayer: false, MemberID: &members[0].ID},
+		{TransactionID: txn4.ID, Name: "小明", Amount: decimal.NewFromInt(10000), IsPayer: false, MemberID: &members[1].ID},
+		{TransactionID: txn4.ID, Name: "小美", Amount: decimal.NewFromInt(10000), IsPayer: false, MemberID: &members[2].ID},
+	}
+	for _, s := range splits4 {
+		db.Create(&s)
+	}
+
+	items4 := []models.TransactionItem{
+		{ID: uuid.New(), TransactionID: txn4.ID, Name: "三人房", UnitPrice: decimal.NewFromInt(30000), Quantity: decimal.NewFromInt(1), Amount: decimal.NewFromInt(30000)},
+	}
+	for _, i := range items4 {
+		db.Create(&i)
+	}
+
+	// Txn 5: Street Food (Unconverted JPY), Paid by "小明", Shared by "我" and "小明"
+	// No Billing Amount (Cash usually has no immediate exchange rate record unless recorded manually)
+	txn5 := models.Transaction{
+		ID:            "trip_txn05",
+		LedgerID:      tripLedger.ID,
+		Title:         "路邊章魚燒",
+		Payer:         "小明",
+		Date:          now.AddDate(0, 0, 2),
+		Currency:      "JPY",
+		TotalAmount:   decimal.NewFromInt(800),
+		Category:      "飲食",
+		PaymentMethod: "現金",
+		Note:          "未換算匯率",
+	}
+	db.Create(&txn5)
+
+	splits5 := []models.TransactionSplit{
+		{TransactionID: txn5.ID, Name: "小明", Amount: decimal.NewFromInt(800), IsPayer: true, MemberID: &members[1].ID},
+		{TransactionID: txn5.ID, Name: "我", Amount: decimal.NewFromInt(400), IsPayer: false, MemberID: &members[0].ID},
+		{TransactionID: txn5.ID, Name: "小明", Amount: decimal.NewFromInt(400), IsPayer: false, MemberID: &members[1].ID},
+	}
+	for _, s := range splits5 {
+		db.Create(&s)
+	}
+
+	items5 := []models.TransactionItem{
+		{ID: uuid.New(), TransactionID: txn5.ID, Name: "章魚燒", UnitPrice: decimal.NewFromInt(800), Quantity: decimal.NewFromInt(1), Amount: decimal.NewFromInt(800)},
+	}
+	for _, i := range items5 {
+		db.Create(&i)
+	}
+
+	// Txn 6: TWD Expense (Advance Booking), Paid by "小美", Uneven Split
+	// Me: 200, Ming: 300, Mei: 500
+	txn6 := models.Transaction{
+		ID:            "trip_txn06",
+		LedgerID:      tripLedger.ID,
+		Title:         "預付門票 (Klook)",
+		Payer:         "小美",
+		Date:          now.AddDate(0, 0, -5),
+		Currency:      "TWD",
+		TotalAmount:   decimal.NewFromInt(1000),
+		Category:      "門票",
+		PaymentMethod: "信用卡",
+		Note:          "台幣預付",
+	}
+	db.Create(&txn6)
+
+	splits6 := []models.TransactionSplit{
+		{TransactionID: txn6.ID, Name: "小美", Amount: decimal.NewFromInt(1000), IsPayer: true, MemberID: &members[2].ID},
+		{TransactionID: txn6.ID, Name: "我", Amount: decimal.NewFromInt(200), IsPayer: false, MemberID: &members[0].ID},
+		{TransactionID: txn6.ID, Name: "小明", Amount: decimal.NewFromInt(300), IsPayer: false, MemberID: &members[1].ID},
+		{TransactionID: txn6.ID, Name: "小美", Amount: decimal.NewFromInt(500), IsPayer: false, MemberID: &members[2].ID},
+	}
+	for _, s := range splits6 {
+		db.Create(&s)
+	}
+
+	fmt.Println("✓ Created 6 trip transactions with varied scenarios")
 
 	fmt.Println("\n🎉 Seed completed!")
 	fmt.Println("   Login: dev / dev123")

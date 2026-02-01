@@ -40,9 +40,12 @@ echo "📋 Running migrations..."
 docker compose exec backend go run cmd/migrate/main.go
 
 # Step 6: Seed test data via API
-echo "🌱 Seeding test data via API..."
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-"$SCRIPT_DIR/seed"
+# echo "🌱 Seeding test data via API..."
+# SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# "$SCRIPT_DIR/seed"
+
+echo "🌱 Seeding test data via Go seeder..."
+docker compose exec backend go run cmd/seed/main.go
 
 echo ""
 echo "✅ Database refresh complete!"
