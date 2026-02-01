@@ -22,6 +22,22 @@
           {{ transaction.currency }} {{ formatAmount(transaction.total_amount) }}
         </div>
         <div class="text-neutral-400">{{ formatDate(transaction.date) }}</div>
+
+        <!-- Foreign Currency Details -->
+        <div v-if="transaction.currency !== 'TWD'" class="mt-6 pt-6 border-t border-neutral-800/50 flex flex-col gap-2 text-sm">
+            <div class="flex justify-between text-neutral-400">
+                <span>匯率</span>
+                <span>{{ transaction.exchange_rate }}</span>
+            </div>
+            <div class="flex justify-between text-neutral-400">
+                <span>折合台幣</span>
+                <span class="text-white font-bold">TWD {{ formatAmount(transaction.billing_amount) }}</span>
+            </div>
+            <div v-if="parseFloat(transaction.handling_fee) > 0" class="flex justify-between text-neutral-400">
+                <span>手續費</span>
+                <span>TWD {{ formatAmount(transaction.handling_fee) }}</span>
+            </div>
+        </div>
       </div>
 
       <div class="mb-6">

@@ -116,6 +116,52 @@
         <span class="text-2xl font-bold text-indigo-500">{{ currency }} {{ totalAmount.toLocaleString() }}</span>
       </div>
 
+      <!-- Foreign Currency Settlement -->
+      <div v-if="form.currency && form.currency !== (trip?.base_currency || 'TWD')" class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800 flex flex-col gap-4">
+        <div class="flex justify-between items-center">
+          <h3 class="font-bold text-lg">外幣結算</h3>
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" v-model="form.manual_rate" class="w-4 h-4 rounded text-indigo-500 focus:ring-indigo-500 bg-neutral-800 border-gray-600">
+            <span class="text-sm">自行輸入匯率 (現金)</span>
+          </label>
+        </div>
+
+        <div v-if="form.manual_rate" class="flex flex-col gap-4 animate-fade-in">
+           <!-- Manual Rate Mode -->
+           <BaseInput
+              v-model.number="form.exchange_rate"
+              type="number"
+              label="匯率"
+              step="0.0001"
+              :placeholder="`1 ${trip?.ledger?.base_currency || trip?.base_currency || 'TWD'} = ? ${form.currency}`"
+           />
+           <div class="flex justify-between items-center p-3 bg-neutral-800 rounded-xl">
+              <span class="text-neutral-400">折合 {{ trip?.ledger?.base_currency || trip?.base_currency || 'TWD' }}</span>
+              <span class="text-xl font-bold">{{ trip?.ledger?.base_currency || trip?.base_currency || 'TWD' }} {{ calculatedBillingAmount.toLocaleString() }}</span>
+           </div>
+        </div>
+
+        <div v-else class="flex flex-col gap-4 animate-fade-in">
+           <!-- Auto Rate Mode (Credit Card) -->
+           <BaseInput
+              v-model.number="form.billing_amount"
+              type="number"
+              :label="`銀行入帳金額 (${trip?.ledger?.base_currency || trip?.base_currency || 'TWD'})`"
+              placeholder="信用卡帳單金額"
+           />
+           <BaseInput
+              v-model.number="form.handling_fee"
+              type="number"
+              :label="`海外手續費 (${trip?.ledger?.base_currency || trip?.base_currency || 'TWD'})`"
+              placeholder="選填"
+           />
+           <div class="flex justify-between items-center p-3 bg-neutral-800 rounded-xl">
+              <span class="text-neutral-400">換算匯率</span>
+              <span class="text-xl font-bold text-indigo-400">{{ calculatedExchangeRate }}</span>
+           </div>
+        </div>
+      </div>
+
       <!-- Payer & Split -->
       <div class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800 flex flex-col gap-4">
         <!-- Payer -->
@@ -265,10 +311,14 @@ const form = ref({
   note: '',
   manualAmount: 0,
   items: [{ name: '', unit_price: 0, quantity: 1, discount: 0 }],
-  payer: '' // Member ID
+  payer: '', // Member ID
+  manual_rate: true,
+  exchange_rate: 0,
+  billing_amount: 0,
+  handling_fee: 0
 })
 
-const currency = computed(() => trip.value?.base_currency || 'TWD')
+const currency = computed(() => form.value.currency || trip.value?.ledger?.base_currency || trip.value?.base_currency || 'TWD')
 
 const hasItems = computed(() => {
     return form.value.items.some(item => item.name && item.unit_price > 0)
@@ -281,6 +331,38 @@ const totalAmount = computed(() => {
       }, 0)
   }
   return form.value.manualAmount
+})
+
+// Calculated Billing Amount (For Manual Rate Mode)
+const calculatedBillingAmount = computed(() => {
+    if (form.value.manual_rate && form.value.exchange_rate > 0) {
+        return Math.round(totalAmount.value * form.value.exchange_rate)
+    }
+    return 0
+})
+
+// Calculated Exchange Rate (For Auto Rate Mode)
+const calculatedExchangeRate = computed(() => {
+    if (!form.value.manual_rate && totalAmount.value > 0 && form.value.billing_amount > 0) {
+        const netBilling = form.value.billing_amount - form.value.handling_fee
+        if (netBilling <= 0) return 0
+        return (netBilling / totalAmount.value).toFixed(4)
+    }
+    return 0
+})
+
+// Watchers
+watch(calculatedBillingAmount, (newVal) => {
+    if (form.value.manual_rate) {
+        form.value.billing_amount = newVal
+        form.value.handling_fee = 0 
+    }
+})
+
+watch(calculatedExchangeRate, (newVal) => {
+    if (!form.value.manual_rate) {
+        form.value.exchange_rate = Number(newVal)
+    }
 })
 
 const splitList = ref<{ name: string, involved: boolean, customAmount: number }[]>([])
@@ -384,8 +466,8 @@ const fetchTrip = async () => {
       form.value.payer = data.members[0].id
     }
     
-    // Set default currency from trip
-    form.value.currency = data.base_currency || 'TWD'
+    // Set default currency from trip/ledger
+    form.value.currency = data.ledger?.base_currency || data.base_currency || 'TWD'
     
     // Set default category from ledger categories
     if (data.ledger?.categories?.length > 0) {
@@ -412,6 +494,18 @@ const handleSubmit = async () => {
   if (!form.value.payer) {
     alert('請選擇付款人')
     return
+  }
+
+  const baseCurrency = trip.value?.ledger?.base_currency || trip.value?.base_currency || 'TWD'
+  if (form.value.currency !== baseCurrency) {
+      if (form.value.manual_rate && form.value.exchange_rate <= 0) {
+          alert('請輸入有效的匯率')
+          return
+      }
+      if (!form.value.manual_rate && form.value.billing_amount <= 0) {
+          alert('請輸入銀行入帳金額')
+          return
+      }
   }
   
   // Validate total split if custom
@@ -471,10 +565,15 @@ const handleSubmit = async () => {
       category: form.value.category,
       note: form.value.note,
       payer: payerMember?.name || 'Unknown',
-      currency: form.value.currency || trip.value.base_currency,
+      currency: form.value.currency || baseCurrency,
       payment_method: form.value.payment_method,
       items: hasItems.value ? form.value.items.filter(item => item.name && item.unit_price > 0) : [],
+      
       total_amount: totalAmount.value,
+      exchange_rate: form.value.currency === baseCurrency ? 1 : form.value.exchange_rate,
+      billing_amount: form.value.currency === baseCurrency ? Math.round(totalAmount.value) : form.value.billing_amount,
+      handling_fee: form.value.currency === baseCurrency ? 0 : form.value.handling_fee,
+
       splits: splits
     }
 

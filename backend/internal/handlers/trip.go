@@ -153,10 +153,11 @@ func (h *TripHandler) Create(c *gin.Context) {
 		// Create Trip Ledger
 		ledgerID := uuid.New()
 		ledger := &models.Ledger{
-			ID:     ledgerID,
-			UserID: userID,
-			Name:   trip.Name + " 的帳本",
-			Type:   "trip",
+			ID:           ledgerID,
+			UserID:       userID,
+			Name:         trip.Name + " 的帳本",
+			Type:         "trip",
+			BaseCurrency: trip.BaseCurrency, // Sync base currency
 		}
 
 		if len(req.Currencies) > 0 {
@@ -247,6 +248,7 @@ func (h *TripHandler) Update(c *gin.Context) {
 		}
 		if req.BaseCurrency != "" {
 			trip.BaseCurrency = req.BaseCurrency
+			// We will update the Ledger's base currency below in the ledger block
 		}
 
 		if err := tx.Save(trip).Error; err != nil {
@@ -263,6 +265,11 @@ func (h *TripHandler) Update(c *gin.Context) {
 			updated := false
 			if req.Currencies != nil {
 				ledger.Currencies = toJSON(req.Currencies)
+				updated = true
+			}
+			// Sync Base Currency if updated in Trip
+			if req.BaseCurrency != "" && req.BaseCurrency != ledger.BaseCurrency {
+				ledger.BaseCurrency = req.BaseCurrency
 				updated = true
 			}
 			if req.Categories != nil {

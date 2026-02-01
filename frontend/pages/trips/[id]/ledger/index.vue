@@ -16,12 +16,14 @@
     <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
 
     <template v-else-if="trip">
-      <!-- Summary Card -->
       <div class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
-        <h2 class="text-sm text-neutral-400 mb-2">總支出</h2>
-        <div class="text-3xl font-bold text-white mb-1">
-          <span class="text-lg text-neutral-500 mr-1">{{ trip.base_currency }}</span>
-          {{ formatAmount(totalExpense) }}
+        <!-- Total Balance -->
+        <div class="flex flex-col flex-1">
+          <span class="text-xs text-neutral-400">目前總支出</span>
+          <div class="flex items-baseline gap-1">
+             <span class="text-2xl font-bold font-mono">{{ trip?.ledger?.base_currency || trip?.base_currency || 'TWD' }}</span>
+             <span class="text-3xl font-bold font-mono">{{ Math.round(metrics.totalExpense || 0).toLocaleString() }}</span>
+          </div>
         </div>
       </div>
 
@@ -159,8 +161,14 @@ const formatAmount = (amount: string | number) => {
 const fetchData = async () => {
   try {
     // 1. Fetch Trip info to get ledger_id
-    trip.value = await api.get<any>(`/api/trips/${route.params.id}`)
+    const data = await api.get<any>(`/api/trips/${route.params.id}`)
     
+    trip.value = data
+    
+    // Ensure we have correct base currency
+    const baseCurrency = data.ledger?.base_currency || data.base_currency || 'TWD'
+
+    // Calculate metrics locally if needed or fetch
     if (trip.value.ledger_id) {
       // 2. Fetch transactions
       transactions.value = await api.get<any[]>(`/api/ledgers/${trip.value.ledger_id}/transactions`)

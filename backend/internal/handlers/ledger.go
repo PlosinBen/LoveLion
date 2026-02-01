@@ -23,6 +23,7 @@ func NewLedgerHandler(db *gorm.DB) *LedgerHandler {
 type CreateLedgerRequest struct {
 	Name           string   `json:"name" binding:"required,min=1,max=100"`
 	Type           string   `json:"type"`
+	BaseCurrency   string   `json:"base_currency"`
 	Currencies     []string `json:"currencies"`
 	Members        []string `json:"members"`
 	Categories     []string `json:"categories"`
@@ -31,6 +32,7 @@ type CreateLedgerRequest struct {
 
 type UpdateLedgerRequest struct {
 	Name           string   `json:"name" binding:"omitempty,min=1,max=100"`
+	BaseCurrency   string   `json:"base_currency"`
 	Currencies     []string `json:"currencies"`
 	Members        []string `json:"members"`
 	Categories     []string `json:"categories"`
@@ -69,10 +71,15 @@ func (h *LedgerHandler) Create(c *gin.Context) {
 	}
 
 	ledger := &models.Ledger{
-		ID:     uuid.New(),
-		UserID: userID,
-		Name:   req.Name,
-		Type:   req.Type,
+		ID:           uuid.New(),
+		UserID:       userID,
+		Name:         req.Name,
+		Type:         req.Type,
+		BaseCurrency: req.BaseCurrency,
+	}
+
+	if ledger.BaseCurrency == "" {
+		ledger.BaseCurrency = "TWD"
 	}
 
 	if ledger.Type == "" {
@@ -160,6 +167,9 @@ func (h *LedgerHandler) Update(c *gin.Context) {
 
 	if req.Name != "" {
 		ledger.Name = req.Name
+	}
+	if req.BaseCurrency != "" {
+		ledger.BaseCurrency = req.BaseCurrency
 	}
 	if req.Currencies != nil {
 		ledger.Currencies = toJSON(req.Currencies)

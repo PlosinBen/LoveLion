@@ -12,6 +12,7 @@ type Ledger struct {
 	UserID         uuid.UUID      `gorm:"type:uuid;not null" json:"user_id"`
 	Name           string         `gorm:"type:varchar(100);not null" json:"name"`
 	Type           string         `gorm:"type:varchar(20);not null;default:'personal'" json:"type"`
+	BaseCurrency   string         `gorm:"type:varchar(3);default:'TWD'" json:"base_currency"`
 	Currencies     datatypes.JSON `gorm:"type:jsonb;default:'[\"TWD\"]'" json:"currencies"`
 	Members        datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"members"`
 	Categories     datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"categories"`

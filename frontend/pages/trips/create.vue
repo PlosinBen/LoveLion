@@ -28,18 +28,53 @@
         <BaseInput v-model="form.end_date" type="date" label="結束日期" />
       </div>
 
-    <div class="flex flex-col gap-2">
-        <BaseSelect 
-          v-model="form.base_currency" 
-          label="基準貨幣"
-          :options="[
-            { label: 'TWD - 新台幣', value: 'TWD' },
-            { label: 'JPY - 日圓', value: 'JPY' },
-            { label: 'USD - 美元', value: 'USD' },
-            { label: 'EUR - 歐元', value: 'EUR' },
-            { label: 'KRW - 韓元', value: 'KRW' }
-          ]"
-        />
+      <div class="flex flex-col gap-3">
+        <label class="text-sm font-medium text-neutral-400">幣別設定</label>
+        
+        <!-- Input Row -->
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Base Currency -->
+          <BaseSelect 
+            v-model="form.base_currency" 
+            label="基準貨幣 *"
+            :options="currencyOptions"
+            :disabled="form.currencies.length === 0"
+            :placeholder="form.currencies.length === 0 ? '需先新增幣別' : '選擇基準'"
+          />
+          
+          <!-- Add Currency Input -->
+           <div class="flex flex-col gap-1">
+             <span class="text-sm text-neutral-400">新增幣別</span>
+             <div class="relative">
+              <BaseInput
+                v-model="newCurrency" 
+                placeholder="輸入代碼 (如 USD)"
+                class="pr-10"
+                @keydown.enter.prevent="addCurrency"
+                @blur="addCurrency"
+              />
+              <button 
+                type="button" 
+                @click="addCurrency" 
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-all"
+                :class="{ 'opacity-0 scale-75 pointer-events-none': !newCurrency, 'opacity-100 scale-100': newCurrency }"
+              >
+                <Icon icon="mdi:plus" class="text-xl" />
+              </button>
+            </div>
+           </div>
+        </div>
+
+        <!-- Currencies List (Full Width) -->
+        <div class="flex flex-wrap gap-2">
+          <div v-for="(item, index) in form.currencies" :key="index" class="flex items-center gap-1 bg-neutral-700 px-3 py-1 rounded text-sm text-white">
+            <span>{{ item }}</span>
+            <button type="button" @click="removeCurrency(index)" class="text-neutral-400 hover:text-white transition-colors">
+              <Icon icon="mdi:close" class="text-base" />
+            </button>
+          </div>
+          <span v-if="form.currencies.length === 0" class="text-sm text-neutral-500 italic">尚未新增任何幣別</span>
+        </div>
       </div>
 
       <!-- Members -->
@@ -48,8 +83,7 @@
       <div class="border-t border-neutral-800 my-2 pt-4"></div>
       <h2 class="text-lg font-semibold text-neutral-200">帳本設定</h2>
 
-      <!-- Active Currencies -->
-      <ListEditor v-model="form.currencies" label="使用幣別" placeholder="新增幣別 (如 USD)" />
+      <!-- Moved Currencies List up -->
 
       <!-- Categories -->
       <ListEditor v-model="form.categories" label="消費分類" placeholder="新增分類 (如 交通)" />
@@ -87,13 +121,46 @@ const form = ref({
   end_date: '',
   base_currency: 'TWD',
   members: [] as string[],
-  currencies: ['TWD'],
+  currencies: ['TWD', 'JPY', 'USD'],
   categories: [],
   payment_methods: []
 })
 
+const newCurrency = ref('')
+
+const addCurrency = () => {
+  const val = newCurrency.value.trim().toUpperCase()
+  if (val && !form.value.currencies.includes(val)) {
+    form.value.currencies.push(val)
+    newCurrency.value = ''
+  } else {
+    newCurrency.value = ''
+  }
+}
+
+const removeCurrency = (index: number) => {
+  form.value.currencies.splice(index, 1)
+}
+
+const currencyOptions = computed(() => {
+  return form.value.currencies.map(c => ({ label: c, value: c }))
+})
+
+// Ensure base_currency is valid
+watch(() => form.value.currencies, (newVal) => {
+  if (newVal.length > 0 && !newVal.includes(form.value.base_currency)) {
+    form.value.base_currency = newVal[0]
+  } else if (newVal.length === 0) {
+      form.value.base_currency = ''
+  }
+}, { deep: true })
+
 const handleSubmit = async () => {
   if (!form.value.name.trim()) return
+  if (!form.value.base_currency) {
+      alert('請選擇基準貨幣')
+      return
+  }
 
   submitting.value = true
   try {
