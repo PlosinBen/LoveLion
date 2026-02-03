@@ -1,61 +1,61 @@
 <template>
-  <div class="flex flex-col h-[calc(100vh-64px)] bg-black text-white">
+  <div class="flex flex-col gap-6">
     <!-- Header -->
-    <header class="flex-none p-4 flex justify-between items-center bg-neutral-900 border-b border-neutral-800">
-      <button @click="router.back()" class="flex justify-center items-center w-10 h-10 rounded-full bg-neutral-800 text-white border-0 cursor-pointer hover:bg-neutral-700 transition-colors">
-        <Icon icon="mdi:arrow-left" class="text-xl" />
+    <header class="flex justify-between items-center">
+      <button @click="router.back()" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-white border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
+        <Icon icon="mdi:arrow-left" class="text-2xl" />
       </button>
       <h1 class="text-xl font-bold">編輯商店</h1>
-      <button @click="saveStore" class="flex justify-center items-center px-4 h-10 rounded-lg bg-indigo-600 text-white border-0 cursor-pointer hover:bg-indigo-500 transition-colors font-medium">
-        儲存
-      </button>
+      <div class="w-10"></div>
     </header>
 
-    <div v-if="loading" class="flex-1 flex justify-center items-center text-neutral-400">
+    <div v-if="loading" class="flex justify-center items-center text-neutral-400 py-10">
       <Icon icon="eos-icons:loading" class="text-3xl animate-spin" />
     </div>
 
-    <div v-else class="flex-1 overflow-y-auto p-4 space-y-6">
-        <!-- Basic Info -->
-        <div class="space-y-4">
-            <div class="space-y-2">
-                <label class="text-sm text-neutral-400 font-medium">商店名稱</label>
-                <input v-model="form.name" type="text" placeholder="輸入商店名稱" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors" />
-            </div>
-             <div class="space-y-2">
-                <label class="text-sm text-neutral-400 font-medium">Google Maps URL</label>
-                <input v-model="form.google_map_url" type="text" placeholder="輸入 Google Maps URL" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors" />
-            </div>
+    <div v-else class="flex flex-col gap-5">
+        <!-- Basic Info Card -->
+        <div class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800 flex flex-col gap-5">
+            <BaseInput
+                v-model="form.name"
+                label="商店名稱"
+                placeholder="輸入商店名稱"
+            />
+            <BaseInput
+                v-model="form.google_map_url"
+                label="Google Maps URL"
+                placeholder="輸入 Google Maps URL"
+            />
         </div>
 
-        <div class="border-t border-neutral-800 my-4"></div>
-
-        <!-- Photo Management -->
-         <div class="space-y-4">
-            <label class="text-sm text-neutral-400 font-medium flex items-center gap-2">
+        <!-- Photo Management Card -->
+        <div class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800 flex flex-col gap-2">
+            <label class="text-sm text-neutral-400 font-medium flex items-center gap-2 mb-1">
                 <Icon icon="mdi:image-multiple" /> 管理照片
             </label>
-            <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-4">
-                <ImageManager 
-                    ref="imageManagerRef"
-                    :entity-id="route.params.storeId as string" 
-                    entity-type="store" 
-                    :max-count="5" 
-                    :allow-reorder="true"
-                    :instant-upload="false"
-                    :instant-delete="false"
-                />
-            </div>
+            <ImageManager 
+                ref="imageManagerRef"
+                :entity-id="route.params.storeId as string" 
+                entity-type="store" 
+                :max-count="5" 
+                :allow-reorder="true"
+                :instant-upload="false"
+                :instant-delete="false"
+            />
         </div>
         
-        <div class="border-t border-neutral-800 my-4"></div>
+        <!-- Save Button -->
+        <button @click="saveStore" class="w-full px-6 py-3 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors border-0 cursor-pointer disabled:opacity-50" :disabled="saving">
+            {{ saving ? '儲存中...' : '儲存' }}
+        </button>
 
         <!-- Danger Zone -->
-         <div class="space-y-4">
-             <button @click="deleteStore" class="w-full py-3 rounded-xl border border-red-500/30 text-red-500 bg-red-500/10 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2">
-                 <Icon icon="mdi:trash-can-outline" /> 刪除商店
-             </button>
-         </div>
+        <div class="mt-4">
+            <button @click="deleteStore" class="w-full py-3 rounded-xl border border-red-500/30 text-red-500 bg-red-500/10 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                <Icon icon="mdi:trash-can-outline" /> 刪除商店
+            </button>
+            <p class="text-xs text-center text-neutral-500 mt-2">刪除商店將會一併刪除所有商品資料</p>
+        </div>
     </div>
   </div>
 </template>
@@ -66,6 +66,11 @@ import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import ImageManager from '~/components/ImageManager.vue'
+import BaseInput from '~/components/BaseInput.vue'
+
+definePageMeta({
+  layout: 'main'
+})
 
 const router = useRouter()
 const route = useRoute()
@@ -73,6 +78,7 @@ const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
 
 const loading = ref(true)
+const saving = ref(false)
 const form = ref({
     name: '',
     google_map_url: ''
@@ -92,6 +98,12 @@ const fetchStore = async () => {
 }
 
 const saveStore = async () => {
+    if (!form.value.name) {
+        alert('請輸入商店名稱')
+        return
+    }
+
+    saving.value = true
     try {
         // 1. Update info
         await api.put(`/api/trips/${route.params.id}/stores/${route.params.storeId}`, {
@@ -107,6 +119,8 @@ const saveStore = async () => {
         router.back()
     } catch (e: any) {
         alert(e.message || '儲存失敗')
+    } finally {
+        saving.value = false
     }
 }
 

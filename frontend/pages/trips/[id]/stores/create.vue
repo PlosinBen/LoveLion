@@ -8,12 +8,28 @@
       <div class="w-10"></div>
     </header>
 
-    <div class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
-      <BaseInput v-model="name" placeholder="商店名稱" input-class="mb-4" @keyup.enter="handleSubmit" :auto-focus="true" />
-      <BaseInput v-model="googleMapUrl" placeholder="Google Maps URL (選填)" input-class="mb-4" />
+    <div class="flex flex-col gap-5">
+      <!-- Info Card -->
+      <div class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800 flex flex-col gap-5">
+        <BaseInput 
+            v-model="name" 
+            label="商店名稱"
+            placeholder="商店名稱" 
+            @keyup.enter="handleSubmit" 
+            :auto-focus="true" 
+        />
+        <BaseInput 
+            v-model="googleMapUrl" 
+            label="Google Maps URL"
+            placeholder="Google Maps URL (選填)" 
+        />
+      </div>
       
-      <div class="mb-4">
-          <label class="text-sm text-neutral-400 font-medium mb-2 block">商店照片</label>
+      <!-- Photo Card -->
+      <div class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800 flex flex-col gap-2">
+          <label class="text-sm text-neutral-400 font-medium flex items-center gap-2 mb-1">
+              <Icon icon="mdi:image-multiple" /> 商店照片
+          </label>
           <ImageManager 
             ref="imageManagerRef"
             entity-id="" 
@@ -40,6 +56,11 @@ import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import ImageManager from '~/components/ImageManager.vue'
+import BaseInput from '~/components/BaseInput.vue'
+
+definePageMeta({
+  layout: 'main'
+})
 
 const router = useRouter()
 const route = useRoute()

@@ -2,7 +2,6 @@
   <div class="flex flex-col gap-6 min-h-screen bg-neutral-900 text-neutral-50 pb-4">
     
     <!-- Hero Header -->
-    <!-- Hero Header -->
     <ImmersiveHeader
         :image="coverImage"
         fallback-icon="mdi:store"
@@ -140,7 +139,7 @@ import ImmersiveHeader from '~/components/ImmersiveHeader.vue'
 
 const router = useRouter()
 definePageMeta({
-  layout: 'empty'
+  layout: 'main'
 })
 const route = useRoute()
 const api = useApi()
