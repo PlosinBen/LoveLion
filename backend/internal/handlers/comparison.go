@@ -325,6 +325,31 @@ func (h *ComparisonHandler) UpdateProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, product)
 }
 
+// Get a product
+func (h *ComparisonHandler) GetProduct(c *gin.Context) {
+	userID := c.MustGet("userID").(uuid.UUID)
+	tripID := c.Param("id")
+	storeID := c.Param("store_id")
+	productID, err := uuid.Parse(c.Param("product_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
+		return
+	}
+
+	if err := h.verifyTripAccess(tripID, userID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Trip not found"})
+		return
+	}
+
+	var product models.ComparisonProduct
+	if err := h.db.Where("id = ? AND store_id = ?", productID, storeID).First(&product).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, product)
+}
+
 // Delete a product
 func (h *ComparisonHandler) DeleteProduct(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)

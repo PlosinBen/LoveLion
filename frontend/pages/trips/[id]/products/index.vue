@@ -56,15 +56,49 @@
                  </div>
 
                  <!-- Expanded List -->
-                 <div v-if="group.expanded" class="border-t border-neutral-800 bg-neutral-800/20">
-                     <div v-for="item in group.items" :key="item.id" 
-                          class="p-3 py-2 flex items-center justify-between border-b border-neutral-800/50 last:border-0 hover:bg-white/5 cursor-pointer"
-                          @click="router.push(`/trips/${route.params.id}/stores/${item.store_id}`)">
-                         <div class="flex items-center gap-2">
-                             <div class="text-xs text-neutral-300">{{ item.store?.name }}</div>
-                             <span v-if="item.price == group.minPrice" class="bg-red-500/20 text-red-500 text-[10px] px-1.5 py-0.5 rounded font-bold">最低</span>
-                         </div>
-                         <div class="text-sm font-medium">{{ item.currency }} {{ formatPrice(item.price) }}</div>
+                 <div v-if="group.expanded" class="border-t border-neutral-800 bg-neutral-950 p-3">
+                     <div class="flex flex-col gap-2">
+                        <div v-for="item in group.items" :key="item.id" 
+                             class="rounded-xl border flex flex-col gap-2 p-3 cursor-pointer transition-all active:scale-[0.98]"
+                             :class="item.price == group.minPrice 
+                               ? 'bg-indigo-500/10 border-indigo-500/50 shadow-md shadow-indigo-500/5 relative overflow-hidden' 
+                               : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'"
+                             @click="router.push(`/trips/${route.params.id}/stores/${item.store_id}`)">
+                            
+                            <!-- Highlight Badge -->
+                            <div v-if="item.price == group.minPrice" class="absolute top-0 right-0 bg-indigo-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">
+                                BEST
+                            </div>
+
+                            <div class="flex justify-between items-start">
+                                <div class="flex flex-col min-w-0">
+                                   <div class="flex items-center gap-2 mb-0.5">
+                                       <span class="text-sm font-bold text-neutral-200 truncate">{{ item.store?.name }}</span>
+                                       <Icon v-if="item.store?.google_map_url" icon="mdi:google-maps" class="text-neutral-500 text-xs" />
+                                   </div>
+                                   <div class="text-xs text-neutral-500 flex items-center gap-1">
+                                      <Icon icon="mdi:package-variant-closed" class="text-[10px]" />
+                                      {{ item.unit ? item.unit : '個' }}
+                                   </div>
+                                </div>
+                                <Icon icon="mdi:chevron-right" class="text-neutral-600 mt-1" />
+                            </div>
+
+                            <div class="mt-1 pt-2 border-t border-neutral-800/50 border-dashed flex justify-between items-end">
+                                <div class="flex flex-col">
+                                    <div class="text-[10px] text-neutral-500" v-if="item.price > group.minPrice">
+                                        +{{ formatPrice(item.price - group.minPrice) }}
+                                    </div>
+                                    <div class="text-[10px] text-indigo-400 font-medium" v-else>
+                                        最低價
+                                    </div>
+                                </div>
+                                <div class="text-lg font-bold font-mono tracking-tight" 
+                                     :class="item.price == group.minPrice ? 'text-indigo-400' : 'text-neutral-300'">
+                                    <span class="text-xs mr-0.5 font-sans font-normal opacity-50">{{ item.currency }}</span>{{ formatPrice(item.price) }}
+                                </div>
+                            </div>
+                        </div>
                      </div>
                  </div>
             </div>

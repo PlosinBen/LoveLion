@@ -88,6 +88,7 @@ func main() {
 			trips.DELETE("/:id/stores/:store_id", comparisonHandler.DeleteStore)
 			trips.GET("/:id/products", comparisonHandler.ListAllProducts)
 			trips.POST("/:id/stores/:store_id/products", comparisonHandler.CreateProduct)
+			trips.GET("/:id/stores/:store_id/products/:product_id", comparisonHandler.GetProduct)
 			trips.PUT("/:id/stores/:store_id/products/:product_id", comparisonHandler.UpdateProduct)
 			trips.DELETE("/:id/stores/:store_id/products/:product_id", comparisonHandler.DeleteProduct)
 		}

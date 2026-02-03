@@ -8,7 +8,7 @@
         class="rounded-2xl"
     >
         <template #top-left>
-             <button @click="router.push(`/trips/${route.params.id}/stores`)" class="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/50 transition-colors border-0 cursor-pointer">
+             <button @click="router.back()" class="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/50 transition-colors border-0 cursor-pointer">
                 <Icon icon="mdi:arrow-left" class="text-xl" />
              </button>
         </template>
@@ -81,10 +81,15 @@
                    </div>
                 </div>
 
-                <!-- Delete -->
-                <button @click.stop="deleteProduct(product.id)" class="w-8 h-8 flex items-center justify-center text-neutral-500 hover:text-red-500 hover:bg-neutral-800 rounded-full transition-colors border-0 cursor-pointer bg-transparent">
-                    <Icon icon="mdi:trash-can-outline" class="text-lg" />
-                </button>
+                <!-- Actions -->
+                <div class="flex items-center">
+                    <button @click.stop="router.push(`/trips/${route.params.id}/stores/${route.params.storeId}/products/${product.id}/edit`)" class="w-8 h-8 flex items-center justify-center text-neutral-500 hover:text-indigo-400 hover:bg-neutral-800 rounded-full transition-colors border-0 cursor-pointer bg-transparent">
+                        <Icon icon="mdi:pencil-outline" class="text-lg" />
+                    </button>
+                    <button @click.stop="deleteProduct(product.id)" class="w-8 h-8 flex items-center justify-center text-neutral-500 hover:text-red-500 hover:bg-neutral-800 rounded-full transition-colors border-0 cursor-pointer bg-transparent">
+                        <Icon icon="mdi:trash-can-outline" class="text-lg" />
+                    </button>
+                </div>
             </div>
 
             <!-- Expanded Details -->
