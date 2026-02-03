@@ -5,244 +5,290 @@
         <Icon icon="mdi:arrow-left" class="text-2xl" />
       </button>
       <h1 class="text-xl font-bold">新增旅行記帳</h1>
-      <div style="width: 40px;"></div>
+      <div class="w-10"></div>
     </header>
 
     <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
 
     <form v-else @submit.prevent="handleSubmit" class="flex flex-col gap-5">
-      <!-- Date -->
       <!-- Date & Time -->
-      <!-- Date & Time -->
-      <VueDatePicker 
-        v-model="form.date" 
-        :dark="true"
-        :formats="{input: 'yyyy-MM-dd HH:mm'}"
-        :enable-seconds="false"
-        time-picker-inline
-        cancel-text="取消"
-        select-text="確定"
-        placeholder="日期與時間"
-        class="date-picker-dark"
-      />
-      <!-- Title -->
-      <BaseInput
-        v-model="form.title"
-        label="標題 (選填)"
-        placeholder="例如：第一天晚餐、伴手禮"
-      />
+      <!-- Core Info Card -->
+      <!-- Core Info Card -->
+      <div class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800 flex flex-col gap-5">
+         <div>
+            <label class="text-xs text-neutral-400">日期</label>
+            <VueDatePicker 
+                v-model="form.date" 
+                :dark="true"
+                :formats="{input: 'yyyy-MM-dd HH:mm'}"
+                :enable-seconds="false"
+                time-picker-inline
+                cancel-text="取消"
+                select-text="確定"
+                placeholder="日期與時間"
+                input-class-name="!bg-neutral-800 !border !border-solid !border-neutral-800 !text-white !text-base !rounded-md focus:!border-indigo-500 !h-auto !py-1.5 placeholder:!text-neutral-400"
+                class="w-full"
+            />
+         </div>
 
-      <div class="flex gap-3">
-        <!-- Currency -->
-        <BaseSelect
-          v-model="form.currency"
-          label="幣別"
-          :options="currencies"
-          class="flex-1"
-        />
+         <div class="flex gap-3">
+             <div class="flex-1">
+                <BaseInput
+                    v-model="form.title"
+                    placeholder="例如：第一天晚餐 (必填)"
+                    label="標題"
+                />
+             </div>
+         </div>
 
-        <!-- Category -->
-        <BaseSelect
-          v-model="form.category"
-          label="類別"
-          :options="categories"
-          class="flex-1"
-        />
+         <div class="flex items-end gap-3">
+             <div class="flex-1">
+                <BaseSelect
+                  v-model="form.category"
+                  :options="categories"
+                  label="類別"
+                />
+             </div>
+             <div class="flex-1">
+                <BaseSelect
+                  v-model="form.currency"
+                  :options="currencies"
+                  label="幣別"
+                />
+             </div>
+             <div class="flex-1">
+                <BaseInput
+                    v-model.number="form.manualAmount"
+                    type="number"
+                    placeholder="0"
+                    label="總金額"
+                    input-class="font-mono text-right"
+                />
+             </div>
+         </div>
+
+         <div class="flex gap-3">
+             <div class="flex-1">
+                <BaseSelect 
+                  v-model="form.payer" 
+                  :options="trip.members.map((m: any) => ({ label: m.name, value: m.id }))"
+                  label="付款人"
+                />
+             </div>
+             <div v-if="paymentMethods.length > 0" class="w-1/3 min-w-28">
+                <BaseSelect
+                  v-model="form.payment_method"
+                  :options="paymentMethods"
+                  placeholder="付款方式"
+                  label="付款方式"
+                />
+             </div>
+         </div>
       </div>
 
       <!-- Items -->
       <div class="flex flex-col gap-2">
-        <label class="block mb-1 text-sm text-neutral-400">項目明細</label>
-        <div class="flex flex-col gap-3">
-          <div v-for="(item, index) in form.items" :key="index" class="bg-neutral-900 rounded-2xl p-4 border border-neutral-800">
-            <div class="flex flex-col gap-3">
-              <div class="flex items-end gap-2">
-                <div class="flex-1">
-                  <BaseInput
-                    v-model="item.name"
-                    placeholder="項目名稱"
-                    label="項目名稱"
-                    input-class="font-medium"
-                  />
-                </div>
-                <button type="button" @click="removeItem(index)" class="flex justify-center items-center w-9 h-9 rounded-lg text-neutral-400 hover:text-red-500 hover:bg-neutral-800 transition-colors" v-if="form.items.length > 1">
-                  <Icon icon="mdi:close" class="text-xl" />
-                </button>
-              </div>
-              <div class="grid grid-cols-3 gap-2">
-                <div class="flex flex-col gap-1">
-                  <label class="text-xs text-neutral-400">單價</label>
-                  <BaseInput
-                    v-model.number="item.unit_price"
-                    type="number"
-                    placeholder="0"
-                  />
-                </div>
-                <!-- - -->
-                <div class="flex flex-col gap-1">
-                  <label class="text-xs text-neutral-400">折扣</label>
-                   <BaseInput
-                    v-model.number="item.discount"
-                    type="number"
-                    placeholder="0"
-                  />
-                </div>
-                <!-- * -->
-                <div class="flex flex-col gap-1">
-                  <label class="text-xs text-neutral-400">數量</label>
-                  <BaseInput
-                    v-model.number="item.quantity"
-                    type="number"
-                    placeholder="1"
-                    min="1"
-                  />
-                </div>
-              </div>
-            </div>
-            <div class="flex justify-end items-center gap-2 mt-2 pt-2 border-t border-neutral-800">
-               <span class="text-neutral-500 text-xs">( {{ item.unit_price || 0 }} - {{ item.discount || 0 }} ) × {{ item.quantity || 1 }} = </span>
-               <span class="text-neutral-300 font-medium">{{ currency }} {{ ((item.unit_price - (item.discount || 0)) * item.quantity).toLocaleString() }}</span>
-            </div>
-          </div>
+        <label class="text-xs text-neutral-400">項目明細</label>
+        <div class="flex flex-col rounded-2xl bg-neutral-900 border border-neutral-800 overflow-hidden">
+             <div v-for="(item, index) in form.items" :key="index" class="border-b border-neutral-800 last:border-0 transition-all duration-300">
+                <BaseCollapsible v-model="item.expanded">
+                    <!-- Header (Summary) -->
+                    <template #header="{ open }">
+                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                             <Icon :icon="open ? 'mdi:chevron-down' : 'mdi:chevron-right'" class="text-xl text-neutral-500 shrink-0" />
+                             <span class="font-medium truncate" :class="item.name ? 'text-white' : 'text-neutral-500'">{{ item.name || '未命名項目' }}</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                             <div class="flex flex-col items-end">
+                                <span class="text-xs text-neutral-500 font-mono">
+                                     (${{ item.unit_price }} - {{ item.discount || 0 }}) x {{ item.quantity }}
+                                </span>
+                                <span class="font-mono text-indigo-400">{{ currency }} {{ ((item.unit_price - (item.discount || 0)) * item.quantity).toLocaleString() }}</span>
+                             </div>
+                             <button type="button" @click.stop="removeItem(index)" class="text-neutral-500 hover:text-red-500 transition-colors p-1" v-if="form.items.length > 1">
+                                <Icon icon="mdi:close" class="text-lg" />
+                             </button>
+                        </div>
+                    </template>
+
+                    <!-- Body (Inputs) -->
+                    <div class="p-4 gap-3 flex flex-col">
+                        <BaseInput
+                            v-model="item.name"
+                            placeholder="項目名稱"
+                            label="項目名稱"
+                        />
+                        
+                        <div class="flex gap-3">
+                            <div class="flex-1">
+                                <BaseInput
+                                    v-model.number="item.unit_price"
+                                    type="number"
+                                    placeholder="0"
+                                    label="單價"
+                                    input-class="text-right"
+                                />
+                            </div>
+                            <div class="flex-1">
+                                <BaseInput
+                                    v-model.number="item.discount"
+                                    type="number"
+                                    placeholder="0"
+                                    label="折扣"
+                                    input-class="text-right text-red-400"
+                                />
+                            </div>
+                            <div class="w-24">
+                                <BaseInput
+                                    v-model.number="item.quantity"
+                                    type="number"
+                                    placeholder="1"
+                                    label="數量"
+                                    input-class="text-right"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </BaseCollapsible>
+             </div>
+             
+             <!-- Add Item Button inside the list container at the bottom -->
+             <button type="button" @click="addItem" class="flex justify-center items-center gap-2 p-3 text-sm text-neutral-400 hover:text-indigo-400 hover:bg-neutral-800/50 transition-colors">
+                <Icon icon="mdi:plus" /> 新增項目
+            </button>
         </div>
-        <button type="button" @click="addItem" class="flex justify-center items-center gap-1.5 p-3 border-2 border-dashed border-neutral-800 rounded-xl bg-transparent text-neutral-400 cursor-pointer mt-3 hover:border-indigo-500 hover:text-indigo-500 transition-colors">
-          <Icon icon="mdi:plus" /> 新增項目
-        </button>
       </div>
 
-      <!-- Total (Computed) -->
-      <div v-if="hasItems" class="flex justify-between items-center text-lg bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
-        <span>總計 (由明細加總)</span>
-        <span class="text-2xl font-bold text-indigo-500">{{ currency }} {{ totalAmount.toLocaleString() }}</span>
+      <!-- Split -->
+      <div class="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden transition-all duration-300">
+        <BaseCollapsible :default-open="isSplitEnabled">
+             <template #header="{ open }">
+                <div class="flex items-center gap-2">
+                     <Icon :icon="open ? 'mdi:chevron-down' : 'mdi:chevron-right'" class="text-xl text-neutral-400" />
+                     <h3 class="font-bold">分帳設定</h3>
+                </div>
+                
+                <div v-if="!open" class="text-sm text-neutral-400">
+                    <span v-if="isSplitEnabled" class="text-indigo-400">已啟用拆帳</span>
+                    <span v-else>平均分攤</span>
+                </div>
+            </template>
+
+            <div class="p-4 flex flex-col gap-4">
+                 <div class="flex items-center justify-between">
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" v-model="isSplitEnabled" class="w-4 h-4 rounded text-indigo-500 focus:ring-indigo-500 bg-neutral-800 border-gray-600" @change="handleSplitToggle" />
+                        <span class="text-sm">啟用進階拆帳</span>
+                    </label>
+                    <div v-if="isSplitEnabled" class="text-xs text-neutral-400">
+                        剩餘: <span :class="remainingAmount !== 0 ? 'text-red-500 font-bold' : 'text-green-500'">{{ formatCurrency(remainingAmount) }}</span>
+                    </div>
+                 </div>
+
+                 <!-- Members Split List -->
+                 <div v-if="isSplitEnabled" class="flex flex-col gap-3 bg-neutral-950/50 p-4 rounded-xl border border-neutral-800 animate-fade-in">
+                     <div class="flex justify-end mb-2">
+                        <button type="button" @click="resetToEven" class="text-xs text-indigo-400 hover:text-indigo-300">
+                            重設為均分
+                        </button>
+                     </div>
+                     <div v-for="m in splitList" :key="m.name" class="flex items-center gap-3">
+                         <input type="checkbox" v-model="m.involved" class="w-5 h-5 accent-indigo-500 rounded" @change="recalculateSplits(false)" />
+                         <div class="flex-1">
+                            <div class="text-base font-medium overflow-hidden text-ellipsis whitespace-nowrap">{{ m.name }}</div>
+                         </div>
+                         <div class="w-32">
+                             <BaseInput 
+                               v-model.number="m.customAmount" 
+                               type="number" 
+                               input-class="text-right font-mono"
+                               :disabled="!m.involved"
+                               placeholder="0"
+                               @input="handleAmountInput"
+                             />
+                         </div>
+                     </div>
+                 </div>
+            </div>
+        </BaseCollapsible>
       </div>
+
+
+
+
+
+
 
       <!-- Foreign Currency Settlement -->
-      <div v-if="form.currency && form.currency !== (trip?.base_currency || 'TWD')" class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800 flex flex-col gap-4">
-        <div class="flex justify-between items-center">
-          <h3 class="font-bold text-lg">外幣結算</h3>
-          <label class="flex items-center gap-2 cursor-pointer select-none">
-            <input type="checkbox" v-model="form.manual_rate" class="w-4 h-4 rounded text-indigo-500 focus:ring-indigo-500 bg-neutral-800 border-gray-600">
-            <span class="text-sm">自行輸入匯率 (現金)</span>
-          </label>
-        </div>
-
-        <div v-if="form.manual_rate" class="flex flex-col gap-4 animate-fade-in">
-           <!-- Manual Rate Mode -->
-           <BaseInput
-              v-model.number="form.exchange_rate"
-              type="number"
-              label="匯率"
-              step="0.0001"
-              :placeholder="`1 ${trip?.ledger?.base_currency || trip?.base_currency || 'TWD'} = ? ${form.currency}`"
-           />
-           <div class="flex justify-between items-center p-3 bg-neutral-800 rounded-xl">
-              <span class="text-neutral-400">折合 {{ trip?.ledger?.base_currency || trip?.base_currency || 'TWD' }}</span>
-              <span class="text-xl font-bold">{{ trip?.ledger?.base_currency || trip?.base_currency || 'TWD' }} {{ calculatedBillingAmount.toLocaleString() }}</span>
-           </div>
-        </div>
-
-        <div v-else class="flex flex-col gap-4 animate-fade-in">
-           <!-- Auto Rate Mode (Credit Card) -->
-           <BaseInput
-              v-model.number="form.billing_amount"
-              type="number"
-              :label="`銀行入帳金額 (${trip?.ledger?.base_currency || trip?.base_currency || 'TWD'})`"
-              placeholder="信用卡帳單金額"
-           />
-           <BaseInput
-              v-model.number="form.handling_fee"
-              type="number"
-              :label="`海外手續費 (${trip?.ledger?.base_currency || trip?.base_currency || 'TWD'})`"
-              placeholder="選填"
-           />
-           <div class="flex justify-between items-center p-3 bg-neutral-800 rounded-xl">
-              <span class="text-neutral-400">換算匯率</span>
-              <span class="text-xl font-bold text-indigo-400">{{ calculatedExchangeRate }}</span>
-           </div>
-        </div>
-      </div>
-
-      <!-- Payer & Split -->
-      <div class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800 flex flex-col gap-4">
-        <!-- Payer -->
-        <div class="flex flex-col gap-2">
-          <label class="text-sm text-neutral-400">誰付錢？</label>
-          <BaseSelect 
-            v-model="form.payer" 
-            :options="trip.members.map((m: any) => ({ label: m.name, value: m.id }))"
-          />
-        </div>
-
-        <hr class="border-t border-neutral-800 my-1" />
-
-        <!-- Split Toggle -->
-        <div class="flex flex-col gap-3">
-            <div class="flex items-center justify-between">
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" v-model="isSplitEnabled" class="w-5 h-5 accent-indigo-500 rounded" @change="handleSplitToggle" />
-                    <span class="text-sm text-neutral-200">拆帳</span>
-                </label>
-                <div v-if="isSplitEnabled" class="text-xs text-neutral-400">
-                    剩餘: <span :class="remainingAmount !== 0 ? 'text-red-500 font-bold' : 'text-green-500'">{{ formatCurrency(remainingAmount) }}</span>
+      <div v-if="form.currency && form.currency !== (trip?.base_currency || 'TWD')" class="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden transition-all duration-300">
+        <BaseCollapsible v-model="isSettlementExpanded">
+            <template #header="{ open }">
+                <div class="flex items-center gap-2">
+                     <Icon :icon="open ? 'mdi:chevron-down' : 'mdi:chevron-right'" class="text-xl text-neutral-400" />
+                     <h3 class="font-bold">外幣結算</h3>
                 </div>
-            </div>
-
-             <!-- Members Split List -->
-            <div v-if="isSplitEnabled" class="flex flex-col gap-3 mt-1 bg-neutral-800/30 p-3 rounded-xl">
-                 <div class="flex justify-end mb-2">
-                    <button type="button" @click="resetToEven" class="text-xs text-indigo-400 hover:text-indigo-300">
-                        重設為均分
-                    </button>
+                
+                 <!-- Show summary if collapsed and has value -->
+                 <div v-if="!open" class="text-sm text-neutral-400">
+                    <span v-if="form.manual_rate && form.exchange_rate > 0">匯率: {{ form.exchange_rate }}</span>
+                    <span v-else-if="!form.manual_rate && form.billing_amount > 0">已填寫</span>
+                    <span v-else>未設定</span>
                  </div>
-                 <div v-for="m in splitList" :key="m.name" class="flex items-center gap-3">
-                     <input type="checkbox" v-model="m.involved" class="w-5 h-5 accent-indigo-500" @change="recalculateSplits(false)" />
-                     <div class="flex-1">
-                        <div class="text-base">{{ m.name }}</div>
-                     </div>
-                     <div class="w-28 relative">
-                         <input 
-                           v-model.number="m.customAmount" 
-                           type="number" 
-                           class="w-full px-2 py-1.5 rounded-lg border border-neutral-700 bg-neutral-800 text-white text-right focus:outline-none focus:border-indigo-500 text-sm"
-                           :disabled="!m.involved"
-                           @input="handleAmountInput"
-                         />
-                     </div>
+            </template>
+            
+            <div class="p-4 flex flex-col gap-4">
+                 <div class="flex justify-end">
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" v-model="form.manual_rate" class="w-4 h-4 rounded text-indigo-500 focus:ring-indigo-500 bg-neutral-800 border-gray-600">
+                        <span class="text-sm">自行輸入匯率 (現金)</span>
+                    </label>
                  </div>
+
+                 <div v-if="form.manual_rate" class="flex flex-col gap-4">
+                    <!-- Manual Rate Mode -->
+                    <BaseInput
+                       v-model.number="form.exchange_rate"
+                       type="number"
+                       label="匯率"
+                       step="0.0001"
+                       :placeholder="`1 ${trip?.ledger?.base_currency || trip?.base_currency || 'TWD'} = ? ${form.currency}`"
+                    />
+                    <div class="flex justify-between items-center p-2 bg-neutral-800 rounded">
+                       <span class="text-neutral-400">折合 {{ trip?.ledger?.base_currency || trip?.base_currency || 'TWD' }}</span>
+                       <span class="text-xl font-bold">{{ trip?.ledger?.base_currency || trip?.base_currency || 'TWD' }} {{ calculatedBillingAmount.toLocaleString() }}</span>
+                    </div>
+                 </div>
+
+            <div v-else class="flex flex-col gap-4">
+               <!-- Auto Rate Mode (Credit Card) -->
+               <BaseInput
+                  v-model.number="form.billing_amount"
+                  type="number"
+                  :label="`銀行入帳金額 (${trip?.ledger?.base_currency || trip?.base_currency || 'TWD'})`"
+                  placeholder="信用卡帳單金額"
+               />
+               <BaseInput
+                  v-model.number="form.handling_fee"
+                  type="number"
+                  :label="`海外手續費 (${trip?.ledger?.base_currency || trip?.base_currency || 'TWD'})`"
+                  placeholder="選填"
+               />
+               <div class="flex justify-between items-center p-2 bg-neutral-800 rounded">
+                  <span class="text-neutral-400">換算匯率</span>
+                  <span class="text-xl font-bold text-indigo-400">{{ calculatedExchangeRate }}</span>
+               </div>
             </div>
-        </div>
+            </div>
+        </BaseCollapsible>
       </div>
 
-      <!-- Payment Method -->
-      <div v-if="paymentMethods.length > 0" class="flex flex-col gap-2">
-        <label class="block mb-1 text-sm text-neutral-400">付款方式</label>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="method in paymentMethods"
-            :key="method"
-            type="button"
-            class="px-4 py-2.5 rounded-3xl border border-neutral-800 bg-neutral-900 text-white cursor-pointer transition-all duration-200 hover:border-indigo-500"
-            :class="{ 'bg-indigo-500 border-indigo-500': form.payment_method === method }"
-            @click="form.payment_method = method"
-          >
-            {{ method }}
-          </button>
-        </div>
-      </div>
 
-      <!-- Note -->
-      <div class="flex flex-col gap-2">
-        <label class="block mb-1 text-sm text-neutral-400">備註</label>
-        <BaseTextarea 
-          v-model="form.note" 
-          rows="2" 
-          placeholder="選填" 
-        />
-      </div>
+
+
 
       <!-- Images -->
-      <div class="flex flex-col gap-2">
-        <label class="block mb-1 text-sm text-neutral-400">照片 / 收據</label>
+      <div class="bg-neutral-900 rounded-2xl p-4 border border-neutral-800 flex flex-col gap-2">
+        <label class="block text-xs text-neutral-400">照片 / 收據</label>
         <ImageManager 
           ref="imageManager"
           entity-id="temp-new-txn" 
@@ -270,6 +316,7 @@ import BaseSelect from '~/components/BaseSelect.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import ImageManager from '~/components/ImageManager.vue'
+import BaseCollapsible from '~/components/BaseCollapsible.vue'
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 
@@ -283,6 +330,7 @@ const loading = ref(true)
 const submitting = ref(false)
 const imageManager = ref<any>(null)
 const isSplitEnabled = ref(false)
+const isSettlementExpanded = ref(false)
 
 // hourOptions/minuteOptions/manual time logic removed
 
@@ -310,7 +358,7 @@ const form = ref({
   payment_method: '',
   note: '',
   manualAmount: 0,
-  items: [{ name: '', unit_price: 0, quantity: 1, discount: 0 }],
+  items: [{ name: '', unit_price: 0, quantity: 1, discount: 0, expanded: true }],
   payer: '', // Member ID
   manual_rate: true,
   exchange_rate: 0,
@@ -325,12 +373,13 @@ const hasItems = computed(() => {
 })
 
 const totalAmount = computed(() => {
-  if (hasItems.value) {
-      return form.value.items.reduce((sum, item) => {
+    return form.value.manualAmount
+})
+
+const itemsTotal = computed(() => {
+    return form.value.items.reduce((sum, item) => {
         return sum + ((item.unit_price - (item.discount || 0)) * item.quantity)
-      }, 0)
-  }
-  return form.value.manualAmount
+    }, 0)
 })
 
 // Calculated Billing Amount (For Manual Rate Mode)
@@ -374,7 +423,7 @@ const remainingAmount = computed(() => {
 })
 
 const addItem = () => {
-  form.value.items.push({ name: '', unit_price: 0, quantity: 1, discount: 0 })
+  form.value.items.push({ name: '', unit_price: 0, quantity: 1, discount: 0, expanded: true })
 }
 
 const removeItem = (index: number) => {
@@ -436,7 +485,11 @@ const formatCurrency = (val: number) => {
 // Actually, simple UX: create/add items -> total changes. Split amounts become stale.
 // Let's re-run even split whenever total changes for simplicity in this version, unless user locked it?
 // User said "Default even".
-watch(totalAmount, () => {
+watch([totalAmount, itemsTotal], ([newTotal, newItemsTotal]) => {
+    // If items exist, maybe we should warn if total != itemsTotal? 
+    // But requirement says: "Only validate on submit".
+    
+    // Auto-update splits if enabled
     if (isSplitEnabled.value) {
         recalculateSplits(true)
     }
@@ -491,9 +544,22 @@ const handleSubmit = async () => {
     alert('總金額必須大於 0')
     return
   }
+  if (!form.value.title.trim()) {
+    alert('請輸入標題')
+    return
+  }
   if (!form.value.payer) {
     alert('請選擇付款人')
     return
+  }
+
+  // Validate Total vs Items
+  if (hasItems.value) {
+      if (Math.abs(itemsTotal.value - form.value.manualAmount) > 1) {
+          if (!confirm(`總金額 (${form.value.manualAmount}) 與 項目明細總和 (${itemsTotal.value}) 不符，確定要儲存？`)) {
+              return
+          }
+      }
   }
 
   const baseCurrency = trip.value?.ledger?.base_currency || trip.value?.base_currency || 'TWD'
@@ -567,7 +633,9 @@ const handleSubmit = async () => {
       payer: payerMember?.name || 'Unknown',
       currency: form.value.currency || baseCurrency,
       payment_method: form.value.payment_method,
-      items: hasItems.value ? form.value.items.filter(item => item.name && item.unit_price > 0) : [],
+      items: hasItems.value ? form.value.items
+        .filter(item => item.name && item.unit_price > 0)
+        .map(({ expanded, ...item }) => item) : [],
       
       total_amount: totalAmount.value,
       exchange_rate: form.value.currency === baseCurrency ? 1 : form.value.exchange_rate,
