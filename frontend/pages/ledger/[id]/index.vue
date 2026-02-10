@@ -5,9 +5,14 @@
         <Icon icon="mdi:arrow-left" class="text-2xl" />
       </button>
       <h1 class="text-xl font-bold">交易詳情</h1>
-      <button @click="handleDelete" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-red-500 border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
-        <Icon icon="mdi:delete" class="text-2xl" />
-      </button>
+      <div class="flex gap-2">
+        <button @click="router.push(`/ledger/${route.params.id}/edit`)" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-indigo-400 border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
+          <Icon icon="mdi:pencil" class="text-2xl" />
+        </button>
+        <button @click="handleDelete" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-red-500 border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
+          <Icon icon="mdi:delete" class="text-2xl" />
+        </button>
+      </div>
     </header>
 
     <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>

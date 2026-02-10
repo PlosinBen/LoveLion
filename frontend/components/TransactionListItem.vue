@@ -4,8 +4,13 @@
       <h4 class="text-sm font-medium">{{ transaction.category || '未分類' }}</h4>
       <p class="text-xs text-neutral-400 mt-1">{{ formatDate(transaction.date) }}</p>
     </div>
-    <div class="font-semibold text-indigo-500">
-      {{ transaction.currency }} {{ transaction.total_amount }}
+    <div class="font-semibold text-indigo-500 text-right">
+      <div class="text-[10px] text-neutral-500 leading-none mb-1">
+        {{ (transaction.billing_amount && Number(transaction.billing_amount) > 0) ? (baseCurrency || 'TWD') : transaction.currency }}
+      </div>
+      <div>
+        {{ formatAmount((transaction.billing_amount && Number(transaction.billing_amount) > 0) ? transaction.billing_amount : transaction.total_amount) }}
+      </div>
     </div>
   </div>
 </template>
@@ -17,11 +22,18 @@ defineProps<{
     date: string
     currency: string
     total_amount: number | string
-  }
+    billing_amount?: number | string
+  },
+  baseCurrency?: string
 }>()
 
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr)
   return date.toLocaleDateString('zh-TW', { month: 'short', day: 'numeric' })
+}
+
+const formatAmount = (amount: string | number) => {
+  const num = typeof amount === 'string' ? parseFloat(amount) : amount
+  return num.toLocaleString('zh-TW')
 }
 </script>

@@ -36,11 +36,10 @@
             <p class="text-xs text-neutral-400">{{ formatDate(txn.date) }} • {{ txn.items?.length || 0 }} 項目</p>
           </div>
           <div class="text-right">
-            <span class="block text-xs text-neutral-400 mb-0.5">{{ txn.currency }}</span>
-            <span class="text-lg font-semibold">{{ formatAmount(txn.total_amount) }}</span>
+            <span class="block text-xs text-neutral-400 mb-0.5">{{ (txn.billing_amount && Number(txn.billing_amount) > 0) ? (ledger?.base_currency || 'TWD') : txn.currency }}</span>
+            <span class="text-lg font-semibold">{{ formatAmount((txn.billing_amount && Number(txn.billing_amount) > 0) ? txn.billing_amount : txn.total_amount) }}</span>
           </div>
         </div>
-        <div v-if="txn.note" class="mt-3 pt-3 border-t border-neutral-800 text-[13px] text-neutral-400">{{ txn.note }}</div>
       </div>
     </div>
   </div>

@@ -69,8 +69,8 @@
               <div class="flex justify-between items-start mb-1">
                 <h3 class="font-bold text-base truncate pr-2">{{ txn.title || txn.items?.[0]?.name || txn.category || '未分類' }}</h3>
                 <div class="flex items-baseline gap-1 shrink-0">
-                   <span class="text-xs text-neutral-400">{{ txn.currency }}</span>
-                   <span class="font-bold text-white">{{ formatAmount(txn.total_amount) }}</span>
+                   <span class="text-xs text-neutral-400">{{ (txn.billing_amount && Number(txn.billing_amount) > 0) ? (trip?.ledger?.base_currency || trip?.base_currency || 'TWD') : txn.currency }}</span>
+                   <span class="font-bold text-white">{{ formatAmount((txn.billing_amount && Number(txn.billing_amount) > 0) ? txn.billing_amount : txn.total_amount) }}</span>
                 </div>
               </div>
               <div class="flex justify-between items-center text-xs text-neutral-400">
@@ -113,12 +113,10 @@ const loading = ref(true)
 
 const totalExpense = computed(() => {
   return transactions.value.reduce((sum, txn) => {
-    // Simplified total calculation (assuming base currency for now or ignoring exchange rates for simple sum)
-    // To do it properly, we should convert everything to base currency.
-    // For now, let's just sum up ignoring currency mixing or assume specific logic.
-    // Actually better to just show raw number if multiple currencies is complex.
-    // Or just sum everything as number.
-    return sum + Number(txn.total_amount)
+    const amount = (txn.billing_amount && Number(txn.billing_amount) > 0) 
+      ? Number(txn.billing_amount) 
+      : Number(txn.total_amount)
+    return sum + amount
   }, 0)
 })
 

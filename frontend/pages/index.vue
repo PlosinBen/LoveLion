@@ -39,6 +39,7 @@
           v-for="txn in recentTransactions"
           :key="txn.id"
           :transaction="txn"
+          :base-currency="ledgers[0]?.base_currency"
         />
       </div>
     </div>
