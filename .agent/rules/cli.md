@@ -2,16 +2,21 @@
 trigger: always_on
 ---
 
-# Terminal & CLI Rules
+# CLI & Git Mandatory Rules
 
-## Usage Preferences
-- **Preferred Shell**: Bash (Git Bash or WSL)
-- **Command Style**: Use bash syntax instead of PowerShell
-- **Command Execution**: Always call commands as **separate tool calls** (not chained with `;` or `&&`) to ensure Allow List whitelist works correctly
+## Execution Guidelines
+- **Shell**: MANDATORY use of Git Bash (`sh/bash`).
+- **Chained Commands**: MUST be wrapped in `bash -c '...'` (e.g., `bash -c "git add . && git commit -m '...'"`).
+- **Environment**: 
+  - Backend: `docker compose exec -T backend go ...`
+  - Frontend: `docker compose exec -T frontend npm ...`
+- **Host System**: NEVER assume Go/Node presence on host.
 
-## Docker Environment
-- **Go Commands**: MUST be run inside the backend container.
-  - Usage: `docker compose exec -T backend go ...`
-- **NPM/Node Commands**: MUST be run inside the frontend container.
-  - Usage: `docker compose exec -T frontend npm ...`
-- **Host System**: Do NOT assume go, node, or npm are installed on the host Windows system.
+## AI Contribution Attribution
+- **Author Identity**: BEFORE any commit, MUST set `git config user.name "Antigravity"`.
+- **Cleanup**: AFTER commit, MUST run `git config --unset user.name`.
+- **Commit Style**: Concise messages. Primary goal: WHY, not WHAT.
+
+## Command Execution
+- Separate tool calls PREFERRED for tracking.
+- If `&&` or `||` is used, `bash -c` is REQUIRED.

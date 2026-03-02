@@ -1,77 +1,30 @@
 ---
 name: testing-guidelines
-description: Rules for when and how to run tests during development
+description: Mandatory testing rules
 ---
 
-# Testing Guidelines
-
-Rules that AI should automatically follow during development.
+# Testing Mandates
 
 ## Backend Testing
+- **Trigger**: Modifying ANY backend code (handlers, models, utils).
+- **Rule**: Run `docker compose exec backend go test ./...`.
+- **Policy**: FIX all failures IMMEDIATELY before proceeding.
 
-When **modifying ANY backend code** (handlers, services, models, utils, etc.):
-
-1. **Rule**: You MUST run unit tests to verify your changes.
-2. **Policy**: If *any* test fails, you MUST fix it **immediately** before proceeding. Do not ignore test failures.
-3. Ensure corresponding test file exists (`*_test.go`). If not, create one.
-
-### Running Tests
-Run all Go tests using Docker:
-```bash
-docker compose exec backend go test ./...
-```
-
-
----
-
-## Frontend Browser Testing
-
-When **modifying frontend pages**:
-
-1. Use `browser_subagent` to simulate user behavior on that page
-2. **Do NOT write JavaScript test code**
-3. Tests should cover the modified functionality flow
-
-### Testing Principles
-- Simulate real user actions (click, type, navigate)
-- Verify UI state changes
-- Verify API call results are reflected in the UI
-
-### Example Test Flow
-```
-1. Open target page
-2. Perform user actions (click buttons, fill forms)
-3. Verify page displays correct results
-4. Report test results
-```
-
----
+## Frontend Testing
+- **Trigger**: Modifying frontend pages/components.
+- **Rule**: Use `browser_subagent` to verify user flow.
+- **Policy**: Simulate actions (click, type, navigate) and verify UI state.
 
 ## Database Schema Changes
+- **Trigger**: Adding/modifying migrations.
+- **Rule**:
+  1. Reset DB: `DROP DATABASE IF EXISTS lovelion; CREATE DATABASE lovelion;`
+  2. Run Migrations: `docker compose exec backend migrate ... up`
+  3. Run API Tests: `docker compose exec backend go test ./...`
 
-When **modifying database schema** (add/modify migrations):
-
-1. Reset database
-2. Run all API tests (which creates test data)
-
-```bash
-# 1. Drop and recreate database
-docker compose exec postgres psql -U postgres -c "DROP DATABASE IF EXISTS lovelion"
-docker compose exec postgres psql -U postgres -c "CREATE DATABASE lovelion"
-
-# 2. Run migrations
-docker compose exec backend migrate -path /app/migrations -database "$DATABASE_URL" up
-
-# 3. Run API tests (creates test data)
-docker compose exec backend go test ./...
-```
-
----
-
-## Summary Table
-
-| Scenario | Automatic Action |
-|----------|-----------------|
-| Add/modify Backend API | Run all Go tests |
-| Modify frontend page | Browser test that page |
-| Modify database schema | Reset DB + Run all API tests |
+## Verification Summary
+| Scenario | Action |
+|----------|--------|
+| API Backend | `go test ./...` |
+| UI Frontend | `browser_test` |
+| Schema/DB | `reset_db + go test` |
