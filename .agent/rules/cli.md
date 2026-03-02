@@ -13,8 +13,8 @@ trigger: always_on
 - **Host System**: NEVER assume Go/Node presence on host.
 
 ## AI Contribution Attribution
-- **Author Identity**: BEFORE any commit, MUST set `git config user.name "Antigravity"`.
-- **Cleanup**: AFTER commit, MUST run `git config --unset user.name`.
+- **Commit Helper**: MUST use `bash bin/commit "message" ["detail"]` for all commits.
+- **Auto-Config**: The script automatically handles `user.name "Antigravity"` and its cleanup.
 - **Commit Style**: Concise messages. Primary goal: WHY, not WHAT.
 
 ## Command Execution
