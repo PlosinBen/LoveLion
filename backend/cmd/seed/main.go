@@ -53,7 +53,7 @@ func main() {
 		Currencies:     datatypes.JSON([]byte(`["TWD", "JPY", "USD"]`)),
 		Categories:     datatypes.JSON([]byte(`["食物", "交通", "購物", "娛樂"]`)),
 		PaymentMethods: datatypes.JSON([]byte(`["現金", "信用卡", "Line Pay"]`)),
-		Members:        datatypes.JSON([]byte(`[]`)),
+		MemberNames:    datatypes.JSON([]byte(`[]`)),
 	}
 	db.Create(ledger)
 	fmt.Println("✓ Created ledger: 我的帳本")
@@ -116,7 +116,7 @@ func main() {
 		Currencies:     datatypes.JSON([]byte(`["TWD", "JPY"]`)),
 		Categories:     datatypes.JSON([]byte(`["住宿", "交通", "飲食", "購物", "門票"]`)),
 		PaymentMethods: datatypes.JSON([]byte(`["現金", "信用卡"]`)),
-		Members:        datatypes.JSON([]byte(`["我", "小明", "小美"]`)),
+		MemberNames:    datatypes.JSON([]byte(`["我", "小明", "小美"]`)),
 	}
 	db.Create(tripLedger)
 	fmt.Println("✓ Created ledger for trip: 2024 日本旅行 帳本")
