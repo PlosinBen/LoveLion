@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -51,22 +53,59 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Create new user
-	user := &models.User{
-		ID:          uuid.New(),
-		Username:    req.Username,
-		DisplayName: req.DisplayName,
-	}
+	// Start a transaction to ensure both user and ledger are created
+	err := h.db.Transaction(func(tx *gorm.DB) error {
+		// 1. Create new user
+		user := &models.User{
+			ID:          uuid.New(),
+			Username:    req.Username,
+			DisplayName: req.DisplayName,
+		}
 
-	if err := user.SetPassword(req.Password); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		if err := user.SetPassword(req.Password); err != nil {
+			return err
+		}
+
+		if err := tx.Create(user).Error; err != nil {
+			return err
+		}
+
+		// 2. Create default personal ledger
+		defaultCategories := []string{"餐飲", "交通", "購物", "娛樂", "生活", "其他"}
+		categoriesJSON, _ := json.Marshal(defaultCategories)
+
+		defaultCurrencies := []string{"TWD"}
+		currenciesJSON, _ := json.Marshal(defaultCurrencies)
+
+		ledger := &models.Ledger{
+			ID:             uuid.New(),
+			UserID:         user.ID,
+			Name:           "我的帳本",
+			Type:           "personal",
+			BaseCurrency:   "TWD",
+			Currencies:     datatypes.JSON(currenciesJSON),
+			Categories:     datatypes.JSON(categoriesJSON),
+			Members:        datatypes.JSON("[]"),
+			PaymentMethods: datatypes.JSON("[]"),
+		}
+
+		if err := tx.Create(ledger).Error; err != nil {
+			return err
+		}
+
+		// Pass the user back out of the closure
+		c.Set("registeredUser", user)
+		return nil
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user and create default ledger: " + err.Error()})
 		return
 	}
 
-	if err := h.db.Create(user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
-		return
-	}
+	// Get the user from context
+	userValue, _ := c.Get("registeredUser")
+	user := userValue.(*models.User)
 
 	// Generate token
 	token, err := h.generateToken(user.ID)

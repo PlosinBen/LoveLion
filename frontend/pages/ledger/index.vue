@@ -95,24 +95,16 @@ const formatAmount = (amount: string | number) => {
 
 const fetchData = async () => {
   try {
-    // Get or create default ledger
+    // 1. Get ledgers (Backend now creates a default one upon registration)
     const ledgers = await api.get<any[]>('/api/ledgers')
 
-    if (ledgers.length === 0) {
-      // Create default ledger
-      ledger.value = await api.post<any>('/api/ledgers', {
-        name: '我的帳本',
-        type: 'personal',
-        currencies: ['TWD'],
-        categories: ['餐飲', '交通', '購物', '娛樂', '生活', '其他']
-      })
-    } else {
+    if (ledgers.length > 0) {
       ledger.value = ledgers[0]
+      
+      // 2. Fetch transactions for the first ledger
+      const txns = await api.get<any[]>(`/api/ledgers/${ledger.value.id}/transactions`)
+      transactions.value = txns
     }
-
-    // Fetch transactions
-    const txns = await api.get<any[]>(`/api/ledgers/${ledger.value.id}/transactions`)
-    transactions.value = txns
   } catch (e) {
     console.error('Failed to fetch data:', e)
   } finally {
