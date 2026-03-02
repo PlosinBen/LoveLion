@@ -4,6 +4,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"lovelion/internal/middleware"
 	"lovelion/internal/testutil"
 )
 
@@ -28,7 +29,7 @@ func TestTransactionHandler_List(t *testing.T) {
 	// Test list transactions
 	router := testutil.TestRouter()
 	handler := NewTransactionHandler(db)
-	router.GET("/api/ledgers/:id/transactions", testutil.AuthContext(user.ID), handler.List)
+	router.GET("/api/ledgers/:id/transactions", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), handler.List)
 
 	w = httptest.NewRecorder()
 	req = testutil.JSONRequest("GET", "/api/ledgers/"+ledgerID+"/transactions", nil)
@@ -57,7 +58,7 @@ func TestTransactionHandler_Create(t *testing.T) {
 	// Test create transaction
 	router := testutil.TestRouter()
 	handler := NewTransactionHandler(db)
-	router.POST("/api/ledgers/:id/transactions", testutil.AuthContext(user.ID), handler.Create)
+	router.POST("/api/ledgers/:id/transactions", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), handler.Create)
 
 	tests := []struct {
 		name       string
@@ -109,8 +110,8 @@ func TestTransactionHandler_Get(t *testing.T) {
 
 	router := testutil.TestRouter()
 	router.POST("/api/ledgers", testutil.AuthContext(user.ID), ledgerHandler.Create)
-	router.POST("/api/ledgers/:id/transactions", testutil.AuthContext(user.ID), txnHandler.Create)
-	router.GET("/api/ledgers/:id/transactions/:txn_id", testutil.AuthContext(user.ID), txnHandler.Get)
+	router.POST("/api/ledgers/:id/transactions", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), txnHandler.Create)
+	router.GET("/api/ledgers/:id/transactions/:txn_id", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), txnHandler.Get)
 
 	// Create ledger
 	w := httptest.NewRecorder()
@@ -148,8 +149,8 @@ func TestTransactionHandler_Delete(t *testing.T) {
 
 	router := testutil.TestRouter()
 	router.POST("/api/ledgers", testutil.AuthContext(user.ID), ledgerHandler.Create)
-	router.POST("/api/ledgers/:id/transactions", testutil.AuthContext(user.ID), txnHandler.Create)
-	router.DELETE("/api/ledgers/:id/transactions/:txn_id", testutil.AuthContext(user.ID), txnHandler.Delete)
+	router.POST("/api/ledgers/:id/transactions", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), txnHandler.Create)
+	router.DELETE("/api/ledgers/:id/transactions/:txn_id", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), txnHandler.Delete)
 
 	// Create ledger
 	w := httptest.NewRecorder()

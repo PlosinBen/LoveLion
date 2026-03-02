@@ -149,44 +149,14 @@ func (h *LedgerHandler) Create(c *gin.Context) {
 
 // Get a single ledger
 func (h *LedgerHandler) Get(c *gin.Context) {
-	userID := c.MustGet("userID").(uuid.UUID)
-	ledgerID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ledger ID"})
-		return
-	}
-
-	var ledger models.Ledger
-	if err := h.db.Where("id = ? AND user_id = ?", ledgerID, userID).First(&ledger).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Ledger not found"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch ledger"})
-		return
-	}
-
+	ledger, _ := c.Get("ledger")
 	c.JSON(http.StatusOK, ledger)
 }
 
 // Update a ledger
 func (h *LedgerHandler) Update(c *gin.Context) {
-	userID := c.MustGet("userID").(uuid.UUID)
-	ledgerID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ledger ID"})
-		return
-	}
-
-	var ledger models.Ledger
-	if err := h.db.Where("id = ? AND user_id = ?", ledgerID, userID).First(&ledger).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Ledger not found"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch ledger"})
-		return
-	}
+	ledgerVal, _ := c.Get("ledger")
+	ledger := ledgerVal.(*models.Ledger)
 
 	var req UpdateLedgerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -223,21 +193,11 @@ func (h *LedgerHandler) Update(c *gin.Context) {
 
 // Delete a ledger
 func (h *LedgerHandler) Delete(c *gin.Context) {
-	userID := c.MustGet("userID").(uuid.UUID)
-	ledgerID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ledger ID"})
-		return
-	}
+	ledgerVal, _ := c.Get("ledger")
+	ledger := ledgerVal.(*models.Ledger)
 
-	result := h.db.Where("id = ? AND user_id = ?", ledgerID, userID).Delete(&models.Ledger{})
-	if result.Error != nil {
+	if err := h.db.Delete(ledger).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete ledger"})
-		return
-	}
-
-	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Ledger not found"})
 		return
 	}
 

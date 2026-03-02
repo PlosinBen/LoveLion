@@ -37,18 +37,8 @@ func generateToken() string {
 // Create an invite link
 func (h *LedgerSharingHandler) CreateInvite(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
-	ledgerID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ledger ID"})
-		return
-	}
-
-	// Verify ownership
-	var ledger models.Ledger
-	if err := h.db.Where("id = ? AND user_id = ?", ledgerID, userID).First(&ledger).Error; err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Only the owner can create invite links"})
-		return
-	}
+	ledgerVal, _ := c.Get("ledger")
+	ledger := ledgerVal.(*models.Ledger)
 
 	var req CreateInviteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -58,7 +48,7 @@ func (h *LedgerSharingHandler) CreateInvite(c *gin.Context) {
 
 	invite := &models.LedgerInvite{
 		ID:        uuid.New(),
-		LedgerID:  ledgerID,
+		LedgerID:  ledger.ID,
 		Token:     generateToken(),
 		IsOneTime: req.IsOneTime,
 		MaxUses:   req.MaxUses,
@@ -174,22 +164,11 @@ func (h *LedgerSharingHandler) JoinLedger(c *gin.Context) {
 
 // List all members of a ledger
 func (h *LedgerSharingHandler) ListMembers(c *gin.Context) {
-	userID := c.MustGet("userID").(uuid.UUID)
-	ledgerID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ledger ID"})
-		return
-	}
-
-	// Verify if the user is a member of the ledger
-	var currentMember models.LedgerMember
-	if err := h.db.Where("ledger_id = ? AND user_id = ?", ledgerID, userID).First(&currentMember).Error; err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"error": "You are not a member of this ledger"})
-		return
-	}
+	ledgerVal, _ := c.Get("ledger")
+	ledger := ledgerVal.(*models.Ledger)
 
 	var members []models.LedgerMember
-	if err := h.db.Where("ledger_id = ?", ledgerID).Preload("User").Find(&members).Error; err != nil {
+	if err := h.db.Where("ledger_id = ?", ledger.ID).Preload("User").Find(&members).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch members"})
 		return
 	}
@@ -201,20 +180,13 @@ type UpdateMemberRequest struct {
 	Alias string `json:"alias"`
 }
 
-// Update a member's alias (Owner only)
+// Update a member's alias (Owner only via LedgerOwnerOnly middleware)
 func (h *LedgerSharingHandler) UpdateMemberAlias(c *gin.Context) {
-	ownerID := c.MustGet("userID").(uuid.UUID)
-	ledgerID, err := uuid.Parse(c.Param("id"))
-	targetUserID, err2 := uuid.Parse(c.Param("user_id"))
-	if err != nil || err2 != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid IDs"})
-		return
-	}
-
-	// Verify ownership
-	var ledger models.Ledger
-	if err := h.db.Where("id = ? AND user_id = ?", ledgerID, ownerID).First(&ledger).Error; err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Only the owner can update member aliases"})
+	ledgerVal, _ := c.Get("ledger")
+	ledger := ledgerVal.(*models.Ledger)
+	targetUserID, err := uuid.Parse(c.Param("user_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid User ID"})
 		return
 	}
 
@@ -225,7 +197,7 @@ func (h *LedgerSharingHandler) UpdateMemberAlias(c *gin.Context) {
 	}
 
 	result := h.db.Model(&models.LedgerMember{}).
-		Where("ledger_id = ? AND user_id = ?", ledgerID, targetUserID).
+		Where("ledger_id = ? AND user_id = ?", ledger.ID, targetUserID).
 		Update("alias", req.Alias)
 
 	if result.Error != nil {
@@ -244,16 +216,14 @@ func (h *LedgerSharingHandler) UpdateMemberAlias(c *gin.Context) {
 // Remove a member (Kick by owner OR leave by self)
 func (h *LedgerSharingHandler) RemoveMember(c *gin.Context) {
 	requestorID := c.MustGet("userID").(uuid.UUID)
-	ledgerID, err := uuid.Parse(c.Param("id"))
-	targetUserID, err2 := uuid.Parse(c.Param("user_id"))
-	if err != nil || err2 != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid IDs"})
-		return
-	}
-
-	var ledger models.Ledger
-	if err := h.db.Where("id = ?", ledgerID).First(&ledger).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Ledger not found"})
+	ledgerVal, _ := c.Get("ledger")
+	ledger := ledgerVal.(*models.Ledger)
+	memberVal, _ := c.Get("member")
+	requestorMember := memberVal.(*models.LedgerMember)
+	
+	targetUserID, err := uuid.Parse(c.Param("user_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid User ID"})
 		return
 	}
 
@@ -261,7 +231,7 @@ func (h *LedgerSharingHandler) RemoveMember(c *gin.Context) {
 	// 1. If requestor is Owner, they can remove anyone EXCEPT themselves (to delete ledger, use DeleteLedger)
 	// 2. If requestor is NOT Owner, they can ONLY remove themselves (leaving)
 	
-	isOwner := ledger.UserID == requestorID
+	isOwner := requestorMember.Role == "owner"
 	isSelf := requestorID == targetUserID
 
 	if !isOwner && !isSelf {
@@ -274,7 +244,7 @@ func (h *LedgerSharingHandler) RemoveMember(c *gin.Context) {
 		return
 	}
 
-	result := h.db.Where("ledger_id = ? AND user_id = ?", ledgerID, targetUserID).Delete(&models.LedgerMember{})
+	result := h.db.Where("ledger_id = ? AND user_id = ?", ledger.ID, targetUserID).Delete(&models.LedgerMember{})
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove member"})
 		return
@@ -288,25 +258,14 @@ func (h *LedgerSharingHandler) RemoveMember(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Member removed successfully"})
 }
 
-// List all active invites for a ledger (Owner only)
+// List all active invites for a ledger (Owner only via LedgerOwnerOnly)
 func (h *LedgerSharingHandler) ListInvites(c *gin.Context) {
-	userID := c.MustGet("userID").(uuid.UUID)
-	ledgerID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ledger ID"})
-		return
-	}
-
-	// Verify ownership
-	var ledger models.Ledger
-	if err := h.db.Where("id = ? AND user_id = ?", ledgerID, userID).First(&ledger).Error; err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Only the owner can view invites"})
-		return
-	}
+	ledgerVal, _ := c.Get("ledger")
+	ledger := ledgerVal.(*models.Ledger)
 
 	var invites []models.LedgerInvite
 	// Only show active ones: not expired AND (max_uses=0 OR use_count < max_uses)
-	err = h.db.Where("ledger_id = ? AND (expires_at IS NULL OR expires_at > ?) AND (max_uses = 0 OR use_count < max_uses)", ledgerID, time.Now()).
+	err := h.db.Where("ledger_id = ? AND (expires_at IS NULL OR expires_at > ?) AND (max_uses = 0 OR use_count < max_uses)", ledger.ID, time.Now()).
 		Order("created_at DESC").
 		Find(&invites).Error
 
@@ -318,25 +277,17 @@ func (h *LedgerSharingHandler) ListInvites(c *gin.Context) {
 	c.JSON(http.StatusOK, invites)
 }
 
-// Revoke an invite link (Owner only)
+// Revoke an invite link (Owner only via LedgerOwnerOnly)
 func (h *LedgerSharingHandler) RevokeInvite(c *gin.Context) {
-	userID := c.MustGet("userID").(uuid.UUID)
-	ledgerID, err := uuid.Parse(c.Param("id"))
-	inviteID, err2 := uuid.Parse(c.Param("invite_id"))
-	if err != nil || err2 != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid IDs"})
+	ledgerVal, _ := c.Get("ledger")
+	ledger := ledgerVal.(*models.Ledger)
+	inviteID, err := uuid.Parse(c.Param("invite_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Invite ID"})
 		return
 	}
 
-	// Verify ownership
-	var ledger models.Ledger
-	if err := h.db.Where("id = ? AND user_id = ?", ledgerID, userID).First(&ledger).Error; err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Only the owner can revoke invites"})
-		return
-	}
-
-	// We can either delete it or set an expired time. Let's delete it for simplicity.
-	result := h.db.Where("id = ? AND ledger_id = ?", inviteID, ledgerID).Delete(&models.LedgerInvite{})
+	result := h.db.Where("id = ? AND ledger_id = ?", inviteID, ledger.ID).Delete(&models.LedgerInvite{})
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to revoke invite"})
 		return

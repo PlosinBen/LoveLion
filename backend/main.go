@@ -55,27 +55,39 @@ func main() {
 			ledgerHandler := handlers.NewLedgerHandler(db)
 			ledgers.GET("", ledgerHandler.List)
 			ledgers.POST("", ledgerHandler.Create)
-			ledgers.GET("/:id", ledgerHandler.Get)
-			ledgers.PUT("/:id", ledgerHandler.Update)
-			ledgers.DELETE("/:id", ledgerHandler.Delete)
 
-			// Invitation management
-			ledgers.POST("/:id/invites", sharingHandler.CreateInvite)
-			ledgers.GET("/:id/invites", sharingHandler.ListInvites)
-			ledgers.DELETE("/:id/invites/:invite_id", sharingHandler.RevokeInvite)
+			// Single ledger operations (Access required)
+			ledgerGroup := ledgers.Group("/:id")
+			ledgerGroup.Use(middleware.LedgerAccess(db))
+			{
+				ledgerGroup.GET("", ledgerHandler.Get)
+				
+				// Owner only operations
+				ownerGroup := ledgerGroup.Group("")
+				ownerGroup.Use(middleware.LedgerOwnerOnly())
+				{
+					ownerGroup.PUT("", ledgerHandler.Update)
+					ownerGroup.DELETE("", ledgerHandler.Delete)
+					
+					// Invitation management
+					ownerGroup.POST("/invites", sharingHandler.CreateInvite)
+					ownerGroup.GET("/invites", sharingHandler.ListInvites)
+					ownerGroup.DELETE("/invites/:invite_id", sharingHandler.RevokeInvite)
+				}
 
-			// Member management
-			ledgers.GET("/:id/members", sharingHandler.ListMembers)
-			ledgers.PATCH("/:id/members/:user_id", sharingHandler.UpdateMemberAlias)
-			ledgers.DELETE("/:id/members/:user_id", sharingHandler.RemoveMember)
+				// Member management
+				ledgerGroup.GET("/members", sharingHandler.ListMembers)
+				ledgerGroup.PATCH("/members/:user_id", sharingHandler.UpdateMemberAlias)
+				ledgerGroup.DELETE("/members/:user_id", sharingHandler.RemoveMember)
 
-			// Transaction routes nested under ledger
-			transactionHandler := handlers.NewTransactionHandler(db)
-			ledgers.GET("/:id/transactions", transactionHandler.List)
-			ledgers.POST("/:id/transactions", transactionHandler.Create)
-			ledgers.GET("/:id/transactions/:txn_id", transactionHandler.Get)
-			ledgers.PUT("/:id/transactions/:txn_id", transactionHandler.Update)
-			ledgers.DELETE("/:id/transactions/:txn_id", transactionHandler.Delete)
+				// Transaction routes nested under ledger
+				transactionHandler := handlers.NewTransactionHandler(db)
+				ledgerGroup.GET("/transactions", transactionHandler.List)
+				ledgerGroup.POST("/transactions", transactionHandler.Create)
+				ledgerGroup.GET("/transactions/:txn_id", transactionHandler.Get)
+				ledgerGroup.PUT("/transactions/:txn_id", transactionHandler.Update)
+				ledgerGroup.DELETE("/transactions/:txn_id", transactionHandler.Delete)
+			}
 		}
 
 		// Protected trip routes

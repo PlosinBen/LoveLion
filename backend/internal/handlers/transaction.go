@@ -67,68 +67,16 @@ type UpdateTransactionRequest struct {
 	Splits        []TransactionSplitRequest `json:"splits"`
 }
 
-// Helper to verify ledger ownership
-// Helper to verify ledger ownership or access
-func (h *TransactionHandler) verifyLedgerOwnership(ledgerID uuid.UUID, userID uuid.UUID) (*models.Ledger, error) {
-	var ledger models.Ledger
-	if err := h.db.Where("id = ?", ledgerID).First(&ledger).Error; err != nil {
-		return nil, err
-	}
-
-	// Personal ledger: must match UserID
-	if ledger.Type == "personal" {
-		if ledger.UserID != userID {
-			return nil, gorm.ErrRecordNotFound
-		}
-		return &ledger, nil
-	}
-
-	// Trip ledger: check if user is in the trip
-	if ledger.Type == "trip" {
-		var trip models.Trip
-		if err := h.db.Where("ledger_id = ?", ledgerID).Preload("Members").First(&trip).Error; err != nil {
-			return nil, err
-		}
-
-		// Check if creator
-		if trip.CreatedBy == userID {
-			return &ledger, nil
-		}
-
-		// Check members
-		for _, m := range trip.Members {
-			if m.UserID != nil && *m.UserID == userID {
-				return &ledger, nil
-			}
-		}
-
-		return nil, gorm.ErrRecordNotFound
-	}
-
-	return nil, gorm.ErrRecordNotFound
-}
-
 // List transactions for a ledger
 func (h *TransactionHandler) List(c *gin.Context) {
-	userID := c.MustGet("userID").(uuid.UUID)
-	ledgerID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ledger ID"})
-		return
-	}
-
-	// Verify ownership
-	if _, err := h.verifyLedgerOwnership(ledgerID, userID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Ledger not found"})
-		return
-	}
+	ledgerVal, _ := c.Get("ledger")
+	ledger := ledgerVal.(*models.Ledger)
 
 	var transactions []models.Transaction
-	if err := h.db.Where("ledger_id = ?", ledgerID).
+	if err := h.db.Where("ledger_id = ?", ledger.ID).
 		Preload("Items").
 		Preload("Splits").
 		Preload("Images", "entity_type = ?", "transaction").
-		Order("date DESC").
 		Order("date DESC").
 		Find(&transactions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch transactions"})
@@ -140,18 +88,8 @@ func (h *TransactionHandler) List(c *gin.Context) {
 
 // Create a new transaction with items
 func (h *TransactionHandler) Create(c *gin.Context) {
-	userID := c.MustGet("userID").(uuid.UUID)
-	ledgerID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ledger ID"})
-		return
-	}
-
-	// Verify ownership
-	if _, err := h.verifyLedgerOwnership(ledgerID, userID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Ledger not found"})
-		return
-	}
+	ledgerVal, _ := c.Get("ledger")
+	ledger := ledgerVal.(*models.Ledger)
 
 	var req CreateTransactionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -168,7 +106,7 @@ func (h *TransactionHandler) Create(c *gin.Context) {
 
 	txn := &models.Transaction{
 		ID:            txnID,
-		LedgerID:      ledgerID,
+		LedgerID:      ledger.ID,
 		Payer:         req.Payer,
 		Currency:      req.Currency,
 		ExchangeRate:  req.ExchangeRate,
@@ -257,22 +195,12 @@ func (h *TransactionHandler) Create(c *gin.Context) {
 
 // Get a single transaction
 func (h *TransactionHandler) Get(c *gin.Context) {
-	userID := c.MustGet("userID").(uuid.UUID)
-	ledgerID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ledger ID"})
-		return
-	}
+	ledgerVal, _ := c.Get("ledger")
+	ledger := ledgerVal.(*models.Ledger)
 	txnID := c.Param("txn_id")
 
-	// Verify ownership
-	if _, err := h.verifyLedgerOwnership(ledgerID, userID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Ledger not found"})
-		return
-	}
-
 	var txn models.Transaction
-	if err := h.db.Where("id = ? AND ledger_id = ?", txnID, ledgerID).
+	if err := h.db.Where("id = ? AND ledger_id = ?", txnID, ledger.ID).
 		Preload("Items").
 		Preload("Splits").
 		First(&txn).Error; err != nil {
@@ -289,22 +217,12 @@ func (h *TransactionHandler) Get(c *gin.Context) {
 
 // Update a transaction
 func (h *TransactionHandler) Update(c *gin.Context) {
-	userID := c.MustGet("userID").(uuid.UUID)
-	ledgerID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ledger ID"})
-		return
-	}
+	ledgerVal, _ := c.Get("ledger")
+	ledger := ledgerVal.(*models.Ledger)
 	txnID := c.Param("txn_id")
 
-	// Verify ownership
-	if _, err := h.verifyLedgerOwnership(ledgerID, userID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Ledger not found"})
-		return
-	}
-
 	var txn models.Transaction
-	if err := h.db.Where("id = ? AND ledger_id = ?", txnID, ledgerID).First(&txn).Error; err != nil {
+	if err := h.db.Where("id = ? AND ledger_id = ?", txnID, ledger.ID).First(&txn).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found"})
 			return
@@ -384,20 +302,6 @@ func (h *TransactionHandler) Update(c *gin.Context) {
 			}
 			txn.TotalAmount = totalAmount
 		}
-		// If req.Items IS provided but empty array, we cleared items.
-		// We should NOT reset TotalAmount to 0 unless explicit?
-		// Actually if user sends empty items list, they probably meant to clear items.
-		// But if they also sent TotalAmount, Update logic above (line 320) handles it.
-		// Wait, line 320 runs BEFORE this.
-		// If Items are provided (even empty), we recalculate totalAmount.
-		// If empty items -> totalAmount = 0.
-		// This overwrites line 320 if `req.Items` is present.
-		// We should only overwrite txn.TotalAmount if items > 0.
-		// If items == 0, we trust line 320.
-
-		// Correction: If req.Items is not nil but empty, it clears items.
-		// If specific items logic runs, it usually implies total changes.
-
 		txn.Items = items
 	}
 
@@ -434,21 +338,11 @@ func (h *TransactionHandler) Update(c *gin.Context) {
 
 // Delete a transaction
 func (h *TransactionHandler) Delete(c *gin.Context) {
-	userID := c.MustGet("userID").(uuid.UUID)
-	ledgerID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ledger ID"})
-		return
-	}
+	ledgerVal, _ := c.Get("ledger")
+	ledger := ledgerVal.(*models.Ledger)
 	txnID := c.Param("txn_id")
 
-	// Verify ownership
-	if _, err := h.verifyLedgerOwnership(ledgerID, userID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Ledger not found"})
-		return
-	}
-
-	result := h.db.Where("id = ? AND ledger_id = ?", txnID, ledgerID).Delete(&models.Transaction{})
+	result := h.db.Where("id = ? AND ledger_id = ?", txnID, ledger.ID).Delete(&models.Transaction{})
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete transaction"})
 		return

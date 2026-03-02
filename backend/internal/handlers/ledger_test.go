@@ -4,6 +4,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"lovelion/internal/middleware"
 	"lovelion/internal/testutil"
 
 	"github.com/google/uuid"
@@ -76,7 +77,7 @@ func TestLedgerHandler_Get(t *testing.T) {
 	router := testutil.TestRouter()
 	handler := NewLedgerHandler(db)
 	router.POST("/api/ledgers", testutil.AuthContext(user.ID), handler.Create)
-	router.GET("/api/ledgers/:id", testutil.AuthContext(user.ID), handler.Get)
+	router.GET("/api/ledgers/:id", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), handler.Get)
 
 	// Create a ledger first
 	body := map[string]interface{}{"name": "Test Ledger"}
@@ -101,12 +102,12 @@ func TestLedgerHandler_Get_NotFound(t *testing.T) {
 
 	router := testutil.TestRouter()
 	handler := NewLedgerHandler(db)
-	router.GET("/api/ledgers/:id", testutil.AuthContext(user.ID), handler.Get)
+	router.GET("/api/ledgers/:id", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), handler.Get)
 
 	w := httptest.NewRecorder()
 	req := testutil.JSONRequest("GET", "/api/ledgers/"+uuid.New().String(), nil)
 	router.ServeHTTP(w, req)
-	testutil.ExpectStatus(t, w, 404)
+	testutil.ExpectStatus(t, w, 403) // Middleware returns 403 Forbidden for missing membership
 }
 
 func TestLedgerHandler_Update(t *testing.T) {
@@ -116,7 +117,7 @@ func TestLedgerHandler_Update(t *testing.T) {
 	router := testutil.TestRouter()
 	handler := NewLedgerHandler(db)
 	router.POST("/api/ledgers", testutil.AuthContext(user.ID), handler.Create)
-	router.PUT("/api/ledgers/:id", testutil.AuthContext(user.ID), handler.Update)
+	router.PUT("/api/ledgers/:id", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), middleware.LedgerOwnerOnly(), handler.Update)
 
 	// Create a ledger first
 	createBody := map[string]interface{}{"name": "Original Name"}
@@ -149,7 +150,7 @@ func TestLedgerHandler_Delete(t *testing.T) {
 	router := testutil.TestRouter()
 	handler := NewLedgerHandler(db)
 	router.POST("/api/ledgers", testutil.AuthContext(user.ID), handler.Create)
-	router.DELETE("/api/ledgers/:id", testutil.AuthContext(user.ID), handler.Delete)
+	router.DELETE("/api/ledgers/:id", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), middleware.LedgerOwnerOnly(), handler.Delete)
 
 	// Create a ledger first
 	createBody := map[string]interface{}{"name": "To Delete"}
