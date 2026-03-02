@@ -47,12 +47,20 @@ func toJSON(v interface{}) datatypes.JSON {
 	return datatypes.JSON(bytes)
 }
 
-// List user's ledgers
+// List user's ledgers (including shared ones)
 func (h *LedgerHandler) List(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 
 	var ledgers []models.Ledger
-	if err := h.db.Where("user_id = ?", userID).Order("created_at DESC").Find(&ledgers).Error; err != nil {
+	// Find ledgers where user is a member (either owner or member)
+	err := h.db.
+		Joins("JOIN ledger_members ON ledger_members.ledger_id = ledgers.id").
+		Where("ledger_members.user_id = ?", userID).
+		Preload("User"). // Preload owner info
+		Order("ledgers.created_at DESC").
+		Find(&ledgers).Error
+
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch ledgers"})
 		return
 	}
@@ -93,9 +101,9 @@ func (h *LedgerHandler) Create(c *gin.Context) {
 	}
 
 	if req.Members != nil {
-		ledger.Members = toJSON(req.Members)
+		ledger.MemberNames = toJSON(req.Members)
 	} else {
-		ledger.Members = toJSON([]string{})
+		ledger.MemberNames = toJSON([]string{})
 	}
 
 	if req.Categories != nil {
@@ -110,7 +118,28 @@ func (h *LedgerHandler) Create(c *gin.Context) {
 		ledger.PaymentMethods = toJSON([]string{})
 	}
 
-	if err := h.db.Create(ledger).Error; err != nil {
+	// Use a transaction to create both the ledger and the owner membership
+	err := h.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(ledger).Error; err != nil {
+			return err
+		}
+
+		// Add owner to members table
+		member := &models.LedgerMember{
+			ID:       uuid.New(),
+			LedgerID: ledger.ID,
+			UserID:   userID,
+			Role:     "owner",
+		}
+
+		if err := tx.Create(member).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create ledger"})
 		return
 	}
@@ -175,7 +204,7 @@ func (h *LedgerHandler) Update(c *gin.Context) {
 		ledger.Currencies = toJSON(req.Currencies)
 	}
 	if req.Members != nil {
-		ledger.Members = toJSON(req.Members)
+		ledger.MemberNames = toJSON(req.Members)
 	}
 	if req.Categories != nil {
 		ledger.Categories = toJSON(req.Categories)

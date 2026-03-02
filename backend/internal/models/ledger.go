@@ -14,15 +14,17 @@ type Ledger struct {
 	Type           string         `gorm:"type:varchar(20);not null;default:'personal'" json:"type"`
 	BaseCurrency   string         `gorm:"type:varchar(3);default:'TWD'" json:"base_currency"`
 	Currencies     datatypes.JSON `gorm:"type:jsonb;default:'[\"TWD\"]'" json:"currencies"`
-	Members        datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"members"`
+	MemberNames    datatypes.JSON `gorm:"type:jsonb;default:'[]';column:members" json:"member_names"`
 	Categories     datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"categories"`
 	PaymentMethods datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"payment_methods"`
 	CreatedAt      time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt      time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 
 	// Associations
-	User         *User         `gorm:"foreignKey:UserID" json:"user,omitempty"`
-	Transactions []Transaction `gorm:"foreignKey:LedgerID" json:"transactions,omitempty"`
+	User         *User          `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	Transactions []Transaction   `gorm:"foreignKey:LedgerID" json:"transactions,omitempty"`
+	Members      []LedgerMember `gorm:"foreignKey:LedgerID;constraint:OnDelete:CASCADE" json:"members,omitempty"`
+	Invites      []LedgerInvite `gorm:"foreignKey:LedgerID;constraint:OnDelete:CASCADE" json:"invites,omitempty"`
 }
 
 func (Ledger) TableName() string {

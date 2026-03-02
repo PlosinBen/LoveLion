@@ -83,13 +83,15 @@ func TestDB(t *testing.T) *gorm.DB {
 	err = db.AutoMigrate(
 		&models.User{},
 		&models.Ledger{},
+		&models.LedgerMember{}, // Added LedgerMember
+		&models.LedgerInvite{}, // Added LedgerInvite
 		&models.Transaction{},
 		&models.TransactionItem{},
 		&models.Trip{},
 		&models.TripMember{},
 		&models.ComparisonStore{},
 		&models.ComparisonProduct{},
-		&models.Image{}, // Added Image model to migration
+		&models.Image{},
 	)
 	if err != nil {
 		t.Fatalf("Failed to migrate test database: %v", err)

@@ -43,6 +43,11 @@ func main() {
 			users.GET("/me", middleware.AuthRequiredWithDB(cfg.JWTSecret, db), authHandler.GetMe)
 		}
 
+		// Sharing routes (Public Info)
+		sharingHandler := handlers.NewLedgerSharingHandler(db)
+		api.GET("/invites/:token", sharingHandler.GetInviteInfo)
+		api.POST("/invites/:token/join", middleware.AuthRequiredWithDB(cfg.JWTSecret, db), sharingHandler.JoinLedger)
+
 		// Protected ledger routes
 		ledgers := api.Group("/ledgers")
 		ledgers.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db))
@@ -53,6 +58,16 @@ func main() {
 			ledgers.GET("/:id", ledgerHandler.Get)
 			ledgers.PUT("/:id", ledgerHandler.Update)
 			ledgers.DELETE("/:id", ledgerHandler.Delete)
+
+			// Invitation management
+			ledgers.POST("/:id/invites", sharingHandler.CreateInvite)
+			ledgers.GET("/:id/invites", sharingHandler.ListInvites)
+			ledgers.DELETE("/:id/invites/:invite_id", sharingHandler.RevokeInvite)
+
+			// Member management
+			ledgers.GET("/:id/members", sharingHandler.ListMembers)
+			ledgers.PATCH("/:id/members/:user_id", sharingHandler.UpdateMemberAlias)
+			ledgers.DELETE("/:id/members/:user_id", sharingHandler.RemoveMember)
 
 			// Transaction routes nested under ledger
 			transactionHandler := handlers.NewTransactionHandler(db)

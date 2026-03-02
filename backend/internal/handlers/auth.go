@@ -77,17 +77,27 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		defaultCurrencies := []string{"TWD"}
 		currenciesJSON, _ := json.Marshal(defaultCurrencies)
 
-		ledger := &models.Ledger{
-			ID:             uuid.New(),
-			UserID:         user.ID,
-			Name:           "我的帳本",
-			Type:           "personal",
-			BaseCurrency:   "TWD",
-			Currencies:     datatypes.JSON(currenciesJSON),
-			Categories:     datatypes.JSON(categoriesJSON),
-			Members:        datatypes.JSON("[]"),
-			PaymentMethods: datatypes.JSON("[]"),
-		}
+				ledger := &models.Ledger{
+
+					ID:             uuid.New(),
+
+					UserID:         user.ID,
+
+					Name:           "我的帳本",
+
+					Type:           "personal",
+
+					BaseCurrency:   "TWD",
+
+					Currencies:     datatypes.JSON(currenciesJSON),
+
+					Categories:     datatypes.JSON(categoriesJSON),
+
+					MemberNames:    datatypes.JSON("[]"),
+
+					PaymentMethods: datatypes.JSON("[]"),
+
+				}
 
 		if err := tx.Create(ledger).Error; err != nil {
 			return err

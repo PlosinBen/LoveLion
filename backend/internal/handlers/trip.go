@@ -179,7 +179,7 @@ func (h *TripHandler) Create(c *gin.Context) {
 		if len(req.Members) > 0 {
 			lMembers = append(lMembers, req.Members...)
 		}
-		ledger.Members = toJSON(lMembers)
+		ledger.MemberNames = toJSON(lMembers)
 
 		if err := tx.Create(ledger).Error; err != nil {
 			return err
@@ -281,7 +281,7 @@ func (h *TripHandler) Update(c *gin.Context) {
 				updated = true
 			}
 			if req.LedgerMembers != nil {
-				ledger.Members = toJSON(req.LedgerMembers)
+				ledger.MemberNames = toJSON(req.LedgerMembers)
 				updated = true
 			}
 
