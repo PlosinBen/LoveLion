@@ -1,7 +1,7 @@
 # LoveLion AI 核心規範 (Index)
 
-## 🛠️ Git & 環境 (最優先)
-- **提交**: 必須分步執行，禁止 `&&` (Windows 限制)。
+## 🛠️ 環境執行標準 (MANDATORY)
+- **Git 提交**: 嚴禁在 `run_shell_command` 中使用 `&&`。必須拆分：
   1. `git add .`
   2. `bash bin/commit "標題" "描述"` (署名: Antigravity)
 - **執行**: 宿主機無環境，指令必經 `docker compose exec backend/frontend`。
