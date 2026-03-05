@@ -11,8 +11,10 @@
         </template>
         
         <template #bottom>
-             <h1 class="text-2xl font-bold text-white shadow-sm mb-1">日常統計</h1>
-             <p class="text-sm text-neutral-300">本月支出概況</p>
+             <div class="flex flex-col">
+                <h1 class="text-2xl font-bold text-white shadow-sm">日常統計</h1>
+                <LedgerSwitcher />
+             </div>
         </template>
     </ImmersiveHeader>
 
@@ -26,7 +28,7 @@
         <div class="bg-neutral-800 rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
             <div class="absolute inset-0 bg-gradient-to-br from-green-500/10 to-teal-500/10 z-0"></div>
             <div class="relative z-10 text-center">
-                <span class="text-neutral-400 text-sm mb-1 block">本月總支出</span>
+                <span class="text-neutral-400 text-sm mb-1 block">本月總支出 ({{ currentLedger?.base_currency || 'TWD' }})</span>
                 <div class="text-4xl font-bold text-white tracking-tight">
                     <span class="text-2xl text-neutral-500 mr-1">$</span>
                     {{ formatNumber(totalSpent) }}
@@ -56,7 +58,7 @@
                 <Icon icon="mdi:shape-outline" class="text-green-400" />
                 分類支出
             </h2>
-            <div class="flex flex-col gap-3">
+            <div class="flex flex-col gap-3 pb-24">
                 <div v-for="cat in categories" :key="cat.name" class="bg-neutral-900 rounded-xl p-3 border border-neutral-800">
                      <div class="flex justify-between items-center mb-2">
                          <div class="flex items-center gap-2">
@@ -83,15 +85,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import ImmersiveHeader from '~/components/ImmersiveHeader.vue'
+import LedgerSwitcher from '~/components/LedgerSwitcher.vue'
+import { useLedger } from '~/composables/useLedger'
+import { useApi } from '~/composables/useApi'
 
 definePageMeta({
   layout: 'main'
 })
 
 const router = useRouter()
+const api = useApi()
+const { currentLedger, currentLedgerId, fetchLedgers } = useLedger()
+
 const loading = ref(true)
 const totalSpent = ref(0)
 const categories = ref<any[]>([])
@@ -101,28 +109,49 @@ const formatNumber = (num: number) => {
     return num.toLocaleString()
 }
 
-// Mock data generator for visualization before backend integration
-const processMockData = () => {
-    const total = 15600
+// Watch for ledger selection changes to reload stats
+watch(currentLedgerId, () => {
+  if (currentLedgerId.value) {
+    fetchData()
+  }
+})
+
+// Generator for visualization based on transactions
+const processStats = (transactions: any[]) => {
+    // Basic calculation for now
+    let total = 0
+    const catMap: Record<string, number> = {}
+    
+    transactions.forEach(t => {
+        const amount = Number(t.billing_amount || t.total_amount)
+        total += amount
+        catMap[t.category || '未分類'] = (catMap[t.category || '未分類'] || 0) + amount
+    })
+
     totalSpent.value = total
     
-    categories.value = [
-        { name: '餐飲', amount: 6240, percentage: 40, icon: '🍔' },
-        { name: '交通', amount: 3120, percentage: 20, icon: '🚆' },
-        { name: '租金', amount: 4680, percentage: 30, icon: '🏠' },
-        { name: '其他', amount: 1560, percentage: 10, icon: '📦' },
-    ].sort((a,b) => b.amount - a.amount)
+    const catIcons: Record<string, string> = {
+        '餐飲': '🍔', '交通': '🚆', '購物': '🛍️', '生活': '🏠', '娛樂': '🎮', '食物': '🍔'
+    }
 
-    // Mock weekly spending relative percentage (0-100)
+    categories.value = Object.entries(catMap).map(([name, amount]) => ({
+        name,
+        amount,
+        percentage: total > 0 ? Math.round((amount / total) * 100) : 0,
+        icon: catIcons[name] || '📦'
+    })).sort((a,b) => b.amount - a.amount)
+
+    // Mock weekly spending relative percentage
     weeklyData.value = [30, 60, 45, 80]
 }
 
 const fetchData = async () => {
-    try {
-        // Here we would fetch real ledger transactions
-        await new Promise(resolve => setTimeout(resolve, 500)) // Fake delay
-        processMockData()
+    if (!currentLedger.value) return
 
+    loading.value = true
+    try {
+        const txns = await api.get<any[]>(`/api/ledgers/${currentLedger.value.id}/transactions`)
+        processStats(txns)
     } catch (e) {
         console.error(e)
     } finally {
@@ -130,7 +159,8 @@ const fetchData = async () => {
     }
 }
 
-onMounted(() => {
+onMounted(async () => {
+    await fetchLedgers()
     fetchData()
 })
 </script>
