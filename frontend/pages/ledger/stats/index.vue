@@ -1,22 +1,10 @@
 <template>
-  <div class="flex flex-col gap-6">
-    <ImmersiveHeader
-        fallback-icon="mdi:chart-bar"
-        class="rounded-2xl"
-    >
-        <template #top-left>
-             <button @click="router.push('/ledger')" class="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/50 transition-colors border-0 cursor-pointer">
-                <Icon icon="mdi:arrow-left" class="text-xl" />
-             </button>
-        </template>
-        
-        <template #bottom>
-             <div class="flex flex-col">
-                <h1 class="text-2xl font-bold text-white shadow-sm">日常統計</h1>
-                <LedgerSwitcher />
-             </div>
-        </template>
-    </ImmersiveHeader>
+  <div class="flex flex-col">
+    <LedgerHeader
+      title="日常統計"
+      icon="mdi:chart-bar"
+      :show-back="true"
+    />
 
     <div v-if="loading" class="flex justify-center items-center py-20 text-neutral-400">
         <Icon icon="eos-icons:loading" class="text-3xl animate-spin" />

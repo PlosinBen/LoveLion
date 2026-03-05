@@ -1,17 +1,10 @@
 <template>
   <div class="ledger-page pb-24">
-    <header class="flex justify-between items-center mb-6">
-      <div class="flex flex-col">
-        <h1 class="text-2xl font-bold tracking-tight">個人記帳</h1>
-        <LedgerSwitcher />
-      </div>
-
-      <div class="flex gap-2">
-        <button v-if="isOwner" @click="router.push(`/ledger/${currentLedger?.id}/settings`)" class="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors cursor-pointer">
-          <Icon icon="mdi:share-variant" class="text-xl" />
-        </button>
-      </div>
-    </header>
+    <LedgerHeader
+      title="個人記帳"
+      icon="mdi:wallet-outline"
+      :show-settings="true"
+    />
 
     <!-- FAB -->
     <NuxtLink 
