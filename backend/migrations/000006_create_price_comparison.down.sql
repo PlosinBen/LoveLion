@@ -1,3 +1,2 @@
-DROP TABLE IF EXISTS trip_comparison_products;
-
-DROP TABLE IF EXISTS trip_comparison_stores;
+DROP TABLE IF EXISTS comparison_products;
+DROP TABLE IF EXISTS comparison_stores;

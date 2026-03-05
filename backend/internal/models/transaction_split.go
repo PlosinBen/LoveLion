@@ -17,8 +17,8 @@ type TransactionSplit struct {
 	CreatedAt     time.Time       `gorm:"autoCreateTime" json:"created_at"`
 
 	// Associations
-	Transaction *Transaction `gorm:"foreignKey:TransactionID" json:"transaction,omitempty"`
-	Member      *TripMember  `gorm:"foreignKey:MemberID" json:"member,omitempty"`
+	Transaction *Transaction  `gorm:"foreignKey:TransactionID" json:"transaction,omitempty"`
+	Member      *LedgerMember `gorm:"foreignKey:MemberID" json:"member,omitempty"`
 }
 
 func (TransactionSplit) TableName() string {

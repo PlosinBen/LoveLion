@@ -7,16 +7,22 @@ import (
 	"gorm.io/datatypes"
 )
 
+// Ledger represents a "Space" in the application (e.g., Personal, Trip, Group)
 type Ledger struct {
 	ID             uuid.UUID      `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
 	UserID         uuid.UUID      `gorm:"type:uuid;not null" json:"user_id"`
 	Name           string         `gorm:"type:varchar(100);not null" json:"name"`
-	Type           string         `gorm:"type:varchar(20);not null;default:'personal'" json:"type"`
+	Description    string         `gorm:"type:text" json:"description"`
+	Type           string         `gorm:"type:varchar(20);not null;default:'personal'" json:"type"` // personal, trip, group
 	BaseCurrency   string         `gorm:"type:varchar(3);default:'TWD'" json:"base_currency"`
 	Currencies     datatypes.JSON `gorm:"type:jsonb;default:'[\"TWD\"]'" json:"currencies"`
-	MemberNames    datatypes.JSON `gorm:"type:jsonb;default:'[]';column:members" json:"member_names"`
+	MemberNames    datatypes.JSON `gorm:"type:jsonb;default:'[]';column:members" json:"member_names"` // Deprecated but kept for compatibility
 	Categories     datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"categories"`
 	PaymentMethods datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"payment_methods"`
+	StartDate      *time.Time     `gorm:"type:date" json:"start_date"`
+	EndDate        *time.Time     `gorm:"type:date" json:"end_date"`
+	CoverImage     string         `gorm:"type:text" json:"cover_image"`
+	IsPinned       bool           `gorm:"default:false" json:"is_pinned"`
 	CreatedAt      time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt      time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 

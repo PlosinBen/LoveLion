@@ -49,8 +49,8 @@ func TestImageHandler_List(t *testing.T) {
 	db := testutil.TestDB(t)
 
 	// Create dummy data
-	entityID := "trip_123"
-	entityType := "trip"
+	entityID := "space_123"
+	entityType := "space"
 
 	images := []models.Image{
 		{
@@ -103,8 +103,8 @@ func TestImageHandler_Reorder(t *testing.T) {
 	db := testutil.TestDB(t)
 
 	// Create dummy data
-	entityID := "trip_123"
-	entityType := "trip"
+	entityID := "space_123"
+	entityType := "space"
 
 	img1 := models.Image{ID: uuid.New(), EntityID: entityID, EntityType: entityType, SortOrder: 0}
 	img2 := models.Image{ID: uuid.New(), EntityID: entityID, EntityType: entityType, SortOrder: 1}

@@ -11,24 +11,24 @@ func TestComparisonHandler_ListStores(t *testing.T) {
 	db := testutil.TestDB(t)
 	user := testutil.CreateTestUser(t, db)
 
-	tripHandler := NewTripHandler(db)
+	spaceHandler := NewSpaceHandler(db)
 	comparisonHandler := NewComparisonHandler(db)
 
 	router := testutil.TestRouter()
-	router.POST("/api/trips", testutil.AuthContext(user.ID), tripHandler.Create)
-	router.GET("/api/trips/:id/stores", testutil.AuthContext(user.ID), comparisonHandler.ListStores)
+	router.POST("/api/spaces", testutil.AuthContext(user.ID), spaceHandler.Create)
+	router.GET("/api/spaces/:id/stores", testutil.AuthContext(user.ID), comparisonHandler.ListStores)
 
-	// Create a trip
+	// Create a space
 	w := httptest.NewRecorder()
-	req := testutil.JSONRequest("POST", "/api/trips", map[string]interface{}{"name": "Trip"})
+	req := testutil.JSONRequest("POST", "/api/spaces", map[string]interface{}{"name": "Personal Space"})
 	router.ServeHTTP(w, req)
-	var trip map[string]interface{}
-	testutil.ParseResponse(t, w, &trip)
-	tripID := trip["id"].(string)
+	var space map[string]interface{}
+	testutil.ParseResponse(t, w, &space)
+	spaceID := space["id"].(string)
 
 	// List stores
 	w = httptest.NewRecorder()
-	req = testutil.JSONRequest("GET", "/api/trips/"+tripID+"/stores", nil)
+	req = testutil.JSONRequest("GET", "/api/spaces/"+spaceID+"/stores", nil)
 	router.ServeHTTP(w, req)
 	testutil.ExpectStatus(t, w, 200)
 }
@@ -37,20 +37,20 @@ func TestComparisonHandler_CreateStore(t *testing.T) {
 	db := testutil.TestDB(t)
 	user := testutil.CreateTestUser(t, db)
 
-	tripHandler := NewTripHandler(db)
+	spaceHandler := NewSpaceHandler(db)
 	comparisonHandler := NewComparisonHandler(db)
 
 	router := testutil.TestRouter()
-	router.POST("/api/trips", testutil.AuthContext(user.ID), tripHandler.Create)
-	router.POST("/api/trips/:id/stores", testutil.AuthContext(user.ID), comparisonHandler.CreateStore)
+	router.POST("/api/spaces", testutil.AuthContext(user.ID), spaceHandler.Create)
+	router.POST("/api/spaces/:id/stores", testutil.AuthContext(user.ID), comparisonHandler.CreateStore)
 
-	// Create a trip
+	// Create a space
 	w := httptest.NewRecorder()
-	req := testutil.JSONRequest("POST", "/api/trips", map[string]interface{}{"name": "Trip"})
+	req := testutil.JSONRequest("POST", "/api/spaces", map[string]interface{}{"name": "Project Space"})
 	router.ServeHTTP(w, req)
-	var trip map[string]interface{}
-	testutil.ParseResponse(t, w, &trip)
-	tripID := trip["id"].(string)
+	var space map[string]interface{}
+	testutil.ParseResponse(t, w, &space)
+	spaceID := space["id"].(string)
 
 	// Create store
 	storeBody := map[string]interface{}{
@@ -58,7 +58,7 @@ func TestComparisonHandler_CreateStore(t *testing.T) {
 		"location": "Tokyo",
 	}
 	w = httptest.NewRecorder()
-	req = testutil.JSONRequest("POST", "/api/trips/"+tripID+"/stores", storeBody)
+	req = testutil.JSONRequest("POST", "/api/spaces/"+spaceID+"/stores", storeBody)
 	router.ServeHTTP(w, req)
 	testutil.ExpectStatus(t, w, 201)
 }
@@ -67,26 +67,26 @@ func TestComparisonHandler_UpdateStore(t *testing.T) {
 	db := testutil.TestDB(t)
 	user := testutil.CreateTestUser(t, db)
 
-	tripHandler := NewTripHandler(db)
+	spaceHandler := NewSpaceHandler(db)
 	comparisonHandler := NewComparisonHandler(db)
 
 	router := testutil.TestRouter()
-	router.POST("/api/trips", testutil.AuthContext(user.ID), tripHandler.Create)
-	router.POST("/api/trips/:id/stores", testutil.AuthContext(user.ID), comparisonHandler.CreateStore)
-	router.PUT("/api/trips/:id/stores/:store_id", testutil.AuthContext(user.ID), comparisonHandler.UpdateStore)
+	router.POST("/api/spaces", testutil.AuthContext(user.ID), spaceHandler.Create)
+	router.POST("/api/spaces/:id/stores", testutil.AuthContext(user.ID), comparisonHandler.CreateStore)
+	router.PUT("/api/spaces/:id/stores/:store_id", testutil.AuthContext(user.ID), comparisonHandler.UpdateStore)
 
-	// Create a trip
+	// Create a space
 	w := httptest.NewRecorder()
-	req := testutil.JSONRequest("POST", "/api/trips", map[string]interface{}{"name": "Trip"})
+	req := testutil.JSONRequest("POST", "/api/spaces", map[string]interface{}{"name": "Trip Space"})
 	router.ServeHTTP(w, req)
-	var trip map[string]interface{}
-	testutil.ParseResponse(t, w, &trip)
-	tripID := trip["id"].(string)
+	var space map[string]interface{}
+	testutil.ParseResponse(t, w, &space)
+	spaceID := space["id"].(string)
 
 	// Create store
 	storeBody := map[string]interface{}{"name": "Original Store"}
 	w = httptest.NewRecorder()
-	req = testutil.JSONRequest("POST", "/api/trips/"+tripID+"/stores", storeBody)
+	req = testutil.JSONRequest("POST", "/api/spaces/"+spaceID+"/stores", storeBody)
 	router.ServeHTTP(w, req)
 	var store map[string]interface{}
 	testutil.ParseResponse(t, w, &store)
@@ -99,7 +99,7 @@ func TestComparisonHandler_UpdateStore(t *testing.T) {
 		"location":       "Tokyo, Japan",
 	}
 	w = httptest.NewRecorder()
-	req = testutil.JSONRequest("PUT", "/api/trips/"+tripID+"/stores/"+storeID, updateBody)
+	req = testutil.JSONRequest("PUT", "/api/spaces/"+spaceID+"/stores/"+storeID, updateBody)
 	router.ServeHTTP(w, req)
 	testutil.ExpectStatus(t, w, 200)
 
@@ -116,26 +116,26 @@ func TestComparisonHandler_CreateProduct(t *testing.T) {
 	db := testutil.TestDB(t)
 	user := testutil.CreateTestUser(t, db)
 
-	tripHandler := NewTripHandler(db)
+	spaceHandler := NewSpaceHandler(db)
 	comparisonHandler := NewComparisonHandler(db)
 
 	router := testutil.TestRouter()
-	router.POST("/api/trips", testutil.AuthContext(user.ID), tripHandler.Create)
-	router.POST("/api/trips/:id/stores", testutil.AuthContext(user.ID), comparisonHandler.CreateStore)
-	router.POST("/api/trips/:id/stores/:store_id/products", testutil.AuthContext(user.ID), comparisonHandler.CreateProduct)
+	router.POST("/api/spaces", testutil.AuthContext(user.ID), spaceHandler.Create)
+	router.POST("/api/spaces/:id/stores", testutil.AuthContext(user.ID), comparisonHandler.CreateStore)
+	router.POST("/api/spaces/:id/stores/:store_id/products", testutil.AuthContext(user.ID), comparisonHandler.CreateProduct)
 
-	// Create a trip
+	// Create a space
 	w := httptest.NewRecorder()
-	req := testutil.JSONRequest("POST", "/api/trips", map[string]interface{}{"name": "Trip"})
+	req := testutil.JSONRequest("POST", "/api/spaces", map[string]interface{}{"name": "Trip Space"})
 	router.ServeHTTP(w, req)
-	var trip map[string]interface{}
-	testutil.ParseResponse(t, w, &trip)
-	tripID := trip["id"].(string)
+	var space map[string]interface{}
+	testutil.ParseResponse(t, w, &space)
+	spaceID := space["id"].(string)
 
 	// Create store
 	storeBody := map[string]interface{}{"name": "Store"}
 	w = httptest.NewRecorder()
-	req = testutil.JSONRequest("POST", "/api/trips/"+tripID+"/stores", storeBody)
+	req = testutil.JSONRequest("POST", "/api/spaces/"+spaceID+"/stores", storeBody)
 	router.ServeHTTP(w, req)
 	var store map[string]interface{}
 	testutil.ParseResponse(t, w, &store)
@@ -148,7 +148,7 @@ func TestComparisonHandler_CreateProduct(t *testing.T) {
 		"currency": "JPY",
 	}
 	w = httptest.NewRecorder()
-	req = testutil.JSONRequest("POST", "/api/trips/"+tripID+"/stores/"+storeID+"/products", productBody)
+	req = testutil.JSONRequest("POST", "/api/spaces/"+spaceID+"/stores/"+storeID+"/products", productBody)
 	router.ServeHTTP(w, req)
 	testutil.ExpectStatus(t, w, 201)
 }
@@ -157,26 +157,26 @@ func TestComparisonHandler_DeleteStore(t *testing.T) {
 	db := testutil.TestDB(t)
 	user := testutil.CreateTestUser(t, db)
 
-	tripHandler := NewTripHandler(db)
+	spaceHandler := NewSpaceHandler(db)
 	comparisonHandler := NewComparisonHandler(db)
 
 	router := testutil.TestRouter()
-	router.POST("/api/trips", testutil.AuthContext(user.ID), tripHandler.Create)
-	router.POST("/api/trips/:id/stores", testutil.AuthContext(user.ID), comparisonHandler.CreateStore)
-	router.DELETE("/api/trips/:id/stores/:store_id", testutil.AuthContext(user.ID), comparisonHandler.DeleteStore)
+	router.POST("/api/spaces", testutil.AuthContext(user.ID), spaceHandler.Create)
+	router.POST("/api/spaces/:id/stores", testutil.AuthContext(user.ID), comparisonHandler.CreateStore)
+	router.DELETE("/api/spaces/:id/stores/:store_id", testutil.AuthContext(user.ID), comparisonHandler.DeleteStore)
 
-	// Create a trip
+	// Create a space
 	w := httptest.NewRecorder()
-	req := testutil.JSONRequest("POST", "/api/trips", map[string]interface{}{"name": "Trip"})
+	req := testutil.JSONRequest("POST", "/api/spaces", map[string]interface{}{"name": "Trip Space"})
 	router.ServeHTTP(w, req)
-	var trip map[string]interface{}
-	testutil.ParseResponse(t, w, &trip)
-	tripID := trip["id"].(string)
+	var space map[string]interface{}
+	testutil.ParseResponse(t, w, &space)
+	spaceID := space["id"].(string)
 
 	// Create store
 	storeBody := map[string]interface{}{"name": "Store to Delete"}
 	w = httptest.NewRecorder()
-	req = testutil.JSONRequest("POST", "/api/trips/"+tripID+"/stores", storeBody)
+	req = testutil.JSONRequest("POST", "/api/spaces/"+spaceID+"/stores", storeBody)
 	router.ServeHTTP(w, req)
 	var store map[string]interface{}
 	testutil.ParseResponse(t, w, &store)
@@ -184,7 +184,7 @@ func TestComparisonHandler_DeleteStore(t *testing.T) {
 
 	// Delete store
 	w = httptest.NewRecorder()
-	req = testutil.JSONRequest("DELETE", "/api/trips/"+tripID+"/stores/"+storeID, nil)
+	req = testutil.JSONRequest("DELETE", "/api/spaces/"+spaceID+"/stores/"+storeID, nil)
 	router.ServeHTTP(w, req)
 	testutil.ExpectStatus(t, w, 200)
 }

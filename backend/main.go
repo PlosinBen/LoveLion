@@ -48,26 +48,27 @@ func main() {
 		api.GET("/invites/:token", sharingHandler.GetInviteInfo)
 		api.POST("/invites/:token/join", middleware.AuthRequiredWithDB(cfg.JWTSecret, db), sharingHandler.JoinLedger)
 
-		// Protected ledger routes
-		ledgers := api.Group("/ledgers")
-		ledgers.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db))
+		// Unified Space (Ledger) routes
+		spaces := api.Group("/spaces")
+		spaces.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db))
 		{
-			ledgerHandler := handlers.NewLedgerHandler(db)
-			ledgers.GET("", ledgerHandler.List)
-			ledgers.POST("", ledgerHandler.Create)
+			spaceHandler := handlers.NewSpaceHandler(db)
+			spaces.GET("", spaceHandler.List)
+			spaces.POST("", spaceHandler.Create)
 
-			// Single ledger operations (Access required)
-			ledgerGroup := ledgers.Group("/:id")
-			ledgerGroup.Use(middleware.LedgerAccess(db))
+			// Single space operations
+			spaceGroup := spaces.Group("/:id")
+			spaceGroup.Use(middleware.LedgerAccess(db))
 			{
-				ledgerGroup.GET("", ledgerHandler.Get)
+				spaceGroup.GET("", spaceHandler.Get)
 				
 				// Owner only operations
-				ownerGroup := ledgerGroup.Group("")
+				ownerGroup := spaceGroup.Group("")
 				ownerGroup.Use(middleware.LedgerOwnerOnly())
 				{
-					ownerGroup.PUT("", ledgerHandler.Update)
-					ownerGroup.DELETE("", ledgerHandler.Delete)
+					ownerGroup.PUT("", spaceHandler.Update)
+					ownerGroup.PATCH("", spaceHandler.Update) // Add PATCH support
+					ownerGroup.DELETE("", spaceHandler.Delete)
 					
 					// Invitation management
 					ownerGroup.POST("/invites", sharingHandler.CreateInvite)
@@ -76,11 +77,59 @@ func main() {
 				}
 
 				// Member management
+				spaceGroup.GET("/members", sharingHandler.ListMembers)
+				spaceGroup.PATCH("/members/:user_id", sharingHandler.UpdateMemberAlias)
+				spaceGroup.DELETE("/members/:user_id", sharingHandler.RemoveMember)
+
+				// Comparison routes (Integrated into space)
+				comparisonHandler := handlers.NewComparisonHandler(db)
+				spaceGroup.GET("/stores", comparisonHandler.ListStores)
+				spaceGroup.POST("/stores", comparisonHandler.CreateStore)
+				spaceGroup.GET("/stores/:store_id", comparisonHandler.GetStore)
+				spaceGroup.PUT("/stores/:store_id", comparisonHandler.UpdateStore)
+				spaceGroup.DELETE("/stores/:store_id", comparisonHandler.DeleteStore)
+				spaceGroup.GET("/products", comparisonHandler.ListAllProducts)
+				spaceGroup.POST("/stores/:store_id/products", comparisonHandler.CreateProduct)
+				spaceGroup.GET("/stores/:store_id/products/:product_id", comparisonHandler.GetProduct)
+				spaceGroup.PUT("/stores/:store_id/products/:product_id", comparisonHandler.UpdateProduct)
+				spaceGroup.DELETE("/stores/:store_id/products/:product_id", comparisonHandler.DeleteProduct)
+
+				// Transaction routes nested under space
+				transactionHandler := handlers.NewTransactionHandler(db)
+				spaceGroup.GET("/transactions", transactionHandler.List)
+				spaceGroup.POST("/transactions", transactionHandler.Create)
+				spaceGroup.GET("/transactions/:txn_id", transactionHandler.Get)
+				spaceGroup.PUT("/transactions/:txn_id", transactionHandler.Update)
+				spaceGroup.DELETE("/transactions/:txn_id", transactionHandler.Delete)
+			}
+		}
+
+		// Backward compatibility: Aliasing /ledgers and /trips to /spaces
+		ledgerHandler := handlers.NewSpaceHandler(db)
+		ledgers := api.Group("/ledgers")
+		ledgers.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db))
+		{
+			ledgers.GET("", ledgerHandler.List)
+			ledgers.POST("", ledgerHandler.Create)
+			
+			ledgerGroup := ledgers.Group("/:id")
+			ledgerGroup.Use(middleware.LedgerAccess(db))
+			{
+				ledgerGroup.GET("", ledgerHandler.Get)
+				ownerGroup := ledgerGroup.Group("")
+				ownerGroup.Use(middleware.LedgerOwnerOnly())
+				{
+					ownerGroup.PUT("", ledgerHandler.Update)
+					ownerGroup.PATCH("", ledgerHandler.Update)
+					ownerGroup.DELETE("", ledgerHandler.Delete)
+					ownerGroup.POST("/invites", sharingHandler.CreateInvite)
+					ownerGroup.GET("/invites", sharingHandler.ListInvites)
+					ownerGroup.DELETE("/invites/:invite_id", sharingHandler.RevokeInvite)
+				}
 				ledgerGroup.GET("/members", sharingHandler.ListMembers)
 				ledgerGroup.PATCH("/members/:user_id", sharingHandler.UpdateMemberAlias)
 				ledgerGroup.DELETE("/members/:user_id", sharingHandler.RemoveMember)
 
-				// Transaction routes nested under ledger
 				transactionHandler := handlers.NewTransactionHandler(db)
 				ledgerGroup.GET("/transactions", transactionHandler.List)
 				ledgerGroup.POST("/transactions", transactionHandler.Create)
@@ -90,24 +139,21 @@ func main() {
 			}
 		}
 
-		// Protected trip routes
 		trips := api.Group("/trips")
 		trips.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db))
 		{
-			tripHandler := handlers.NewTripHandler(db)
-			trips.GET("", tripHandler.List)
-			trips.POST("", tripHandler.Create)
-			trips.GET("/:id", tripHandler.Get)
-			trips.PUT("/:id", tripHandler.Update)
-			trips.DELETE("/:id", tripHandler.Delete)
-
-			// Member routes
-			trips.GET("/:id/members", tripHandler.ListMembers)
-			trips.POST("/:id/members", tripHandler.AddMember)
-			trips.DELETE("/:id/members/:member_id", tripHandler.RemoveMember)
-
-			// Comparison routes
+			// For List, we can filter by type=trip automatically in the handler or here
+			// Let's use the SpaceHandler's List and rely on query params from frontend if they update, 
+			// or we could wrap it. For compatibility, we just map them.
+			trips.GET("", ledgerHandler.List) 
+			trips.POST("", ledgerHandler.Create)
+			trips.GET("/:id", ledgerHandler.Get)
+			trips.PUT("/:id", ledgerHandler.Update)
+			trips.DELETE("/:id", ledgerHandler.Delete)
+			
+			// For trips, members and comparisons are now under the same ID
 			comparisonHandler := handlers.NewComparisonHandler(db)
+			trips.GET("/:id/members", sharingHandler.ListMembers)
 			trips.GET("/:id/stores", comparisonHandler.ListStores)
 			trips.POST("/:id/stores", comparisonHandler.CreateStore)
 			trips.GET("/:id/stores/:store_id", comparisonHandler.GetStore)
@@ -122,11 +168,6 @@ func main() {
 
 		// Image routes
 		images := api.Group("/images")
-		// Optional: Protect routes if needed, or leave public. Assuming protected for write operations at least.
-		// For simplicity, let's allow public access or consistent with others.
-		// Given images are for trips/transactions which are user specific, maybe auth is good?
-		// But "Get" might need to be public/shared?
-		// Let's assume Auth required for now.
 		images.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db))
 		{
 			imageHandler := handlers.NewImageHandler(db)

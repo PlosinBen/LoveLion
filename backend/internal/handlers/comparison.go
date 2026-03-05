@@ -48,38 +48,31 @@ type UpdateProductRequest struct {
 	Note     string           `json:"note"`
 }
 
-// Helper to verify trip access
-func (h *ComparisonHandler) verifyTripAccess(tripID string, userID uuid.UUID) error {
-	var trip models.Trip
-	if err := h.db.Where("id = ?", tripID).Preload("Members").First(&trip).Error; err != nil {
+// Helper to verify space (ledger) access
+func (h *ComparisonHandler) verifySpaceAccess(ledgerID uuid.UUID, userID uuid.UUID) error {
+	var member models.LedgerMember
+	if err := h.db.Where("ledger_id = ? AND user_id = ?", ledgerID, userID).First(&member).Error; err != nil {
 		return err
 	}
-
-	if trip.CreatedBy == userID {
-		return nil
-	}
-
-	for _, m := range trip.Members {
-		if m.UserID != nil && *m.UserID == userID {
-			return nil
-		}
-	}
-
-	return gorm.ErrRecordNotFound
+	return nil
 }
 
-// List stores for a trip
+// List stores for a space
 func (h *ComparisonHandler) ListStores(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
-	tripID := c.Param("id")
+	ledgerID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid space ID"})
+		return
+	}
 
-	if err := h.verifyTripAccess(tripID, userID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Trip not found"})
+	if err := h.verifySpaceAccess(ledgerID, userID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Space not found"})
 		return
 	}
 
 	var stores []models.ComparisonStore
-	if err := h.db.Where("trip_id = ?", tripID).Preload("Products").Find(&stores).Error; err != nil {
+	if err := h.db.Where("ledger_id = ?", ledgerID).Preload("Products").Find(&stores).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch stores"})
 		return
 	}
@@ -90,10 +83,14 @@ func (h *ComparisonHandler) ListStores(c *gin.Context) {
 // Create a store
 func (h *ComparisonHandler) CreateStore(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
-	tripID := c.Param("id")
+	ledgerID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid space ID"})
+		return
+	}
 
-	if err := h.verifyTripAccess(tripID, userID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Trip not found"})
+	if err := h.verifySpaceAccess(ledgerID, userID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Space not found"})
 		return
 	}
 
@@ -103,7 +100,7 @@ func (h *ComparisonHandler) CreateStore(c *gin.Context) {
 		return
 	}
 
-	storeID, err := utils.NewShortID(h.db, "trip_comparison_stores", "id")
+	storeID, err := utils.NewShortID(h.db, "comparison_stores", "id")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate ID"})
 		return
@@ -111,7 +108,7 @@ func (h *ComparisonHandler) CreateStore(c *gin.Context) {
 
 	store := &models.ComparisonStore{
 		ID:           storeID,
-		TripID:       tripID,
+		LedgerID:     ledgerID,
 		Name:         req.Name,
 		GoogleMapURL: req.GoogleMapURL,
 		Location:     req.Location,
@@ -128,16 +125,20 @@ func (h *ComparisonHandler) CreateStore(c *gin.Context) {
 // Update a store
 func (h *ComparisonHandler) UpdateStore(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
-	tripID := c.Param("id")
+	ledgerID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid space ID"})
+		return
+	}
 	storeID := c.Param("store_id")
 
-	if err := h.verifyTripAccess(tripID, userID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Trip not found"})
+	if err := h.verifySpaceAccess(ledgerID, userID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Space not found"})
 		return
 	}
 
 	var store models.ComparisonStore
-	if err := h.db.Where("id = ? AND trip_id = ?", storeID, tripID).First(&store).Error; err != nil {
+	if err := h.db.Where("id = ? AND ledger_id = ?", storeID, ledgerID).First(&store).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Store not found"})
 		return
 	}
@@ -151,7 +152,6 @@ func (h *ComparisonHandler) UpdateStore(c *gin.Context) {
 	if req.Name != "" {
 		store.Name = req.Name
 	}
-	// Allow clearing if sent as empty string (always update provided fields)
 	store.GoogleMapURL = req.GoogleMapURL
 	store.Location = req.Location
 
@@ -166,16 +166,20 @@ func (h *ComparisonHandler) UpdateStore(c *gin.Context) {
 // Get a store with products
 func (h *ComparisonHandler) GetStore(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
-	tripID := c.Param("id")
+	ledgerID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid space ID"})
+		return
+	}
 	storeID := c.Param("store_id")
 
-	if err := h.verifyTripAccess(tripID, userID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Trip not found"})
+	if err := h.verifySpaceAccess(ledgerID, userID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Space not found"})
 		return
 	}
 
 	var store models.ComparisonStore
-	if err := h.db.Where("id = ? AND trip_id = ?", storeID, tripID).Preload("Products").First(&store).Error; err != nil {
+	if err := h.db.Where("id = ? AND ledger_id = ?", storeID, ledgerID).Preload("Products").First(&store).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Store not found"})
 		return
 	}
@@ -186,15 +190,19 @@ func (h *ComparisonHandler) GetStore(c *gin.Context) {
 // Delete a store
 func (h *ComparisonHandler) DeleteStore(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
-	tripID := c.Param("id")
+	ledgerID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid space ID"})
+		return
+	}
 	storeID := c.Param("store_id")
 
-	if err := h.verifyTripAccess(tripID, userID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Trip not found"})
+	if err := h.verifySpaceAccess(ledgerID, userID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Space not found"})
 		return
 	}
 
-	result := h.db.Where("id = ? AND trip_id = ?", storeID, tripID).Delete(&models.ComparisonStore{})
+	result := h.db.Where("id = ? AND ledger_id = ?", storeID, ledgerID).Delete(&models.ComparisonStore{})
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete store"})
 		return
@@ -208,20 +216,24 @@ func (h *ComparisonHandler) DeleteStore(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Store deleted"})
 }
 
-// List all products across stores for a trip (for comparison view)
+// List all products across stores for a space
 func (h *ComparisonHandler) ListAllProducts(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
-	tripID := c.Param("id")
+	ledgerID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid space ID"})
+		return
+	}
 
-	if err := h.verifyTripAccess(tripID, userID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Trip not found"})
+	if err := h.verifySpaceAccess(ledgerID, userID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Space not found"})
 		return
 	}
 
 	var products []models.ComparisonProduct
 	if err := h.db.
-		Joins("JOIN trip_comparison_stores ON trip_comparison_stores.id = trip_comparison_products.store_id").
-		Where("trip_comparison_stores.trip_id = ?", tripID).
+		Joins("JOIN comparison_stores ON comparison_stores.id = comparison_products.store_id").
+		Where("comparison_stores.ledger_id = ?", ledgerID).
 		Preload("Store").
 		Find(&products).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch products"})
@@ -234,17 +246,20 @@ func (h *ComparisonHandler) ListAllProducts(c *gin.Context) {
 // Create a product in a store
 func (h *ComparisonHandler) CreateProduct(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
-	tripID := c.Param("id")
+	ledgerID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid space ID"})
+		return
+	}
 	storeID := c.Param("store_id")
 
-	if err := h.verifyTripAccess(tripID, userID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Trip not found"})
+	if err := h.verifySpaceAccess(ledgerID, userID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Space not found"})
 		return
 	}
 
-	// Verify store belongs to trip
 	var store models.ComparisonStore
-	if err := h.db.Where("id = ? AND trip_id = ?", storeID, tripID).First(&store).Error; err != nil {
+	if err := h.db.Where("id = ? AND ledger_id = ?", storeID, ledgerID).First(&store).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Store not found"})
 		return
 	}
@@ -280,7 +295,11 @@ func (h *ComparisonHandler) CreateProduct(c *gin.Context) {
 // Update a product
 func (h *ComparisonHandler) UpdateProduct(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
-	tripID := c.Param("id")
+	ledgerID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid space ID"})
+		return
+	}
 	storeID := c.Param("store_id")
 	productID, err := uuid.Parse(c.Param("product_id"))
 	if err != nil {
@@ -288,8 +307,8 @@ func (h *ComparisonHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	if err := h.verifyTripAccess(tripID, userID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Trip not found"})
+	if err := h.verifySpaceAccess(ledgerID, userID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Space not found"})
 		return
 	}
 
@@ -328,7 +347,11 @@ func (h *ComparisonHandler) UpdateProduct(c *gin.Context) {
 // Get a product
 func (h *ComparisonHandler) GetProduct(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
-	tripID := c.Param("id")
+	ledgerID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid space ID"})
+		return
+	}
 	storeID := c.Param("store_id")
 	productID, err := uuid.Parse(c.Param("product_id"))
 	if err != nil {
@@ -336,8 +359,8 @@ func (h *ComparisonHandler) GetProduct(c *gin.Context) {
 		return
 	}
 
-	if err := h.verifyTripAccess(tripID, userID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Trip not found"})
+	if err := h.verifySpaceAccess(ledgerID, userID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Space not found"})
 		return
 	}
 
@@ -353,7 +376,11 @@ func (h *ComparisonHandler) GetProduct(c *gin.Context) {
 // Delete a product
 func (h *ComparisonHandler) DeleteProduct(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
-	tripID := c.Param("id")
+	ledgerID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid space ID"})
+		return
+	}
 	storeID := c.Param("store_id")
 	productID, err := uuid.Parse(c.Param("product_id"))
 	if err != nil {
@@ -361,8 +388,8 @@ func (h *ComparisonHandler) DeleteProduct(c *gin.Context) {
 		return
 	}
 
-	if err := h.verifyTripAccess(tripID, userID); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Trip not found"})
+	if err := h.verifySpaceAccess(ledgerID, userID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Space not found"})
 		return
 	}
 

@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"lovelion/internal/models"
 
@@ -12,31 +13,41 @@ import (
 	"gorm.io/gorm"
 )
 
-type LedgerHandler struct {
+type SpaceHandler struct {
 	db *gorm.DB
 }
 
-func NewLedgerHandler(db *gorm.DB) *LedgerHandler {
-	return &LedgerHandler{db: db}
+func NewSpaceHandler(db *gorm.DB) *SpaceHandler {
+	return &SpaceHandler{db: db}
 }
 
-type CreateLedgerRequest struct {
-	Name           string   `json:"name" binding:"required,min=1,max=100"`
-	Type           string   `json:"type"`
-	BaseCurrency   string   `json:"base_currency"`
-	Currencies     []string `json:"currencies"`
-	Members        []string `json:"members"`
-	Categories     []string `json:"categories"`
-	PaymentMethods []string `json:"payment_methods"`
+type CreateSpaceRequest struct {
+	Name           string     `json:"name" binding:"required,min=1,max=100"`
+	Description    string     `json:"description"`
+	Type           string     `json:"type"` // personal, trip, group
+	BaseCurrency   string     `json:"base_currency"`
+	Currencies     []string   `json:"currencies"`
+	Members        []string   `json:"members"` // legacy member names
+	Categories     []string   `json:"categories"`
+	PaymentMethods []string   `json:"payment_methods"`
+	StartDate      *time.Time `json:"start_date"`
+	EndDate        *time.Time `json:"end_date"`
+	CoverImage     string     `json:"cover_image"`
+	IsPinned       bool       `json:"is_pinned"`
 }
 
-type UpdateLedgerRequest struct {
-	Name           string   `json:"name" binding:"omitempty,min=1,max=100"`
-	BaseCurrency   string   `json:"base_currency"`
-	Currencies     []string `json:"currencies"`
-	Members        []string `json:"members"`
-	Categories     []string `json:"categories"`
-	PaymentMethods []string `json:"payment_methods"`
+type UpdateSpaceRequest struct {
+	Name           string     `json:"name" binding:"omitempty,min=1,max=100"`
+	Description    *string    `json:"description"`
+	BaseCurrency   string     `json:"base_currency"`
+	Currencies     []string   `json:"currencies"`
+	Members        []string   `json:"members"`
+	Categories     []string   `json:"categories"`
+	PaymentMethods []string   `json:"payment_methods"`
+	StartDate      *time.Time `json:"start_date"`
+	EndDate        *time.Time `json:"end_date"`
+	CoverImage     *string    `json:"cover_image"`
+	IsPinned       *bool      `json:"is_pinned"`
 }
 
 func toJSON(v interface{}) datatypes.JSON {
@@ -47,87 +58,82 @@ func toJSON(v interface{}) datatypes.JSON {
 	return datatypes.JSON(bytes)
 }
 
-// List user's ledgers (including shared ones)
-func (h *LedgerHandler) List(c *gin.Context) {
+// List user's spaces (ledgers)
+func (h *SpaceHandler) List(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
+	spaceType := c.Query("type")
 
-	var ledgers []models.Ledger
-	// Find ledgers where user is a member (either owner or member)
-	err := h.db.
+	query := h.db.
 		Joins("JOIN ledger_members ON ledger_members.ledger_id = ledgers.id").
 		Where("ledger_members.user_id = ?", userID).
-		Preload("User"). // Preload owner info
-		Order("ledgers.created_at DESC").
-		Find(&ledgers).Error
+		Preload("User") // Preload owner info
+
+	if spaceType != "" {
+		query = query.Where("ledgers.type = ?", spaceType)
+	}
+
+	var spaces []models.Ledger
+	err := query.Order("ledgers.is_pinned DESC, ledgers.created_at DESC").
+		Find(&spaces).Error
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch ledgers"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch spaces"})
 		return
 	}
 
-	c.JSON(http.StatusOK, ledgers)
+	c.JSON(http.StatusOK, spaces)
 }
 
-// Create a new ledger
-func (h *LedgerHandler) Create(c *gin.Context) {
+// Create a new space
+func (h *SpaceHandler) Create(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 
-	var req CreateLedgerRequest
+	var req CreateSpaceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	ledger := &models.Ledger{
+	space := &models.Ledger{
 		ID:           uuid.New(),
 		UserID:       userID,
 		Name:         req.Name,
+		Description:  req.Description,
 		Type:         req.Type,
 		BaseCurrency: req.BaseCurrency,
+		StartDate:    req.StartDate,
+		EndDate:      req.EndDate,
+		CoverImage:   req.CoverImage,
+		IsPinned:     req.IsPinned,
 	}
 
-	if ledger.BaseCurrency == "" {
-		ledger.BaseCurrency = "TWD"
+	if space.BaseCurrency == "" {
+		space.BaseCurrency = "TWD"
 	}
 
-	if ledger.Type == "" {
-		ledger.Type = "personal"
+	if space.Type == "" {
+		space.Type = "personal"
 	}
 
-	if req.Currencies != nil {
-		ledger.Currencies = toJSON(req.Currencies)
-	} else {
-		ledger.Currencies = toJSON([]string{"TWD"})
+	space.Currencies = toJSON(req.Currencies)
+	if req.Currencies == nil {
+		space.Currencies = toJSON([]string{space.BaseCurrency})
 	}
+	
+	space.MemberNames = toJSON(req.Members)
+	space.Categories = toJSON(req.Categories)
+	space.PaymentMethods = toJSON(req.PaymentMethods)
 
-	if req.Members != nil {
-		ledger.MemberNames = toJSON(req.Members)
-	} else {
-		ledger.MemberNames = toJSON([]string{})
-	}
-
-	if req.Categories != nil {
-		ledger.Categories = toJSON(req.Categories)
-	} else {
-		ledger.Categories = toJSON([]string{})
-	}
-
-	if req.PaymentMethods != nil {
-		ledger.PaymentMethods = toJSON(req.PaymentMethods)
-	} else {
-		ledger.PaymentMethods = toJSON([]string{})
-	}
-
-	// Use a transaction to create both the ledger and the owner membership
+	// Use a transaction to create both the space and the owner membership
 	err := h.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(ledger).Error; err != nil {
+		if err := tx.Create(space).Error; err != nil {
 			return err
 		}
 
 		// Add owner to members table
 		member := &models.LedgerMember{
 			ID:       uuid.New(),
-			LedgerID: ledger.ID,
+			LedgerID: space.ID,
 			UserID:   userID,
 			Role:     "owner",
 		}
@@ -140,66 +146,81 @@ func (h *LedgerHandler) Create(c *gin.Context) {
 	})
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create ledger"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create space"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, ledger)
+	c.JSON(http.StatusCreated, space)
 }
 
-// Get a single ledger
-func (h *LedgerHandler) Get(c *gin.Context) {
-	ledger, _ := c.Get("ledger")
-	c.JSON(http.StatusOK, ledger)
+// Get a single space
+func (h *SpaceHandler) Get(c *gin.Context) {
+	space, _ := c.Get("ledger") // Using existing middleware's key for now
+	c.JSON(http.StatusOK, space)
 }
 
-// Update a ledger
-func (h *LedgerHandler) Update(c *gin.Context) {
-	ledgerVal, _ := c.Get("ledger")
-	ledger := ledgerVal.(*models.Ledger)
+// Update a space
+func (h *SpaceHandler) Update(c *gin.Context) {
+	spaceVal, _ := c.Get("ledger")
+	space := spaceVal.(*models.Ledger)
 
-	var req UpdateLedgerRequest
+	var req UpdateSpaceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	if req.Name != "" {
-		ledger.Name = req.Name
+		space.Name = req.Name
+	}
+	if req.Description != nil {
+		space.Description = *req.Description
 	}
 	if req.BaseCurrency != "" {
-		ledger.BaseCurrency = req.BaseCurrency
+		space.BaseCurrency = req.BaseCurrency
 	}
 	if req.Currencies != nil {
-		ledger.Currencies = toJSON(req.Currencies)
+		space.Currencies = toJSON(req.Currencies)
 	}
 	if req.Members != nil {
-		ledger.MemberNames = toJSON(req.Members)
+		space.MemberNames = toJSON(req.Members)
 	}
 	if req.Categories != nil {
-		ledger.Categories = toJSON(req.Categories)
+		space.Categories = toJSON(req.Categories)
 	}
 	if req.PaymentMethods != nil {
-		ledger.PaymentMethods = toJSON(req.PaymentMethods)
+		space.PaymentMethods = toJSON(req.PaymentMethods)
+	}
+	if req.StartDate != nil {
+		space.StartDate = req.StartDate
+	}
+	if req.EndDate != nil {
+		space.EndDate = req.EndDate
+	}
+	if req.CoverImage != nil {
+		space.CoverImage = *req.CoverImage
+	}
+	if req.IsPinned != nil {
+		space.IsPinned = *req.IsPinned
 	}
 
-	if err := h.db.Save(&ledger).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update ledger"})
+	if err := h.db.Save(&space).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update space"})
 		return
 	}
 
-	c.JSON(http.StatusOK, ledger)
+	c.JSON(http.StatusOK, space)
 }
 
-// Delete a ledger
-func (h *LedgerHandler) Delete(c *gin.Context) {
-	ledgerVal, _ := c.Get("ledger")
-	ledger := ledgerVal.(*models.Ledger)
+// Delete a space
+func (h *SpaceHandler) Delete(c *gin.Context) {
+	spaceVal, _ := c.Get("ledger")
+	space := spaceVal.(*models.Ledger)
 
-	if err := h.db.Delete(ledger).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete ledger"})
+	if err := h.db.Delete(space).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete space"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Ledger deleted"})
+	c.JSON(http.StatusOK, gin.H{"message": "Space deleted"})
 }

@@ -12,27 +12,27 @@ func TestTransactionHandler_List(t *testing.T) {
 	db := testutil.TestDB(t)
 	user := testutil.CreateTestUser(t, db)
 
-	// Create a ledger first
-	ledgerRouter := testutil.TestRouter()
-	ledgerHandler := NewLedgerHandler(db)
-	ledgerRouter.POST("/api/ledgers", testutil.AuthContext(user.ID), ledgerHandler.Create)
+	// Create a space first
+	spaceRouter := testutil.TestRouter()
+	spaceHandler := NewSpaceHandler(db)
+	spaceRouter.POST("/api/spaces", testutil.AuthContext(user.ID), spaceHandler.Create)
 
-	body := map[string]interface{}{"name": "Test Ledger"}
+	body := map[string]interface{}{"name": "Test Space"}
 	w := httptest.NewRecorder()
-	req := testutil.JSONRequest("POST", "/api/ledgers", body)
-	ledgerRouter.ServeHTTP(w, req)
+	req := testutil.JSONRequest("POST", "/api/spaces", body)
+	spaceRouter.ServeHTTP(w, req)
 
-	var ledger map[string]interface{}
-	testutil.ParseResponse(t, w, &ledger)
-	ledgerID := ledger["id"].(string)
+	var space map[string]interface{}
+	testutil.ParseResponse(t, w, &space)
+	spaceID := space["id"].(string)
 
 	// Test list transactions
 	router := testutil.TestRouter()
 	handler := NewTransactionHandler(db)
-	router.GET("/api/ledgers/:id/transactions", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), handler.List)
+	router.GET("/api/spaces/:id/transactions", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), handler.List)
 
 	w = httptest.NewRecorder()
-	req = testutil.JSONRequest("GET", "/api/ledgers/"+ledgerID+"/transactions", nil)
+	req = testutil.JSONRequest("GET", "/api/spaces/"+spaceID+"/transactions", nil)
 	router.ServeHTTP(w, req)
 	testutil.ExpectStatus(t, w, 200)
 }
@@ -41,24 +41,24 @@ func TestTransactionHandler_Create(t *testing.T) {
 	db := testutil.TestDB(t)
 	user := testutil.CreateTestUser(t, db)
 
-	// Create a ledger first
-	ledgerRouter := testutil.TestRouter()
-	ledgerHandler := NewLedgerHandler(db)
-	ledgerRouter.POST("/api/ledgers", testutil.AuthContext(user.ID), ledgerHandler.Create)
+	// Create a space first
+	spaceRouter := testutil.TestRouter()
+	spaceHandler := NewSpaceHandler(db)
+	spaceRouter.POST("/api/spaces", testutil.AuthContext(user.ID), spaceHandler.Create)
 
-	body := map[string]interface{}{"name": "Test Ledger"}
+	body := map[string]interface{}{"name": "Test Space"}
 	w := httptest.NewRecorder()
-	req := testutil.JSONRequest("POST", "/api/ledgers", body)
-	ledgerRouter.ServeHTTP(w, req)
+	req := testutil.JSONRequest("POST", "/api/spaces", body)
+	spaceRouter.ServeHTTP(w, req)
 
-	var ledger map[string]interface{}
-	testutil.ParseResponse(t, w, &ledger)
-	ledgerID := ledger["id"].(string)
+	var space map[string]interface{}
+	testutil.ParseResponse(t, w, &space)
+	spaceID := space["id"].(string)
 
 	// Test create transaction
 	router := testutil.TestRouter()
 	handler := NewTransactionHandler(db)
-	router.POST("/api/ledgers/:id/transactions", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), handler.Create)
+	router.POST("/api/spaces/:id/transactions", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), handler.Create)
 
 	tests := []struct {
 		name       string
@@ -93,7 +93,7 @@ func TestTransactionHandler_Create(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
-			req := testutil.JSONRequest("POST", "/api/ledgers/"+ledgerID+"/transactions", tt.body)
+			req := testutil.JSONRequest("POST", "/api/spaces/"+spaceID+"/transactions", tt.body)
 			router.ServeHTTP(w, req)
 			testutil.ExpectStatus(t, w, tt.wantStatus)
 		})
@@ -105,21 +105,21 @@ func TestTransactionHandler_Get(t *testing.T) {
 	user := testutil.CreateTestUser(t, db)
 
 	// Setup
-	ledgerHandler := NewLedgerHandler(db)
+	spaceHandler := NewSpaceHandler(db)
 	txnHandler := NewTransactionHandler(db)
 
 	router := testutil.TestRouter()
-	router.POST("/api/ledgers", testutil.AuthContext(user.ID), ledgerHandler.Create)
-	router.POST("/api/ledgers/:id/transactions", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), txnHandler.Create)
-	router.GET("/api/ledgers/:id/transactions/:txn_id", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), txnHandler.Get)
+	router.POST("/api/spaces", testutil.AuthContext(user.ID), spaceHandler.Create)
+	router.POST("/api/spaces/:id/transactions", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), txnHandler.Create)
+	router.GET("/api/spaces/:id/transactions/:txn_id", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), txnHandler.Get)
 
-	// Create ledger
+	// Create space
 	w := httptest.NewRecorder()
-	req := testutil.JSONRequest("POST", "/api/ledgers", map[string]interface{}{"name": "Ledger"})
+	req := testutil.JSONRequest("POST", "/api/spaces", map[string]interface{}{"name": "Space"})
 	router.ServeHTTP(w, req)
-	var ledger map[string]interface{}
-	testutil.ParseResponse(t, w, &ledger)
-	ledgerID := ledger["id"].(string)
+	var space map[string]interface{}
+	testutil.ParseResponse(t, w, &space)
+	spaceID := space["id"].(string)
 
 	// Create transaction
 	txnBody := map[string]interface{}{
@@ -127,7 +127,7 @@ func TestTransactionHandler_Get(t *testing.T) {
 		"items": []map[string]interface{}{{"name": "Test", "unit_price": 100}},
 	}
 	w = httptest.NewRecorder()
-	req = testutil.JSONRequest("POST", "/api/ledgers/"+ledgerID+"/transactions", txnBody)
+	req = testutil.JSONRequest("POST", "/api/spaces/"+spaceID+"/transactions", txnBody)
 	router.ServeHTTP(w, req)
 	var txn map[string]interface{}
 	testutil.ParseResponse(t, w, &txn)
@@ -135,7 +135,7 @@ func TestTransactionHandler_Get(t *testing.T) {
 
 	// Get transaction
 	w = httptest.NewRecorder()
-	req = testutil.JSONRequest("GET", "/api/ledgers/"+ledgerID+"/transactions/"+txnID, nil)
+	req = testutil.JSONRequest("GET", "/api/spaces/"+spaceID+"/transactions/"+txnID, nil)
 	router.ServeHTTP(w, req)
 	testutil.ExpectStatus(t, w, 200)
 }
@@ -144,29 +144,29 @@ func TestTransactionHandler_Delete(t *testing.T) {
 	db := testutil.TestDB(t)
 	user := testutil.CreateTestUser(t, db)
 
-	ledgerHandler := NewLedgerHandler(db)
+	spaceHandler := NewSpaceHandler(db)
 	txnHandler := NewTransactionHandler(db)
 
 	router := testutil.TestRouter()
-	router.POST("/api/ledgers", testutil.AuthContext(user.ID), ledgerHandler.Create)
-	router.POST("/api/ledgers/:id/transactions", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), txnHandler.Create)
-	router.DELETE("/api/ledgers/:id/transactions/:txn_id", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), txnHandler.Delete)
+	router.POST("/api/spaces", testutil.AuthContext(user.ID), spaceHandler.Create)
+	router.POST("/api/spaces/:id/transactions", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), txnHandler.Create)
+	router.DELETE("/api/spaces/:id/transactions/:txn_id", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), txnHandler.Delete)
 
-	// Create ledger
+	// Create space
 	w := httptest.NewRecorder()
-	req := testutil.JSONRequest("POST", "/api/ledgers", map[string]interface{}{"name": "Ledger"})
+	req := testutil.JSONRequest("POST", "/api/spaces", map[string]interface{}{"name": "Space"})
 	router.ServeHTTP(w, req)
-	var ledger map[string]interface{}
-	testutil.ParseResponse(t, w, &ledger)
-	ledgerID := ledger["id"].(string)
+	var space map[string]interface{}
+	testutil.ParseResponse(t, w, &space)
+	spaceID := space["id"].(string)
 
-	// Create transaction without items (to avoid FK issues on delete)
+	// Create transaction
 	txnBody := map[string]interface{}{
 		"payer": "Me",
 		"items": []map[string]interface{}{},
 	}
 	w = httptest.NewRecorder()
-	req = testutil.JSONRequest("POST", "/api/ledgers/"+ledgerID+"/transactions", txnBody)
+	req = testutil.JSONRequest("POST", "/api/spaces/"+spaceID+"/transactions", txnBody)
 	router.ServeHTTP(w, req)
 	var txn map[string]interface{}
 	testutil.ParseResponse(t, w, &txn)
@@ -174,7 +174,7 @@ func TestTransactionHandler_Delete(t *testing.T) {
 
 	// Delete transaction
 	w = httptest.NewRecorder()
-	req = testutil.JSONRequest("DELETE", "/api/ledgers/"+ledgerID+"/transactions/"+txnID, nil)
+	req = testutil.JSONRequest("DELETE", "/api/spaces/"+spaceID+"/transactions/"+txnID, nil)
 	router.ServeHTTP(w, req)
 	testutil.ExpectStatus(t, w, 200)
 }

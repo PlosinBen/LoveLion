@@ -9,7 +9,7 @@ import (
 
 type ComparisonStore struct {
 	ID           string    `gorm:"type:varchar(21);primary_key" json:"id"`
-	TripID       string    `gorm:"type:varchar(21);not null" json:"trip_id"`
+	LedgerID     uuid.UUID `gorm:"type:uuid;not null" json:"ledger_id"`
 	Name         string    `gorm:"type:varchar(100);not null" json:"name"`
 	GoogleMapURL string    `gorm:"type:text" json:"google_map_url"`
 	Location     string    `gorm:"type:text" json:"location"`
@@ -17,12 +17,12 @@ type ComparisonStore struct {
 	UpdatedAt    time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 
 	// Associations
-	Trip     *Trip               `gorm:"foreignKey:TripID" json:"trip,omitempty"`
+	Ledger   *Ledger             `gorm:"foreignKey:LedgerID" json:"ledger,omitempty"`
 	Products []ComparisonProduct `gorm:"foreignKey:StoreID" json:"products,omitempty"`
 }
 
 func (ComparisonStore) TableName() string {
-	return "trip_comparison_stores"
+	return "comparison_stores"
 }
 
 type ComparisonProduct struct {
@@ -41,5 +41,5 @@ type ComparisonProduct struct {
 }
 
 func (ComparisonProduct) TableName() string {
-	return "trip_comparison_products"
+	return "comparison_products"
 }

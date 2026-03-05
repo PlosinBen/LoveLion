@@ -29,7 +29,6 @@ func TestDB(t *testing.T) *gorm.DB {
 	}
 
 	// Connect to default DB to create schema
-	// We use a temporary connection for setup
 	setupDB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("Failed to connect to setup database: %v", err)
@@ -48,29 +47,17 @@ func TestDB(t *testing.T) *gorm.DB {
 
 	// Cleanup using setupDB
 	t.Cleanup(func() {
-		// Re-establish connection or use setupDB if it's still valid/safe
-		// Note: setupDB is a pool, so it's fine.
 		setupDB.Exec(fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE", schemaName))
 	})
 
-	// Connect to the specific schema using search_path in DSN
-	// We append search_path to the DSN.
-	// If DSN is a URL, this might be tricky, but assuming KV or standard libpq support.
-	// For libpq KV: append " search_path=schema,public"
-	// For URL: append "?search_path=schema,public" (if no query) or "&..."
-
 	var appDSN string
 	if len(dsn) > 11 && strings.HasPrefix(dsn, "postgres://") {
-		// URL format - rigorous parsing would be better but simple append often works if no existing params
-		// or if we trust the structure.
-		// For robustness in this specific project context:
 		separator := "?"
 		if strings.Contains(dsn, "?") {
 			separator = "&"
 		}
 		appDSN = fmt.Sprintf("%s%ssearch_path=%s,public", dsn, separator, schemaName)
 	} else {
-		// Key-Value format
 		appDSN = fmt.Sprintf("%s search_path=%s,public", dsn, schemaName)
 	}
 
@@ -83,12 +70,11 @@ func TestDB(t *testing.T) *gorm.DB {
 	err = db.AutoMigrate(
 		&models.User{},
 		&models.Ledger{},
-		&models.LedgerMember{}, // Added LedgerMember
-		&models.LedgerInvite{}, // Added LedgerInvite
+		&models.LedgerMember{},
+		&models.LedgerInvite{},
 		&models.Transaction{},
 		&models.TransactionItem{},
-		&models.Trip{},
-		&models.TripMember{},
+		&models.TransactionSplit{},
 		&models.ComparisonStore{},
 		&models.ComparisonProduct{},
 		&models.Image{},
