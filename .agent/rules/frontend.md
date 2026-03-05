@@ -1,12 +1,4 @@
----
-trigger: always_on
----
-
-# Frontend Rules
-
-## Tailwind CSS
-- **Only use native Tailwind classes** - Do NOT use arbitrary/custom values
-- ❌ Forbidden: `h-[32rem]`, `w-[200px]`, `text-[#1a1a1a]`, `p-(--my-spacing)`
-- ✅ Allowed: `h-96`, `w-48`, `text-gray-900`, `p-4`
-- **Use Standard Tailwind Colors**: Do NOT define custom colors in `tailwind.config.ts`. Map design tokens (e.g., primary) to the nearest standard Tailwind utility (e.g., `indigo-500`, `neutral-900`).
-- If a native class doesn't exist, use the closest available option. Do not extend the theme unless absolutely necessary for non-color values.
+# 前端規範
+- **Tailwind**: 僅限原生類名。禁止任意值 `-[...]`。
+- **顏色**: 禁止自定義 `tailwind.config`。映射至標準顏色 (如 `indigo-500`)。
+- **佈局**: Mobile-First, Bottom Navigation.

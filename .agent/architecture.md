@@ -1,27 +1,7 @@
-# LoveLion Architecture
-
-## Tech Stack
-- **Frontend**: Nuxt 4, TailwindCSS, Iconify
-- **Backend**: Go (Gin, GORM, golang-migrate)
-- **Database**: PostgreSQL
-
-## ID Strategy (MANDATORY)
-- **NanoID**: URL-exposed (trips, transactions, stores, invites)
-- **UUID**: Internal (users, members, items, ledger_members)
-
-## Data Schema
-### Accounting & Sharing
-- `ledgers`: Main books. Type: personal/trip.
-- `ledger_members`: User-ledger relations. Roles: owner, member. Supports `alias`.
-- `ledger_invites`: Shared tokens. One-time or multi-use.
-- `transactions`: Records linked to ledgers.
-- `transaction_splits/items`: Detailed splits/lines.
-
-### Travel
-- `trips`: Trip containers. Linked to a ledger.
-- `trip_comparison_*`: Price comparison stores and products.
-
-## Design Mandates
-- **Mobile-First**: Bottom navigation.
-- **Money**: `DECIMAL(10, 2)` for amounts, `DECIMAL(12, 6)` for rates.
-- **Audit**: All tables MUST have `created_at` and `updated_at` (TIMESTAMPTZ).
+# 系統規格
+- **Stack**: Nuxt 4 (Layer), Go (Gin/GORM), PostgreSQL.
+- **ID 策略**:
+  - URL 暴露 (Trip/Txn/Ledger/Store): `NanoID`
+  - 內部關聯 (User/Member/Item): `UUID`
+- **精確度**: 金額 `DECIMAL(10,2)`, 匯率 `DECIMAL(12,6)`.
+- **必備欄位**: 所有表均需 `created_at`, `updated_at` (TIMESTAMPTZ).
