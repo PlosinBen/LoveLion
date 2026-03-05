@@ -1,124 +1,141 @@
 <template>
-  <div class="flex flex-col gap-6">
-    <!-- Immersive Header Area -->
-    <ImmersiveHeader
-      :image="coverImage"
-      fallback-icon="mdi:airplane"
-      class="rounded-2xl"
-    >
-      <template #top-left>
-        <button @click="router.push('/trips')" class="flex justify-center items-center w-10 h-10 rounded-xl bg-black/20 text-white backdrop-blur-md border-0 cursor-pointer hover:bg-black/40 transition-colors">
-            <Icon icon="mdi:arrow-left" class="text-2xl" />
-        </button>
-      </template>
+  <div class="flex flex-col">
+    <!-- Single Row Header -->
+    <div class="px-2 pt-0 pb-6 flex items-center gap-3">
+      <button @click="router.push('/trips')" class="w-10 h-10 rounded-full bg-neutral-800 text-white flex items-center justify-center hover:bg-neutral-700 transition-colors border-0 cursor-pointer shrink-0">
+          <Icon icon="mdi:arrow-left" class="text-xl" />
+      </button>
 
-      <template #top-right>
-        <button @click="showMenu = !showMenu" class="flex justify-center items-center w-10 h-10 rounded-xl bg-black/20 text-white backdrop-blur-md border-0 cursor-pointer hover:bg-black/40 transition-colors relative">
-            <Icon icon="mdi:dots-vertical" class="text-2xl" />
-            <div v-if="showMenu" class="absolute top-12 right-0 bg-neutral-800 rounded-xl border border-neutral-700 shadow-lg z-20 overflow-hidden min-w-32 py-1">
-              <NuxtLink :to="`/trips/${trip?.id}/edit`" class="block w-full px-4 py-3 text-left text-white hover:bg-neutral-700 transition-colors no-underline">編輯旅行</NuxtLink>
-              <button @click="handleDelete" class="w-full px-4 py-3 text-left text-red-500 hover:bg-neutral-700 transition-colors border-0 bg-transparent cursor-pointer">刪除旅行</button>
-            </div>
-        </button>
-      </template>
-
-      <template #bottom>
-         <h1 class="text-2xl font-bold text-white mb-1 shadow-sm">{{ trip?.name || '載入中...' }}</h1>
-         <div class="flex items-center gap-2 text-neutral-300 text-sm">
-            <Icon icon="mdi:calendar-range" class="text-indigo-400" />
+      <div class="flex-1 min-w-0">
+         <h1 class="text-xl font-bold text-white tracking-tight truncate">{{ trip?.name || '載入中...' }}</h1>
+         <div class="flex items-center gap-1.5 text-neutral-500 text-[10px] font-medium mt-0.5">
+            <Icon icon="mdi:calendar-range" class="text-indigo-500" />
             <span>{{ formatDateRange(trip?.start_date, trip?.end_date) }}</span>
          </div>
-      </template>
-    </ImmersiveHeader>
-
-    <div v-if="loading" class="text-center text-neutral-400 p-10">
-        <Icon icon="eos-icons:loading" class="text-3xl animate-spin" />
+      </div>
+      
+      <div class="relative shrink-0">
+        <button @click="showMenu = !showMenu" class="w-10 h-10 rounded-full bg-neutral-800 text-white flex items-center justify-center hover:bg-neutral-700 transition-colors border-0 cursor-pointer">
+            <Icon icon="mdi:dots-vertical" class="text-xl" />
+        </button>
+        
+        <Transition
+          enter-active-class="transition duration-200 ease-out"
+          enter-from-class="transform scale-95 opacity-0 -translate-y-2"
+          enter-to-class="transform scale-100 opacity-100 translate-y-0"
+          leave-active-class="transition duration-150 ease-in"
+          leave-from-class="transform scale-100 opacity-100 translate-y-0"
+          leave-to-class="transform scale-95 opacity-0 -translate-y-2"
+        >
+          <div v-if="showMenu" v-click-outside="() => showMenu = false" class="absolute top-12 right-0 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl z-50 overflow-hidden py-1 min-w-[140px]">
+              <NuxtLink :to="`/trips/${trip?.id}/edit`" class="flex items-center gap-2 px-4 py-3 text-white hover:bg-neutral-800 transition-colors no-underline text-sm font-medium">
+                <Icon icon="mdi:pencil-outline" /> 編輯旅行
+              </NuxtLink>
+              <div class="border-t border-neutral-800 my-1"></div>
+              <button @click="handleDelete" class="w-full flex items-center gap-2 px-4 py-3 text-red-500 hover:bg-neutral-800 transition-colors border-0 bg-transparent cursor-pointer text-sm font-medium">
+                <Icon icon="mdi:trash-can-outline" /> 刪除旅行
+              </button>
+          </div>
+        </Transition>
+      </div>
     </div>
 
-    <template v-else-if="trip">
-        
-        <!-- Tabs -->
-        <div class="flex items-center gap-1 bg-neutral-900 mx-1 p-1 rounded-xl border border-neutral-800">
-            <button 
-                v-for="tab in tabs" 
-                :key="tab.id"
-                @click="activeTab = tab.id"
-                class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all"
-                :class="activeTab === tab.id ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-400 hover:text-neutral-200'"
-            >
-                <Icon :icon="tab.icon" />
-                {{ tab.label }}
-            </button>
-        </div>
+    <div class="flex flex-col gap-6">
+      <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4">
+          <div class="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+          <div class="text-neutral-500 text-sm">載入中...</div>
+      </div>
 
-        <!-- Tab Content -->
-        
-        <!-- Overview Tab -->
-        <div v-if="activeTab === 'overview'" class="flex flex-col gap-6 animate-fade-in">
-            
-            <!-- KPI Cards -->
-            <div class="grid grid-cols-2 gap-3 px-1">
-                <div class="bg-neutral-800 rounded-2xl p-4 flex flex-col justify-center relative overflow-hidden">
-                     <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent z-0"></div>
-                     <span class="text-neutral-400 text-xs mb-1 relative z-10">總支出 ({{ trip.base_currency }})</span>
-                     <div class="text-2xl font-bold text-white tracking-tight relative z-10">
-                        {{ formatNumber(stats.totalSpent) }}
-                     </div>
-                </div>
-                
-                <div class="bg-neutral-800 rounded-2xl p-4 flex flex-col justify-center relative overflow-hidden">
-                     <div class="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent z-0"></div>
-                     <span class="text-neutral-400 text-xs mb-1 relative z-10">每人平均</span>
-                     <div class="text-2xl font-bold text-white tracking-tight relative z-10">
-                        {{ formatNumber(stats.averagePerMember) }}
-                     </div>
-                </div>
-            </div>
+      <template v-else-if="trip">
+          
+          <!-- Tabs -->
+          <div class="flex items-center gap-1 bg-neutral-900 p-1 rounded-2xl border border-neutral-800/50">
+              <button 
+                  v-for="tab in tabs" 
+                  :key="tab.id"
+                  @click="activeTab = tab.id"
+                  class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all"
+                  :class="activeTab === tab.id ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'"
+              >
+                  <Icon :icon="tab.icon" class="text-lg" />
+                  {{ tab.label }}
+              </button>
+          </div>
 
-            <!-- Members Section -->
-            <div class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="text-base font-semibold">成員 ({{ trip.members?.length || 0 }})</h3>
-                  <button @click="router.push(`/trips/${trip.id}/members/add`)" class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-500 text-sm border-0 cursor-pointer hover:bg-indigo-500/30 transition-colors">
-                    <Icon icon="mdi:plus" /> 新增
-                  </button>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                  <div v-for="member in trip.members" :key="member.id" class="flex items-center gap-2 px-3 py-2 rounded-full bg-neutral-800 text-sm">
-                    <Icon icon="mdi:account" class="text-indigo-500" />
-                    <span>{{ member.name }}</span>
-                    <span v-if="member.is_owner" class="text-xs text-indigo-500">(主辦)</span>
+          <!-- Tab Content -->
+          
+          <!-- Overview Tab -->
+          <div v-if="activeTab === 'overview'" class="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-24">
+              
+              <!-- KPI Cards -->
+              <div class="grid grid-cols-2 gap-3">
+                  <div class="bg-neutral-900 rounded-3xl p-5 border border-neutral-800/60 flex flex-col justify-center relative overflow-hidden">
+                       <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent z-0"></div>
+                       <span class="text-neutral-500 text-[10px] font-bold mb-1 relative z-10 uppercase tracking-wider">總支出 ({{ trip.base_currency }})</span>
+                       <div class="text-2xl font-black text-white tracking-tight relative z-10">
+                          {{ formatNumber(stats.totalSpent) }}
+                       </div>
                   </div>
-                </div>
-            </div>
-            
-            <!-- Quick Link to Ledger (Optional, but user removed detailed list so maybe useful?) -->
-            <div class="px-1">
-                 <NuxtLink :to="`/trips/${trip.id}/ledger`" class="block w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-4 text-center text-white font-semibold hover:bg-neutral-800 transition-colors no-underline flex items-center justify-center gap-2">
-                    <Icon icon="mdi:notebook-outline" class="text-xl" />
-                    進入記帳本
-                 </NuxtLink>
-            </div>
+                  
+                  <div class="bg-neutral-900 rounded-3xl p-5 border border-neutral-800/60 flex flex-col justify-center relative overflow-hidden">
+                       <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent z-0"></div>
+                       <span class="text-neutral-500 text-[10px] font-bold mb-1 relative z-10 uppercase tracking-wider">每人平均</span>
+                       <div class="text-2xl font-black text-white tracking-tight relative z-10">
+                          {{ formatNumber(stats.averagePerMember) }}
+                       </div>
+                  </div>
+              </div>
 
-        </div>
+              <!-- Members Section -->
+              <div class="bg-neutral-900 rounded-3xl p-6 border border-neutral-800/60">
+                  <div class="flex justify-between items-center mb-5">
+                    <h3 class="text-base font-bold">成員 ({{ trip.members?.length || 0 }})</h3>
+                    <button @click="router.push(`/trips/${trip.id}/members/add`)" class="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-500 flex items-center justify-center border-0 cursor-pointer hover:bg-indigo-500/20 transition-colors">
+                      <Icon icon="mdi:plus" class="text-xl" />
+                    </button>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    <div v-for="member in trip.members" :key="member.id" class="flex items-center gap-2 px-4 py-2 rounded-2xl bg-neutral-800/50 border border-neutral-800 text-sm font-medium">
+                      <Icon icon="mdi:account-outline" class="text-indigo-400" />
+                      <span>{{ member.name }}</span>
+                      <span v-if="member.is_owner" class="text-[10px] bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded-md ml-1 font-bold uppercase">主辦</span>
+                    </div>
+                  </div>
+              </div>
+              
+              <!-- Quick Link to Ledger -->
+              <NuxtLink :to="`/trips/${trip.id}/ledger`" class="group flex items-center justify-between bg-indigo-500 rounded-3xl p-6 text-white no-underline shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all">
+                  <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                      <Icon icon="mdi:notebook-outline" class="text-2xl" />
+                    </div>
+                    <div class="flex flex-col text-left">
+                      <span class="font-bold text-lg">進入記帳本</span>
+                      <span class="text-white/70 text-sm">查看明細與拆帳細節</span>
+                    </div>
+                  </div>
+                  <Icon icon="mdi:chevron-right" class="text-2xl opacity-50 group-hover:translate-x-1 transition-transform" />
+              </NuxtLink>
 
-        <!-- Stats Tab -->
-        <div v-else-if="activeTab === 'stats'" class="animate-fade-in">
-            <TripStats 
-                :transactions="transactions" 
-                :members="trip.members" 
-                :base-currency="trip.ledger?.base_currency || trip.base_currency || 'TWD'"
-            />
-        </div>
+          </div>
 
-    </template>
+          <!-- Stats Tab -->
+          <div v-else-if="activeTab === 'stats'" class="animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <TripStats 
+                  :transactions="transactions" 
+                  :members="trip.members" 
+                  :base-currency="trip.ledger?.base_currency || trip.base_currency || 'TWD'"
+              />
+          </div>
+
+      </template>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { Icon } from '@iconify/vue'
-import ImmersiveHeader from '~/components/ImmersiveHeader.vue'
 import TripStats from '~/components/TripStats.vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
@@ -144,7 +161,7 @@ const coverImage = ref<string | null>(null)
 const activeTab = ref('overview')
 const tabs = [
     { id: 'overview', label: '概覽', icon: 'mdi:view-dashboard-outline' },
-    { id: 'stats', label: '帳務分析', icon: 'mdi:chart-pie' }
+    { id: 'stats', label: '統計', icon: 'mdi:chart-pie' }
 ]
 
 // Stats Data (Kept for Overview KPI)
@@ -169,10 +186,6 @@ const calculateStats = () => {
     if (!trip.value || !transactions.value) return
 
     let total = 0
-    // Simplified KPI calc for Overview (Total Base)
-    // We can reuse the logic from TripStats logic or keep it simple
-    // Let's assume transactions converted to base for KPI
-    // Base currency
     const baseC = trip.value.ledger?.base_currency || trip.value.base_currency || 'TWD'
 
     transactions.value.forEach(txn => {
@@ -190,20 +203,13 @@ const calculateStats = () => {
 
 const fetchTripData = async () => {
   try {
-    // 1. Fetch Trip
     trip.value = await api.get<any>(`/api/trips/${route.params.id}`)
     
-    // 2. Fetch Images
-    const images = await getImages(trip.value.id, 'trip')
-    if (images.length > 0) coverImage.value = images[0].file_path
-
-    // 3. Fetch Transactions (All, for stats)
     if (trip.value.ledger_id) {
          const txns = await api.get<any[]>(`/api/ledgers/${trip.value.ledger_id}/transactions`)
          transactions.value = txns
          calculateStats()
     }
-
   } catch (e) {
     console.error('Failed to fetch trip data:', e)
     router.push('/trips')

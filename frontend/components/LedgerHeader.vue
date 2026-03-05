@@ -1,47 +1,28 @@
 <template>
-  <ImmersiveHeader
-    :fallback-icon="icon"
-    height="h-48"
-    class="rounded-3xl shadow-xl mb-6 mx-4"
-  >
-    <template #top-left>
-      <button 
-        v-if="showBack" 
-        @click="router.back()" 
-        class="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/50 transition-colors border-0 cursor-pointer"
-      >
-        <Icon icon="mdi:arrow-left" class="text-xl" />
-      </button>
-    </template>
+  <div class="px-2 pt-0 pb-4 flex items-center gap-3">
+    <!-- Back Button -->
+    <button 
+      v-if="showBack" 
+      @click="router.back()" 
+      class="w-10 h-10 rounded-full bg-neutral-800 text-white flex items-center justify-center hover:bg-neutral-700 transition-colors border-0 cursor-pointer shrink-0"
+    >
+      <Icon icon="mdi:arrow-left" class="text-xl" />
+    </button>
 
-    <template #top-right>
-      <button 
-        v-if="showSettings && isOwner" 
-        @click="router.push(`/ledger/${currentLedger?.id}/settings`)" 
-        class="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/50 transition-colors border-0 cursor-pointer"
-      >
-        <Icon icon="mdi:share-variant" class="text-xl" />
-      </button>
-    </template>
-
-    <template #bottom>
-      <div class="flex flex-col">
-        <h1 class="text-2xl font-bold text-white shadow-sm">{{ title }}</h1>
-        <LedgerSwitcher />
-      </div>
-    </template>
-  </ImmersiveHeader>
+    <!-- Title and Switcher -->
+    <div class="flex-1 min-w-0">
+      <h1 class="text-xl font-bold text-white tracking-tight truncate">{{ title }}</h1>
+      <LedgerSwitcher />
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useLedger } from '~/composables/useLedger'
-import { useAuth } from '~/composables/useAuth'
-import ImmersiveHeader from './ImmersiveHeader.vue'
 import LedgerSwitcher from './LedgerSwitcher.vue'
 
-const props = defineProps({
+defineProps({
   title: {
     type: String,
     required: true
@@ -53,18 +34,9 @@ const props = defineProps({
   showBack: {
     type: Boolean,
     default: false
-  },
-  showSettings: {
-    type: Boolean,
-    default: false
   }
 })
 
 const router = useRouter()
-const { user } = useAuth()
 const { currentLedger } = useLedger()
-
-const isOwner = computed(() => {
-  return currentLedger.value && currentLedger.value.user_id === user.value?.id
-})
 </script>

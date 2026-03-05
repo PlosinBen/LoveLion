@@ -3,7 +3,6 @@
     <LedgerHeader
       title="個人記帳"
       icon="mdi:wallet-outline"
-      :show-settings="true"
     />
 
     <!-- FAB -->

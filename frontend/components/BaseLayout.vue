@@ -2,7 +2,7 @@
   <div class="flex flex-col min-h-screen font-sans transition-colors duration-200" :class="[bgClass, textClass]">
     
     <!-- Optional Header Slot -->
-    <header v-if="$slots.header" class="shrink-0" :class="headerClass">
+    <header v-if="$slots.header" class="shrink-0 py-2">
       <slot name="header" />
     </header>
 
@@ -23,7 +23,6 @@
 interface Props {
   bgClass?: string
   textClass?: string
-  headerClass?: string
   contentClass?: string
   footerClass?: string
 }
@@ -31,7 +30,6 @@ interface Props {
 withDefaults(defineProps<Props>(), {
   bgClass: 'bg-neutral-900',
   textClass: 'text-neutral-50',
-  headerClass: 'px-4',
   contentClass: 'max-w-lg p-4' // Default constrained width for app-like feel
 })
 </script>

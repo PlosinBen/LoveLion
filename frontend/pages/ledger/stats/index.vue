@@ -3,7 +3,6 @@
     <LedgerHeader
       title="日常統計"
       icon="mdi:chart-bar"
-      :show-back="true"
     />
 
     <div v-if="loading" class="flex justify-center items-center py-20 text-neutral-400">
@@ -75,8 +74,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
-import ImmersiveHeader from '~/components/ImmersiveHeader.vue'
-import LedgerSwitcher from '~/components/LedgerSwitcher.vue'
 import { useLedger } from '~/composables/useLedger'
 import { useApi } from '~/composables/useApi'
 

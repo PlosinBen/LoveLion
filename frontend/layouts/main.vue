@@ -1,5 +1,5 @@
 <template>
-  <BaseLayout content-class="max-w-lg p-4 pb-20">
+  <BaseLayout content-class="max-w-lg p-4 pb-20" header-class="px-0">
     <template #header>
       <BrandLogo class="px-4" />
     </template>

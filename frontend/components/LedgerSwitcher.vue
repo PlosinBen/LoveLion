@@ -14,17 +14,29 @@
       leave-from-class="transform scale-100 opacity-100 translate-y-0"
       leave-to-class="transform scale-95 opacity-0 -translate-y-2"
     >
-      <div v-if="showSwitcher" class="absolute top-full left-0 mt-2 w-64 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl z-50 overflow-hidden py-1">
+      <div v-if="showSwitcher" class="absolute top-full left-0 mt-2 w-72 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl z-50 overflow-hidden py-1">
           <div v-for="l in allLedgers" :key="l.id" 
-            class="px-4 py-3 hover:bg-neutral-800 transition-colors flex items-center justify-between"
+            class="px-4 py-3 hover:bg-neutral-800 transition-colors flex items-center justify-between group/item"
             :class="{ 'bg-indigo-500/10 text-indigo-400': l.id === currentLedger?.id }"
             @click.stop="onSwitch(l.id)"
           >
-            <div class="flex flex-col">
-              <span class="font-medium">{{ l.name }}</span>
+            <div class="flex flex-col min-w-0 flex-1">
+              <span class="font-medium truncate">{{ l.name }}</span>
               <span class="text-[10px] text-neutral-500">{{ l.user?.display_name || '系統' }} 的帳本</span>
             </div>
-            <Icon v-if="l.id === currentLedger?.id" icon="mdi:check" />
+
+            <div class="flex items-center gap-2 shrink-0 ml-3">
+              <!-- Settings Button (Visible only if owner) -->
+              <button 
+                v-if="l.user_id === user?.id"
+                @click.stop="router.push(`/ledger/${l.id}/settings`); showSwitcher = false"
+                class="w-8 h-8 rounded-full flex items-center justify-center text-neutral-500 hover:bg-neutral-700 hover:text-white transition-colors border-0 cursor-pointer bg-transparent"
+              >
+                <Icon icon="mdi:cog-outline" class="text-lg" />
+              </button>
+              
+              <Icon v-if="l.id === currentLedger?.id" icon="mdi:check" class="text-lg shrink-0" />
+            </div>
           </div>
           
           <div class="border-t border-neutral-800 my-1"></div>
@@ -41,7 +53,10 @@
 import { ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useLedger } from '~/composables/useLedger'
+import { useAuth } from '~/composables/useAuth'
 
+const router = useRouter()
+const { user } = useAuth()
 const { allLedgers, currentLedger, selectLedger } = useLedger()
 const showSwitcher = ref(false)
 

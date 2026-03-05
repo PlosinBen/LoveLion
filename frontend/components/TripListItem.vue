@@ -1,25 +1,47 @@
 <template>
   <div
-    class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800 cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-500"
+    class="relative w-full h-44 rounded-3xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] group shadow-lg mb-4"
     @click="$emit('click')"
   >
-    <div class="flex items-center gap-3">
-      <div class="relative flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-500/20 overflow-hidden">
-         <img v-if="coverImage" :src="getImageUrl(coverImage)" class="w-full h-full object-cover" />
-         <Icon v-else icon="mdi:airplane" class="text-2xl text-indigo-500" />
+    <!-- Background Image -->
+    <div class="absolute inset-0 bg-neutral-800">
+      <img 
+        v-if="coverImage" 
+        :src="getImageUrl(coverImage)" 
+        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+        :alt="trip.name"
+      />
+      <div v-else class="w-full h-full bg-gradient-to-br from-indigo-900 to-slate-900 flex items-center justify-center">
+        <Icon icon="mdi:airplane-takeoff" class="text-6xl text-white/10" />
       </div>
-      <div class="flex-1">
-        <h3 class="text-base font-bold mb-1">{{ trip.name }}</h3>
-        <p class="text-xs text-neutral-400">
-          {{ formatDateRange(trip.start_date, trip.end_date) }}
-          <span v-if="trip.members?.length" class="ml-2">• {{ trip.members.length }} 位成員</span>
-        </p>
-      </div>
-      <Icon icon="mdi:chevron-right" class="text-xl text-neutral-500" />
+      
+      <!-- Overlays -->
+      <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
     </div>
-    <p v-if="trip.description" class="mt-3 pt-3 border-t border-neutral-800 text-sm text-neutral-400 line-clamp-2">
-      {{ trip.description }}
-    </p>
+
+    <!-- Content -->
+    <div class="absolute inset-0 p-6 flex flex-col justify-end">
+      <div class="flex flex-col gap-1">
+        <h3 class="text-xl font-bold text-white tracking-tight drop-shadow-md">{{ trip.name }}</h3>
+        
+        <div class="flex items-center gap-3 text-white/80 text-xs font-medium">
+          <div class="flex items-center gap-1">
+            <Icon icon="mdi:calendar-range" class="text-sm" />
+            <span>{{ formatDateRange(trip.start_date, trip.end_date) }}</span>
+          </div>
+          
+          <div v-if="trip.members?.length" class="flex items-center gap-1">
+            <Icon icon="mdi:account-group" class="text-sm" />
+            <span>{{ trip.members.length }} 人</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Badge (Optional, if you want to show it's active) -->
+    <div v-if="isCurrentTrip(trip.start_date, trip.end_date)" class="absolute top-4 right-4 px-3 py-1 bg-green-500/20 backdrop-blur-md border border-green-500/30 rounded-full">
+      <span class="text-[10px] font-bold text-green-400 uppercase tracking-wider">進行中</span>
+    </div>
   </div>
 </template>
 
@@ -27,7 +49,7 @@
 import { Icon } from '@iconify/vue'
 import { useImages } from '~/composables/useImages'
 
-defineProps<{
+const props = defineProps<{
   trip: any
   coverImage?: string
 }>()
@@ -35,6 +57,14 @@ defineProps<{
 defineEmits(['click'])
 
 const { getImageUrl } = useImages()
+
+const isCurrentTrip = (start: string | null, end: string | null) => {
+  if (!start || !end) return false
+  const now = new Date()
+  const s = new Date(start)
+  const e = new Date(end)
+  return now >= s && now <= e
+}
 
 const formatDateRange = (start: string | null, end: string | null) => {
   if (!start && !end) return '日期未設定'

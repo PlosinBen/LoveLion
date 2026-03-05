@@ -4,13 +4,43 @@
       <button @click="router.back()" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-white border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
         <Icon icon="mdi:arrow-left" class="text-2xl" />
       </button>
-      <h1 class="text-xl font-bold">帳本分享設定</h1>
+      <h1 class="text-xl font-bold">帳本設定</h1>
       <div class="w-10"></div>
     </header>
 
-    <div v-if="loading" class="text-center py-10 text-neutral-500">載入中...</div>
+    <div v-if="loading" class="text-center py-10 text-neutral-500">
+      <Icon icon="eos-icons:loading" class="text-3xl animate-spin" />
+    </div>
 
     <div v-else class="flex flex-col gap-8">
+      <!-- Ledger Info Section -->
+      <section>
+        <div class="flex items-center gap-2 mb-4 px-1">
+          <Icon icon="mdi:notebook-edit-outline" class="text-indigo-500 text-xl" />
+          <h2 class="text-lg font-bold">基本設定</h2>
+        </div>
+        <div class="bg-neutral-900 rounded-3xl border border-neutral-800 p-6 flex flex-col gap-4">
+          <div>
+            <label class="block text-xs text-neutral-500 uppercase tracking-wider mb-2 ml-1">帳本名稱</label>
+            <div class="flex gap-2">
+              <input 
+                v-model="ledgerName" 
+                type="text" 
+                class="flex-1 bg-neutral-800 border-neutral-700 text-white py-3 px-4 rounded-2xl outline-none focus:border-indigo-500 transition-colors"
+                placeholder="輸入帳本名稱"
+              />
+              <button 
+                @click="handleUpdateLedger" 
+                :disabled="updatingLedger || !ledgerName || ledgerName === initialLedgerName"
+                class="px-6 py-3 rounded-2xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all disabled:opacity-50 disabled:grayscale border-0 cursor-pointer"
+              >
+                {{ updatingLedger ? '...' : '儲存' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Members Section -->
       <section>
         <div class="flex items-center gap-2 mb-4 px-1">
@@ -176,6 +206,9 @@ const api = useApi()
 const { initAuth } = useAuth()
 
 const loading = ref(true)
+const updatingLedger = ref(false)
+const ledgerName = ref('')
+const initialLedgerName = ref('')
 const members = ref<any[]>([])
 const activeInvites = ref<any[]>([])
 
@@ -191,13 +224,37 @@ const aliasForm = ref({
   alias: ''
 })
 
+const fetchLedger = async () => {
+  try {
+    const data = await api.get<any>(`/api/ledgers/${route.params.id}`)
+    ledgerName.value = data.name
+    initialLedgerName.value = data.name
+  } catch (e) {
+    console.error('Failed to fetch ledger:', e)
+  }
+}
+
+const handleUpdateLedger = async () => {
+  if (!ledgerName.value || ledgerName.value === initialLedgerName.value) return
+  updatingLedger.value = true
+  try {
+    await api.patch(`/api/ledgers/${route.params.id}`, {
+      name: ledgerName.value
+    })
+    initialLedgerName.value = ledgerName.value
+    alert('帳本名稱已更新！')
+  } catch (e: any) {
+    alert(e.message || '更新失敗')
+  } finally {
+    updatingLedger.value = false
+  }
+}
+
 const fetchMembers = async () => {
   try {
     members.value = await api.get<any[]>(`/api/ledgers/${route.params.id}/members`)
   } catch (e) {
     console.error('Failed to fetch members:', e)
-  } finally {
-    loading.value = false
   }
 }
 
@@ -206,6 +263,19 @@ const fetchInvites = async () => {
     activeInvites.value = await api.get<any[]>(`/api/ledgers/${route.params.id}/invites`)
   } catch (e) {
     console.error('Failed to fetch invites:', e)
+  }
+}
+
+const fetchData = async () => {
+  loading.value = true
+  try {
+    await Promise.all([
+      fetchLedger(),
+      fetchMembers(),
+      fetchInvites()
+    ])
+  } finally {
+    loading.value = false
   }
 }
 
@@ -289,8 +359,7 @@ const formatExpiry = (dateStr: string) => {
 
 onMounted(() => {
   initAuth()
-  fetchMembers()
-  fetchInvites()
+  fetchData()
 })
 </script>
 

@@ -1,18 +1,23 @@
 <template>
-  <div class="flex flex-col gap-6">
-    <header class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold">我的旅行</h1>
-    </header>
+  <div class="flex flex-col">
+    <!-- Text Header -->
+    <div class="px-2 pt-0 pb-6">
+      <h1 class="text-2xl font-bold text-white tracking-tight">我的旅行</h1>
+      <p class="text-neutral-500 text-xs mt-0.5">記錄每一趟精彩的旅程</p>
+    </div>
 
     <!-- FAB -->
     <NuxtLink 
         to="/trips/create" 
-        class="fixed bottom-6 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20 cursor-pointer border-0"
+        class="fixed bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20 cursor-pointer border-0"
     >
         <Icon icon="mdi:plus" class="text-3xl" />
     </NuxtLink>
 
-    <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
+    <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4">
+      <div class="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+      <div class="text-neutral-500 text-sm">載入旅行中...</div>
+    </div>
 
     <EmptyState
       v-else-if="trips.length === 0"
@@ -23,7 +28,7 @@
       action-link="/trips/create"
     />
 
-    <div v-else class="flex flex-col gap-3">
+    <div v-else class="flex flex-col gap-4 pb-24">
       <TripListItem
         v-for="trip in trips"
         :key="trip.id"
