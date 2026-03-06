@@ -5,7 +5,7 @@
       <p class="text-xs text-neutral-400 mt-1">{{ formatDate(transaction.date) }}</p>
     </div>
     <div class="font-semibold text-indigo-500 text-right">
-      <div class="text-[10px] text-neutral-500 leading-none mb-1">
+      <div class="text-xs text-neutral-500 leading-none mb-1">
         {{ (transaction.billing_amount && Number(transaction.billing_amount) > 0) ? (baseCurrency || 'TWD') : transaction.currency }}
       </div>
       <div>

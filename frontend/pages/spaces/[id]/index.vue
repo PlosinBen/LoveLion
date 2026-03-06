@@ -8,7 +8,7 @@
 
       <div class="flex-1 min-w-0">
          <h1 class="text-xl font-bold text-white tracking-tight truncate">{{ space?.name || '載入中...' }}</h1>
-         <div class="flex items-center gap-1.5 text-neutral-500 text-[10px] font-medium mt-0.5">
+         <div class="flex items-center gap-1.5 text-neutral-500 text-xs font-medium mt-0.5">
             <Icon :icon="spaceTheme.icon" :class="spaceTheme.color" />
             <span v-if="space?.type === 'trip'">{{ formatDateRange(space?.start_date, space?.end_date) }}</span>
             <span v-else>{{ spaceTheme.label }}</span>
@@ -44,7 +44,7 @@
           <!-- Tab Contents -->
           
           <!-- 1. Ledger (Transactions) Tab -->
-          <div v-if="activeTab === 'ledger'" class="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-24">
+          <div v-if="activeTab === 'ledger'" class="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
               <!-- FAB for Ledger -->
               <NuxtLink 
                   :to="`/spaces/add?ledger_id=${space.id}`" 
@@ -71,7 +71,7 @@
                       <Icon :icon="getCategoryIcon(txn.category)" class="text-2xl" />
                     </div>
                     <div class="flex-1 min-w-0">
-                      <h3 class="text-[15px] font-bold mb-0.5 truncate text-neutral-100">{{ txn.title || txn.category || '未分類' }}</h3>
+                      <h3 class="text-sm font-bold mb-0.5 truncate text-neutral-100">{{ txn.title || txn.category || '未分類' }}</h3>
                       <p class="text-xs text-neutral-500 flex items-center gap-1.5 font-medium">
                          <span>{{ formatDateShort(txn.date) }}</span>
                          <span class="w-0.5 h-0.5 rounded-full bg-neutral-700"></span>
@@ -88,7 +88,7 @@
           </div>
 
           <!-- 2. Comparison Tab -->
-          <div v-else-if="activeTab === 'comparison'" class="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-24">
+          <div v-else-if="activeTab === 'comparison'" class="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
               <!-- FAB for Comparison -->
               <button 
                   @click="showAddStore = true"
@@ -124,10 +124,9 @@
                       <!-- Product Quick List -->
                       <div class="flex flex-col gap-2">
                           <div v-for="p in (store.products || []).slice(0, 3)" :key="p.id" class="flex justify-between text-sm py-1 border-b border-neutral-800/30 last:border-0">
-                              <span class="text-neutral-400">{{ p.name }}</span>
                               <span class="text-white font-medium">{{ p.currency }} {{ formatAmount(p.price) }}</span>
                           </div>
-                          <p v-if="(store.products || []).length > 3" class="text-[10px] text-center text-neutral-600 font-bold uppercase tracking-widest mt-1">還有 {{ (store.products || []).length - 3 }} 個項目</p>
+                          <p v-if="(store.products || []).length > 3" class="text-xs text-center text-neutral-600 font-bold uppercase tracking-widest mt-1">還有 {{ (store.products || []).length - 3 }} 個項目</p>
                       </div>
                   </div>
                   
@@ -138,7 +137,7 @@
           </div>
 
           <!-- 3. Stats Tab -->
-          <div v-else-if="activeTab === 'stats'" class="animate-in fade-in slide-in-from-bottom-2 duration-500 pb-24">
+          <div v-else-if="activeTab === 'stats'" class="animate-in fade-in slide-in-from-bottom-2 duration-500">
               <TripStats 
                   :transactions="transactions" 
                   :members="members" 
@@ -159,7 +158,7 @@
       leave-to-class="opacity-0"
     >
         <div v-if="showAddStore" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div class="w-full max-w-lg bg-neutral-900 rounded-t-[32px] sm:rounded-[32px] p-8 border border-neutral-800 animate-in slide-in-from-bottom duration-300">
+            <div class="w-full max-w-lg bg-neutral-900 rounded-t-3xl sm:rounded-3xl p-8 border border-neutral-800 animate-in slide-in-from-bottom duration-300">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-bold">新增商店</h2>
                     <button @click="showAddStore = false" class="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 border-0 cursor-pointer">

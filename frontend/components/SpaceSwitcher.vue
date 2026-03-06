@@ -1,7 +1,7 @@
 <template>
   <div class="relative group cursor-pointer" v-click-outside="() => showSwitcher = false">
     <div @click="showSwitcher = !showSwitcher" class="flex items-center gap-1.5 text-indigo-400 font-medium py-1 px-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors">
-       <span class="truncate max-w-[160px]">{{ currentLedger?.name || '正在載入...' }}</span>
+       <span class="truncate w-40">{{ currentLedger?.name || '正在載入...' }}</span>
        <Icon icon="mdi:chevron-down" class="text-lg flex-shrink-0 transition-transform duration-300" :class="{ 'rotate-180': showSwitcher }" />
     </div>
     
@@ -22,7 +22,7 @@
           >
             <div class="flex flex-col min-w-0 flex-1">
               <span class="font-medium truncate">{{ l.name }}</span>
-              <span class="text-[10px] text-neutral-500">{{ l.user?.display_name || '系統' }} 的帳本</span>
+              <span class="text-xs text-neutral-500">{{ l.user?.display_name || '系統' }} 的帳本</span>
             </div>
 
             <div class="flex items-center gap-2 shrink-0 ml-3">

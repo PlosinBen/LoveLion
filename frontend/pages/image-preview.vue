@@ -1,12 +1,12 @@
 <template>
-  <div class="image-preview fixed inset-0 bg-black flex flex-col h-[100dvh]">
+  <div class="image-preview fixed inset-0 bg-black flex flex-col h-screen">
     <!-- Header / Close -->
     <header class="absolute top-0 left-0 right-0 p-4 pt-6 transition-opacity duration-300 pointer-events-none bg-gradient-to-b from-black/60 to-transparent flex justify-start items-center z-10" :class="showControls ? 'opacity-100' : 'opacity-0'">
        <!-- Progress Bar -->
        <div class="absolute top-2 left-2 right-2 flex gap-1">
            <div v-for="(img, idx) in images" :key="idx" 
                 class="h-1 flex-1 rounded-full transition-colors duration-300 backdrop-blur-sm shadow-sm"
-                :class="idx === currentIndex ? 'bg-white/90 shadow-[0_0_8px_rgba(255,255,255,0.6)]' : 'bg-white/40'">
+                :class="idx === currentIndex ? 'bg-white/90 shadow-white/60' : 'bg-white/40'">
            </div>
        </div>
 

@@ -8,7 +8,7 @@
 
       <div class="flex-1 min-w-0">
          <h1 class="text-xl font-bold text-white tracking-tight truncate">{{ store?.name || '載入中...' }}</h1>
-         <div class="flex items-center gap-1.5 text-neutral-500 text-[10px] font-medium mt-0.5">
+         <div class="flex items-center gap-1.5 text-neutral-500 text-xs font-medium mt-0.5">
             <Icon icon="mdi:package-variant-closed" class="text-indigo-500" />
             <span>{{ store?.products?.length || 0 }} 個商品</span>
             <span v-if="store?.products?.length > 0" class="text-neutral-700">•</span>
@@ -57,7 +57,7 @@
                        <span class="text-indigo-400 font-black text-lg">
                            {{ product.currency }} {{ formatPrice(product.price) }}
                        </span>
-                       <span v-if="product.unit" class="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
+                       <span v-if="product.unit" class="text-xs text-neutral-500 font-bold uppercase tracking-wider">
                            / {{ product.unit }}
                        </span>
                    </div>
@@ -82,7 +82,7 @@
                     </div>
                     
                     <div>
-                        <label class="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mb-3 block ml-1">參考照片</label>
+                        <label class="text-xs text-neutral-500 font-bold uppercase tracking-widest mb-3 block ml-1">參考照片</label>
                         <ImageManager 
                             :ref="(el) => setProjectImageManager(el, product.id)"
                             :entity-id="product.id" 

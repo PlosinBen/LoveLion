@@ -100,9 +100,9 @@
               <div class="flex flex-col">
                 <div class="flex items-center gap-2">
                   <span class="font-bold text-neutral-100">{{ member.alias || member.user?.display_name }}</span>
-                  <span v-if="member.role === 'owner'" class="text-[9px] px-1.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400 font-bold uppercase tracking-wider border border-indigo-500/20">主辦人</span>
+                  <span v-if="member.role === 'owner'" class="text-xs px-1.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400 font-bold uppercase tracking-wider border border-indigo-500/20">主辦人</span>
                 </div>
-                <span class="text-[10px] text-neutral-500 font-medium">@{{ member.user?.username }}</span>
+                <span class="text-xs text-neutral-500 font-medium">@{{ member.user?.username }}</span>
               </div>
             </div>
 
@@ -138,10 +138,10 @@
           <div v-for="invite in invites" :key="invite.id" class="p-5 bg-neutral-900 rounded-3xl border border-neutral-800 flex items-center justify-between hover:bg-neutral-800/20 transition-colors">
             <div class="flex flex-col gap-1">
               <div class="flex items-center gap-2">
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400 font-bold uppercase tracking-wider border border-neutral-700">
+                <span class="text-xs px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400 font-bold uppercase tracking-wider border border-neutral-700">
                   {{ invite.is_one_time ? '一次性' : '多人共用' }}
                 </span>
-                <span v-if="invite.expires_at" class="text-[10px] text-neutral-600 font-medium">
+                <span v-if="invite.expires_at" class="text-xs text-neutral-600 font-medium">
                   {{ formatExpiry(invite.expires_at) }} 到期
                 </span>
               </div>
@@ -182,7 +182,7 @@
     >
         <!-- Invite Modal -->
         <div v-if="showInviteModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div class="w-full max-w-lg bg-neutral-900 rounded-t-[32px] sm:rounded-[32px] p-8 border border-neutral-800 animate-in slide-in-from-bottom duration-300">
+            <div class="w-full max-w-lg bg-neutral-900 rounded-t-3xl sm:rounded-3xl p-8 border border-neutral-800 animate-in slide-in-from-bottom duration-300">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-bold">產生邀請連結</h2>
                     <button @click="showInviteModal = false" class="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 border-0 cursor-pointer">
@@ -196,7 +196,7 @@
                             <input type="checkbox" v-model="inviteForm.is_one_time" class="w-5 h-5 rounded border-neutral-700 bg-neutral-800 text-indigo-500" />
                             <div class="flex flex-col">
                                 <span class="font-bold text-sm">一次性連結</span>
-                                <span class="text-[10px] text-neutral-500 mt-0.5">使用一次後立即失效（適合單人邀請）</span>
+                                <span class="text-xs text-neutral-500 mt-0.5">使用一次後立即失效（適合單人邀請）</span>
                             </div>
                         </label>
                     </div>
@@ -214,7 +214,7 @@
 
         <!-- Alias Modal -->
         <div v-else-if="showAliasModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div class="w-full max-w-lg bg-neutral-900 rounded-t-[32px] sm:rounded-[32px] p-8 border border-neutral-800 animate-in slide-in-from-bottom duration-300">
+            <div class="w-full max-w-lg bg-neutral-900 rounded-t-3xl sm:rounded-3xl p-8 border border-neutral-800 animate-in slide-in-from-bottom duration-300">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-bold">修改成員暱稱</h2>
                     <button @click="showAliasModal = false" class="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 border-0 cursor-pointer">

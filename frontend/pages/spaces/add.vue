@@ -64,7 +64,7 @@
                   v-model.number="item.unit_price"
                   type="number"
                   placeholder="單價"
-                  input-class="flex-[2]"
+                  input-class="flex-auto"
                 />
                 <span class="text-neutral-400">×</span>
                 <BaseInput
@@ -72,7 +72,7 @@
                   type="number"
                   placeholder="數量"
                   min="1"
-                  input-class="flex-1 w-[60px]"
+                  input-class="flex-1 w-14"
                 />
                 <button type="button" @click="removeItem(index)" class="flex justify-center items-center w-9 h-9 rounded-lg bg-red-500 text-white border-0 cursor-pointer hover:bg-red-600 transition-colors" v-if="form.items.length > 1">
                   <Icon icon="mdi:close" />

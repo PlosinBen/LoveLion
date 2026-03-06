@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative w-full h-44 rounded-3xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] group shadow-lg mb-4"
+    class="relative w-full h-44 rounded-3xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95 group shadow-lg mb-4"
     @click="$emit('click')"
   >
     <!-- Background Image -->
@@ -40,7 +40,7 @@
 
     <!-- Status Badge (Optional, if you want to show it's active) -->
     <div v-if="isCurrentTrip(trip.start_date, trip.end_date)" class="absolute top-4 right-4 px-3 py-1 bg-green-500/20 backdrop-blur-md border border-green-500/30 rounded-full">
-      <span class="text-[10px] font-bold text-green-400 uppercase tracking-wider">進行中</span>
+      <span class="text-xs font-bold text-green-400 uppercase tracking-wider">進行中</span>
     </div>
   </div>
 </template>
