@@ -1,16 +1,16 @@
 <template>
-  <div class="add-space-page min-h-screen bg-neutral-900 text-neutral-50">
+  <div class="add-space-page">
     <SpaceHeader 
       title="建立新空間" 
       :show-back="true"
       class="pt-0 px-2"
     />
 
-    <div class="p-4 pt-0">
+    <div class="pt-0">
       <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
         <div class="flex flex-col gap-2">
-          <label class="text-xs font-black text-neutral-500 uppercase tracking-widest px-1">基本資訊</label>
-          <div class="bg-neutral-900 rounded-3xl border border-neutral-800 p-6 flex flex-col gap-6 shadow-sm">
+          <label class="text-xs font-bold text-neutral-500 uppercase tracking-widest px-1">基本資訊</label>
+          <div class="bg-neutral-900 rounded-2xl border border-neutral-800 p-6 flex flex-col gap-6 shadow-sm">
             <BaseInput 
               v-model="form.name" 
               label="空間名稱" 
@@ -34,7 +34,7 @@
         <button 
           type="submit" 
           :disabled="submitting"
-          class="w-full py-4 rounded-2xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-[0.98] disabled:opacity-50 mt-4 shadow-lg shadow-indigo-500/20 border-0 cursor-pointer"
+          class="w-full py-4 rounded-xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-[0.98] disabled:opacity-50 mt-4 shadow-lg shadow-indigo-500/20 border-0 cursor-pointer"
         >
           {{ submitting ? '建立中...' : '建立空間' }}
         </button>

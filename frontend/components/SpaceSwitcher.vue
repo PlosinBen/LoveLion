@@ -2,7 +2,7 @@
   <div class="relative group cursor-pointer select-none" v-click-outside="() => showSwitcher = false">
     <!-- Trigger Header -->
     <div @click="showSwitcher = !showSwitcher" class="flex items-center gap-1.5 text-indigo-400 font-bold py-1 px-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors">
-       <span class="truncate max-w-[160px]">{{ currentSpace?.name || '正在載入...' }}</span>
+       <span class="truncate max-w-xs">{{ currentSpace?.name || '正在載入...' }}</span>
        <Icon 
          icon="mdi:chevron-down" 
          class="text-lg flex-shrink-0 transition-transform duration-300" 
@@ -19,7 +19,7 @@
       leave-from-class="transform scale-100 opacity-100 translate-y-0"
       leave-to-class="transform scale-95 opacity-0 -translate-y-2"
     >
-      <div v-if="showSwitcher" class="absolute top-full left-0 mt-2 w-72 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl z-[100] overflow-hidden py-1">
+      <div v-if="showSwitcher" class="absolute top-full left-0 mt-2 w-72 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl z-40 overflow-hidden py-1">
           <div v-for="space in allSpaces" :key="space.id" 
             class="px-4 py-3 hover:bg-neutral-800 transition-colors flex items-center justify-between group/item border-0 cursor-pointer"
             :class="{ 'bg-indigo-500/10 text-indigo-400': space.id === currentSpace?.id }"

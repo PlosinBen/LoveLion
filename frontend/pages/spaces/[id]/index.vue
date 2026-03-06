@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col min-h-screen">
+  <div class="flex flex-col">
     <!-- Space Navigation -->
     <SpaceHeader 
       v-if="space"
@@ -18,14 +18,14 @@
       </template>
     </SpaceHeader>
 
-    <div v-if="space" class="p-4 pt-0 pb-32">
+    <div v-if="space" class="pb-32">
       <!-- 1. Ledger Tab -->
       <div v-if="activeTab === 'ledger'" class="flex flex-col gap-6">
           <div class="bg-neutral-900 rounded-2xl border border-neutral-800 p-6 flex flex-col gap-5 shadow-sm">
               <div class="flex items-start justify-between">
                 <div class="flex flex-col gap-1">
                    <div class="flex items-center gap-2 mb-1">
-                      <div class="px-2.5 py-0.5 bg-indigo-500/10 text-indigo-400 rounded-full text-[10px] font-bold uppercase tracking-wider border border-indigo-500/20">
+                      <div class="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 rounded-full text-xs font-bold uppercase tracking-wider border border-indigo-500/20">
                          {{ space.type === 'trip' ? '專案' : '空間' }}
                       </div>
                    </div>
@@ -39,11 +39,11 @@
 
               <div class="grid grid-cols-2 gap-3">
                  <div class="bg-neutral-800/50 rounded-xl p-4 border border-neutral-700/30 flex flex-col gap-1">
-                    <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">交易</span>
+                    <span class="text-xs font-bold text-neutral-500 uppercase tracking-wider">交易</span>
                     <span class="text-lg font-bold">{{ transactions.length }} 筆</span>
                  </div>
                  <div class="bg-neutral-800/50 rounded-xl p-4 border border-neutral-700/30 flex flex-col gap-1">
-                    <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">成員</span>
+                    <span class="text-xs font-bold text-neutral-500 uppercase tracking-wider">成員</span>
                     <span class="text-lg font-bold">{{ members.length }} 位</span>
                  </div>
               </div>
@@ -132,7 +132,7 @@
     <button 
         v-if="activeTab === 'ledger' && space"
         @click="router.push(`/spaces/${route.params.id}/transaction/add`)"
-        class="fixed bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg rounded-full flex items-center justify-center text-white transition-all active:scale-90 z-20 cursor-pointer border-0"
+        class="fixed bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg rounded-full flex items-center justify-center text-white transition-all active:scale-95 z-20 cursor-pointer border-0"
     >
         <Icon icon="mdi:plus" class="text-3xl" />
     </button>
@@ -140,7 +140,7 @@
     <button 
         v-if="activeTab === 'comparison' && space"
         @click="router.push(`/spaces/${route.params.id}/stores/add`)"
-        class="fixed bottom-24 right-6 w-14 h-14 bg-green-500 hover:bg-green-600 shadow-lg rounded-full flex items-center justify-center text-white transition-all active:scale-90 z-20 cursor-pointer border-0"
+        class="fixed bottom-24 right-6 w-14 h-14 bg-green-500 hover:bg-green-600 shadow-lg rounded-full flex items-center justify-center text-white transition-all active:scale-95 z-20 cursor-pointer border-0"
     >
         <Icon icon="mdi:store-plus-outline" class="text-3xl" />
     </button>

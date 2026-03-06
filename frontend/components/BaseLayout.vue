@@ -7,7 +7,7 @@
     </div>
 
     <!-- Main Content -->
-    <main class="flex-1 w-full mx-auto relative flex flex-col" :class="contentClass">
+    <main class="flex-1 w-full mx-auto relative flex flex-col px-6">
       <slot />
     </main>
 
@@ -23,7 +23,6 @@
 interface Props {
   bgClass?: string
   textClass?: string
-  contentClass?: string
   headerClass?: string
   footerClass?: string
 }
@@ -31,6 +30,5 @@ interface Props {
 withDefaults(defineProps<Props>(), {
   bgClass: 'bg-neutral-900',
   textClass: 'text-neutral-50',
-  contentClass: 'max-w-lg p-4' // Default constrained width for app-like feel
 })
 </script>

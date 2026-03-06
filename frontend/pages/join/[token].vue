@@ -1,39 +1,39 @@
 <template>
-  <div class="join-space-page min-h-screen flex flex-col items-center justify-center p-6 bg-neutral-950 text-neutral-50">
+  <div class="join-space-page flex flex-col items-center justify-center p-6 text-neutral-50">
     <div v-if="loading" class="text-neutral-400 animate-pulse font-bold">
       正在驗證邀請連結...
     </div>
 
-    <div v-else-if="error" class="bg-neutral-900 p-8 rounded-3xl border border-neutral-800 text-center max-w-sm w-full shadow-2xl">
+    <div v-else-if="error" class="bg-neutral-900 p-8 rounded-2xl border border-neutral-800 text-center max-w-sm w-full shadow-2xl">
       <div class="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
         <Icon icon="mdi:alert-circle-outline" class="text-5xl text-red-500" />
       </div>
-      <h1 class="text-xl font-black mb-2">邀請無效</h1>
+      <h1 class="text-xl font-bold mb-2">邀請無效</h1>
       <p class="text-neutral-400 mb-8 leading-relaxed">{{ error }}</p>
-      <button @click="router.push('/')" class="w-full py-4 rounded-2xl bg-neutral-800 text-white font-bold hover:bg-neutral-700 transition-all border-0 cursor-pointer">
+      <button @click="router.push('/')" class="w-full py-4 rounded-xl bg-neutral-800 text-white font-bold hover:bg-neutral-700 transition-colors border-0 cursor-pointer">
         回到首頁
       </button>
     </div>
 
-    <div v-else-if="inviteInfo" class="bg-neutral-900 p-8 rounded-3xl border border-neutral-800 text-center max-w-sm w-full shadow-2xl">
+    <div v-else-if="inviteInfo" class="bg-neutral-900 p-8 rounded-2xl border border-neutral-800 text-center max-w-sm w-full shadow-2xl">
       <div class="w-20 h-20 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
         <Icon icon="mdi:account-group-outline" class="text-5xl text-indigo-500" />
       </div>
       
-      <h1 class="text-xl font-black mb-1">受邀加入空間</h1>
+      <h1 class="text-xl font-bold mb-1">受邀加入空間</h1>
       <p class="text-neutral-400 mb-8 font-medium">
-        <span class="text-white font-black">{{ inviteInfo.creator_name }}</span> 邀請您一同協作
+        <span class="text-white font-bold">{{ inviteInfo.creator_name }}</span> 邀請您一同協作
       </p>
 
-      <div class="bg-neutral-800/50 p-5 rounded-2xl mb-8 border border-neutral-800/50">
-        <div class="text-[10px] text-neutral-500 mb-1 uppercase font-black tracking-[0.2em]">空間名稱</div>
-        <div class="text-xl font-black text-indigo-400">{{ inviteInfo.space_name }}</div>
+      <div class="bg-neutral-800 p-5 rounded-xl mb-8 border border-neutral-700">
+        <div class="text-xs text-neutral-500 mb-1 uppercase font-bold tracking-wider">空間名稱</div>
+        <div class="text-xl font-bold text-indigo-400">{{ inviteInfo.space_name }}</div>
       </div>
 
       <button 
         @click="handleJoin" 
         :disabled="joining"
-        class="w-full py-4 rounded-2xl bg-indigo-500 text-white font-black hover:bg-indigo-600 transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-indigo-500/20 border-0 cursor-pointer"
+        class="w-full py-4 rounded-xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 shadow-lg border-0 cursor-pointer"
       >
         {{ joining ? '加入中...' : '接受邀請並加入' }}
       </button>

@@ -1,5 +1,5 @@
 <template>
-  <div class="transaction-detail min-h-screen bg-neutral-900 text-neutral-50">
+  <div class="transaction-detail">
     <SpaceHeader 
       title="交易詳情" 
       class="pt-0 px-2"
@@ -16,12 +16,12 @@
       </template>
     </SpaceHeader>
 
-    <div class="p-4 pt-0">
+    <div class="pt-0">
       <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
 
       <div v-else-if="transaction" class="content">
-        <div class="text-center py-8 px-5 mb-6 bg-neutral-900 rounded-3xl border border-neutral-800">
-          <div class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-800 rounded-3xl mb-4">
+        <div class="text-center py-8 px-5 mb-6 bg-neutral-900 rounded-2xl border border-neutral-800">
+          <div class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-800 rounded-2xl mb-4">
             <Icon :icon="getCategoryIcon(transaction.category)" class="text-xl text-indigo-500" />
             <span class="font-bold text-sm">{{ transaction.category || '未分類' }}</span>
           </div>

@@ -1,21 +1,21 @@
 <template>
-  <div class="flex flex-col bg-neutral-900 border border-neutral-800/60 rounded-3xl overflow-hidden transition-all duration-300 shadow-sm">
+  <div class="flex flex-col bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden transition-all duration-300">
     <!-- Header -->
     <button 
       type="button"
-      class="flex items-center justify-between p-5 w-full bg-transparent border-0 cursor-pointer hover:bg-neutral-800/50 transition-colors active:bg-neutral-800 group"
+      class="flex items-center justify-between p-4 w-full bg-transparent border-0 cursor-pointer hover:bg-neutral-800 transition-colors group"
       @click="toggle"
     >
       <slot name="header" :open="isOpen" :toggle="toggle">
         <div class="flex items-center gap-3">
-           <div class="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center text-neutral-500 group-hover:text-indigo-400 transition-colors">
+           <div class="w-8 h-8 rounded-lg bg-neutral-800 flex items-center justify-center text-neutral-500 group-hover:text-indigo-400 transition-colors">
              <Icon 
                icon="mdi:chevron-right" 
-               class="text-2xl transition-transform duration-300" 
+               class="text-xl transition-transform duration-300" 
                :class="{ 'rotate-90 text-indigo-500': isOpen }" 
              />
            </div>
-           <span class="font-black text-white tracking-tight text-sm uppercase tracking-widest">詳細資訊</span>
+           <span class="font-bold text-white text-sm uppercase tracking-wider">詳細資訊</span>
         </div>
       </slot>
     </button>
@@ -24,13 +24,13 @@
     <Transition
       enter-active-class="transition-all duration-300 ease-out"
       enter-from-class="max-h-0 opacity-0"
-      enter-to-class="max-h-[1000px] opacity-100"
+      enter-to-class="max-h-96 opacity-100"
       leave-active-class="transition-all duration-200 ease-in"
-      leave-from-class="max-h-[1000px] opacity-100"
+      leave-from-class="max-h-96 opacity-100"
       leave-to-class="max-h-0 opacity-0"
     >
       <div v-if="isOpen" class="overflow-hidden">
-        <div class="px-5 pb-6 border-t border-neutral-800/30 pt-4">
+        <div class="px-4 pb-4 border-t border-neutral-800 pt-3">
           <slot :open="isOpen" />
         </div>
       </div>

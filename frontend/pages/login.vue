@@ -4,9 +4,9 @@
       <p class="text-neutral-400 font-medium">個人記帳 & 旅遊專案助手</p>
     </div>
 
-    <div class="w-full max-w-sm mx-auto bg-neutral-900 rounded-3xl p-6 border border-neutral-800 shadow-xl">
+    <div class="w-full max-w-sm mx-auto bg-neutral-900 rounded-2xl p-6 border border-neutral-800 shadow-xl">
       <div v-if="!isRegister">
-        <h2 class="mb-8 text-center text-2xl font-black text-white tracking-tight">歡迎回來</h2>
+        <h2 class="mb-8 text-center text-2xl font-bold text-white tracking-tight">歡迎回來</h2>
 
         <div class="flex flex-col gap-4">
           <BaseInput 
@@ -31,19 +31,19 @@
 
         <button 
           @click="handleLogin" 
-          class="w-full mt-8 py-4 rounded-2xl font-black bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-[0.98] disabled:opacity-50 border-0 cursor-pointer shadow-lg shadow-indigo-500/20" 
+          class="w-full mt-8 py-4 rounded-xl font-bold bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-[0.98] disabled:opacity-50 border-0 cursor-pointer shadow-lg shadow-indigo-500/20" 
           :disabled="loading"
         >
           {{ loading ? '登入中...' : '登入' }}
         </button>
 
         <p class="text-center mt-6 text-neutral-500 text-sm font-medium">
-          還沒有帳號嗎？ <button @click="isRegister = true" class="text-indigo-400 bg-transparent border-0 cursor-pointer font-black hover:underline p-0">立即註冊</button>
+          還沒有帳號嗎？ <button @click="isRegister = true" class="text-indigo-400 bg-transparent border-0 cursor-pointer font-bold hover:underline p-0">立即註冊</button>
         </p>
       </div>
 
       <div v-else>
-        <h2 class="mb-8 text-center text-2xl font-black text-white tracking-tight">加入 LoveLion</h2>
+        <h2 class="mb-8 text-center text-2xl font-bold text-white tracking-tight">加入 LoveLion</h2>
 
         <div class="flex flex-col gap-4">
           <BaseInput 
@@ -75,14 +75,14 @@
 
         <button 
           @click="handleRegister" 
-          class="w-full mt-8 py-4 rounded-2xl font-black bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-[0.98] disabled:opacity-50 border-0 cursor-pointer shadow-lg shadow-indigo-500/20" 
+          class="w-full mt-8 py-4 rounded-xl font-bold bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-[0.98] disabled:opacity-50 border-0 cursor-pointer shadow-lg shadow-indigo-500/20" 
           :disabled="loading"
         >
           {{ loading ? '註冊中...' : '註冊帳號' }}
         </button>
 
         <p class="text-center mt-6 text-neutral-500 text-sm font-medium">
-          已經有帳號了？ <button @click="isRegister = false" class="text-indigo-400 bg-transparent border-0 cursor-pointer font-black hover:underline p-0">點此登入</button>
+          已經有帳號了？ <button @click="isRegister = false" class="text-indigo-400 bg-transparent border-0 cursor-pointer font-bold hover:underline p-0">點此登入</button>
         </p>
       </div>
     </div>

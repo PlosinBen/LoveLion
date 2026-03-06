@@ -8,7 +8,7 @@
       leave-from-class="opacity-100 translate-y-0"
       leave-to-class="opacity-0 translate-y-4"
     >
-      <div v-if="modelValue" class="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div v-if="modelValue" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
         <!-- Backdrop -->
         <div class="absolute inset-0 bg-black/60" @click="$emit('update:modelValue', false)"></div>
 
@@ -23,7 +23,7 @@
           </div>
 
           <!-- Body -->
-          <div class="max-h-[80vh] overflow-y-auto">
+          <div class="max-h-full overflow-y-auto">
             <slot />
           </div>
         </div>

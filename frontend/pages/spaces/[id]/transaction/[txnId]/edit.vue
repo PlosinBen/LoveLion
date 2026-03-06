@@ -1,5 +1,5 @@
 <template>
-  <div class="edit-transaction-page min-h-screen bg-neutral-900 text-neutral-50">
+  <div class="edit-transaction-page">
     <SpaceHeader 
       title="編輯交易" 
       :show-back="true"
@@ -10,11 +10,11 @@
         <Icon icon="mdi:loading" class="text-4xl animate-spin" />
     </div>
 
-    <div v-else class="p-4 pt-0">
+    <div v-else class="pt-0">
       <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
         <!-- Date & Time -->
         <div class="flex flex-col gap-2">
-          <label class="text-xs font-black text-neutral-500 uppercase tracking-widest px-1">日期與時間</label>
+          <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">日期與時間</label>
           <VueDatePicker 
             v-model="form.date" 
             :dark="true"
@@ -24,21 +24,20 @@
             cancel-text="取消"
             select-text="確定"
             placeholder="點擊選擇時間"
-            class="date-picker-dark"
           />
         </div>
 
         <!-- Currency & Category -->
         <div class="grid grid-cols-2 gap-4">
           <div class="flex flex-col gap-2">
-            <label class="text-xs font-black text-neutral-500 uppercase tracking-widest px-1">幣別</label>
+            <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">幣別</label>
             <BaseSelect
               v-model="form.currency"
               :options="availableCurrencies"
             />
           </div>
           <div class="flex flex-col gap-2">
-            <label class="text-xs font-black text-neutral-500 uppercase tracking-widest px-1">類別</label>
+            <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">類別</label>
             <BaseSelect
               v-model="form.category"
               :options="categories"
@@ -48,13 +47,13 @@
 
         <!-- Items Section -->
         <div class="flex flex-col gap-3">
-          <label class="text-xs font-black text-neutral-500 uppercase tracking-widest px-1 flex justify-between">
+          <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1 flex justify-between">
             <span>項目明細 ({{ form.currency }})</span>
             <span class="text-indigo-400">總計 {{ totalAmount.toLocaleString() }}</span>
           </label>
           
           <div class="flex flex-col gap-3">
-            <div v-for="(item, index) in form.items" :key="index" class="bg-neutral-900 rounded-3xl p-5 border border-neutral-800/60 flex flex-col gap-4 relative">
+            <div v-for="(item, index) in form.items" :key="index" class="bg-neutral-900 rounded-xl p-4 border border-neutral-800 flex flex-col gap-4 relative">
               <BaseInput
                 v-model="item.name"
                 placeholder="項目名稱"
@@ -67,7 +66,7 @@
                   placeholder="單價"
                   class="flex-1"
                 />
-                <span class="text-neutral-600 font-black">×</span>
+                <span class="text-neutral-600 font-bold">×</span>
                 <BaseInput
                   v-model.number="item.quantity"
                   type="number"
@@ -79,7 +78,7 @@
                   v-if="form.items.length > 1"
                   type="button" 
                   @click="removeItem(index)" 
-                  class="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center border-0 cursor-pointer hover:bg-red-500/20 active:scale-90 transition-transform"
+                  class="w-10 h-10 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center border-0 cursor-pointer hover:bg-red-500/20 active:scale-95 transition-transform"
                 >
                   <Icon icon="mdi:close" />
                 </button>
@@ -87,15 +86,15 @@
             </div>
           </div>
           
-          <button type="button" @click="addItem" class="flex justify-center items-center gap-2 p-4 border-2 border-dashed border-neutral-800 rounded-2xl bg-transparent text-neutral-500 font-bold cursor-pointer hover:border-indigo-500/50 hover:text-indigo-400 transition-colors">
+          <button type="button" @click="addItem" class="flex justify-center items-center gap-2 p-4 border-2 border-dashed border-neutral-700 rounded-xl bg-transparent text-neutral-500 font-bold cursor-pointer hover:border-indigo-500/50 hover:text-indigo-400 transition-colors">
             <Icon icon="mdi:plus" class="text-xl" /> 新增項目
           </button>
         </div>
 
         <!-- Foreign Currency Settlement (Conditional) -->
-        <div v-if="form.currency !== baseCurrency" class="bg-indigo-500/5 rounded-3xl p-6 border border-indigo-500/10 flex flex-col gap-5">
+        <div v-if="form.currency !== baseCurrency" class="bg-indigo-500/5 rounded-xl p-5 border border-indigo-500/10 flex flex-col gap-5">
           <div class="flex justify-between items-center">
-            <h3 class="font-black text-sm text-indigo-400 uppercase tracking-widest">外幣結算</h3>
+            <h3 class="font-bold text-xs text-indigo-400 uppercase tracking-wider">外幣結算</h3>
             <label class="flex items-center gap-2 cursor-pointer select-none">
               <input type="checkbox" v-model="form.manual_rate" class="w-4 h-4 rounded text-indigo-500 bg-neutral-800 border-neutral-700">
               <span class="text-xs font-bold text-neutral-400">手動輸入匯率</span>
@@ -109,9 +108,9 @@
                 label="匯率 (1 TWD = ? 外幣)"
                 step="0.0001"
              />
-             <div class="flex justify-between items-center p-4 bg-neutral-900 rounded-2xl border border-neutral-800">
+             <div class="flex justify-between items-center p-4 bg-neutral-800 rounded-xl border border-neutral-700">
                 <span class="text-neutral-500 text-xs font-bold">折合台幣</span>
-                <span class="text-xl font-black text-white">TWD {{ calculatedBillingAmount.toLocaleString() }}</span>
+                <span class="text-xl font-bold text-white">TWD {{ calculatedBillingAmount.toLocaleString() }}</span>
              </div>
           </div>
 
@@ -121,16 +120,16 @@
                 type="number"
                 label="銀行入帳金額 (TWD)"
              />
-             <div class="flex justify-between items-center p-4 bg-neutral-900 rounded-2xl border border-neutral-800">
+             <div class="flex justify-between items-center p-4 bg-neutral-800 rounded-xl border border-neutral-700">
                 <span class="text-neutral-500 text-xs font-bold">換算匯率</span>
-                <span class="text-xl font-black text-indigo-400">{{ calculatedExchangeRate }}</span>
+                <span class="text-xl font-bold text-indigo-400">{{ calculatedExchangeRate }}</span>
              </div>
           </div>
         </div>
 
         <!-- Note -->
         <div class="flex flex-col gap-2">
-          <label class="text-xs font-black text-neutral-500 uppercase tracking-widest px-1">備註</label>
+          <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">備註</label>
           <BaseTextarea 
             v-model="form.note" 
             placeholder="選填" 
@@ -142,7 +141,7 @@
         <div class="flex flex-col gap-3 mt-4">
           <button 
             type="submit" 
-            class="w-full py-4 rounded-2xl font-black bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-[0.98] disabled:opacity-50 border-0 cursor-pointer shadow-lg shadow-indigo-500/20" 
+            class="w-full py-4 rounded-xl font-bold bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 border-0 cursor-pointer shadow-lg" 
             :disabled="submitting"
           >
             {{ submitting ? '儲存中...' : '儲存變更' }}
@@ -151,7 +150,7 @@
           <button 
             type="button"
             @click="handleDelete"
-            class="w-full py-4 rounded-2xl font-black bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all active:scale-[0.98] border-0 cursor-pointer"
+            class="w-full py-4 rounded-xl font-bold bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all active:scale-95 border-0 cursor-pointer"
           >
             刪除此筆交易
           </button>

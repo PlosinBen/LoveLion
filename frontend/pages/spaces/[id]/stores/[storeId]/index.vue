@@ -11,7 +11,7 @@
          <div class="flex items-center gap-1.5 text-neutral-500 text-xs font-medium mt-0.5">
             <Icon icon="mdi:package-variant-closed" class="text-indigo-500" />
             <span>{{ store?.products?.length || 0 }} 個商品</span>
-            <span v-if="store?.products?.length > 0" class="text-neutral-700">•</span>
+            <span v-if="store?.products?.length > 0" class="text-neutral-700">|</span>
             <span v-if="store?.products?.length > 0" class="text-indigo-400">{{ getPriceRange(store.products) }}</span>
          </div>
       </div>
@@ -27,26 +27,25 @@
     </div>
 
     <div v-if="loading" class="flex justify-center items-center text-neutral-400 py-20">
-      <Icon icon="eos-icons:loading" class="text-3xl animate-spin" />
+      <Icon icon="mdi:loading" class="text-3xl animate-spin" />
     </div>
 
     <div v-else class="px-2">
       <!-- Empty State -->
-      <div v-if="!store?.products || store?.products?.length === 0" class="flex flex-col items-center justify-center py-20 bg-neutral-900 rounded-3xl border border-neutral-800 border-dashed text-neutral-500">
+      <div v-if="!store?.products || store?.products?.length === 0" class="flex flex-col items-center justify-center py-20 bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed text-neutral-500">
         <Icon icon="mdi:package-variant" class="text-5xl mb-4 opacity-20" />
-        <p class="text-sm">尚未加入任何商品價格</p>
-        <button @click="router.push(`/spaces/${route.params.id}/stores/${route.params.storeId}/products/add`)" class="mt-6 px-6 py-2 bg-indigo-500 text-white rounded-full font-bold text-sm border-0 cursor-pointer">立即新增</button>
+        <p class="text-sm">目前還沒有任何商品紀錄</p>
+        <button @click="router.push(`/spaces/${route.params.id}/stores/${route.params.storeId}/products/add`)" class="mt-6 px-6 py-2 bg-indigo-500 text-white rounded-full font-bold text-sm border-0 cursor-pointer hover:bg-indigo-600 transition-colors active:scale-95">立即新增</button>
       </div>
 
       <!-- Product List -->
       <div v-else class="flex flex-col gap-3">
         <div v-for="product in store?.products" :key="product.id" 
-             class="bg-neutral-900 rounded-3xl border border-neutral-800/60 overflow-hidden transition-all duration-300"
-             :class="{'ring-2 ring-indigo-500/50': expandedProductId === product.id}">
+             class="bg-neutral-900 rounded-2xl border border-neutral-800 transition-all duration-300">
             
             <div class="p-5 flex items-center gap-4 cursor-pointer" @click="toggleProductExpand(product.id)">
                 <!-- Thumbnail/Icon -->
-                <div class="w-12 h-12 rounded-2xl bg-neutral-800 flex-none flex items-center justify-center text-neutral-500">
+                <div class="w-12 h-12 rounded-xl bg-neutral-800 flex-none flex items-center justify-center text-neutral-500 border border-neutral-700">
                    <Icon icon="mdi:tag-outline" class="text-2xl" />
                 </div>
 
@@ -54,7 +53,7 @@
                 <div class="flex-1 min-w-0">
                    <h3 class="font-bold truncate text-neutral-100">{{ product.name }}</h3>
                    <div class="flex items-center gap-2 mt-0.5">
-                       <span class="text-indigo-400 font-black text-lg">
+                       <span class="text-indigo-400 font-bold text-lg">
                            {{ product.currency }} {{ formatPrice(product.price) }}
                        </span>
                        <span v-if="product.unit" class="text-xs text-neutral-500 font-bold uppercase tracking-wider">
@@ -75,14 +74,14 @@
             </div>
 
             <!-- Expanded Details -->
-            <div v-if="expandedProductId === product.id" class="px-5 pb-5 pt-0 border-t border-neutral-800/30 animate-in fade-in slide-in-from-top-1 duration-200">
+            <div v-if="expandedProductId === product.id" class="px-5 pb-5 pt-0 border-t border-neutral-800/50">
                 <div class="pt-4 flex flex-col gap-4">
-                    <div v-if="product.note" class="text-sm text-neutral-400 bg-neutral-800/50 p-4 rounded-2xl italic leading-relaxed">
+                    <div v-if="product.note" class="text-sm text-neutral-400 bg-neutral-800/50 p-4 rounded-xl italic leading-relaxed">
                         "{{ product.note }}"
                     </div>
                     
                     <div>
-                        <label class="text-xs text-neutral-500 font-bold uppercase tracking-widest mb-3 block ml-1">參考照片</label>
+                        <label class="text-xs text-neutral-500 font-bold uppercase tracking-wider mb-3 block ml-1">商品相片</label>
                         <ImageManager 
                             :ref="(el) => setProjectImageManager(el, product.id)"
                             :entity-id="product.id" 
@@ -92,7 +91,7 @@
                             :instant-delete="false"
                         />
                         <div class="mt-4 flex justify-end">
-                            <button @click.stop="saveProductImages(product.id)" class="px-5 py-2 bg-neutral-800 text-white text-xs font-bold rounded-xl border border-neutral-700 cursor-pointer hover:bg-neutral-700 transition-colors">
+                            <button @click.stop="saveProductImages(product.id)" class="px-5 py-2 bg-neutral-800 text-white text-xs font-bold rounded-lg border border-neutral-700 cursor-pointer hover:bg-neutral-700 transition-colors active:scale-95">
                                 儲存變更
                             </button>
                         </div>
@@ -106,7 +105,7 @@
     <!-- FAB -->
     <button 
         @click="router.push(`/spaces/${route.params.id}/stores/${route.params.storeId}/products/add`)" 
-        class="fixed bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20 cursor-pointer border-0"
+        class="fixed bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20 cursor-pointer border-0"
     >
         <Icon icon="mdi:plus" class="text-3xl" />
     </button>
@@ -144,7 +143,7 @@ const saveProductImages = async (productId: string) => {
     if (manager) {
         try {
             await manager.commit()
-            alert('照片已更新')
+            alert('相片已更新')
         } catch (e) {
             console.error('Failed to save images', e)
             alert('儲存失敗')
@@ -179,7 +178,6 @@ const windowOpen = (url: string) => window.open(url, '_blank')
 
 const fetchStore = async () => {
   try {
-    // API backward compatibility via main.go routes
     store.value = await api.get<any>(`/api/spaces/${route.params.id}/stores/${route.params.storeId}`)
   } catch (e) {
     console.error('Failed to fetch store:', e)
@@ -190,9 +188,9 @@ const fetchStore = async () => {
 }
 
 const deleteProduct = async (productId: string) => {
-  if (!confirm('確定要刪除此商品？')) return
+  if (!confirm('確定要刪除此商品紀錄嗎？')) return
   try {
-    await api.del(`/api/spaces/${route.params.id}/stores/${route.params.storeId}/products/${productId}`)
+    await api.delete(`/api/spaces/${route.params.id}/stores/${route.params.storeId}/products/${productId}`)
     fetchStore()
   } catch (e: any) {
     alert(e.message || '刪除失敗')
