@@ -275,8 +275,8 @@ const handleSubmit = async () => {
       total_amount: totalAmount.value
     }
 
-    await api.put(`/api/spaces/${ledgerId.value}/transactions/${route.params.id}`, payload)
-    router.push('/spaces')
+    await api.put(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`, payload)
+    router.push(`/spaces/${route.params.id}`)
   } catch (e: any) {
     alert(e.message || '更新失敗')
   } finally {
@@ -287,8 +287,8 @@ const handleSubmit = async () => {
 const handleDelete = async () => {
   if (!confirm('確定要刪除這筆交易嗎？')) return
   try {
-    await api.del(`/api/spaces/${ledgerId.value}/transactions/${route.params.id}`)
-    router.push('/spaces')
+    await api.del(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`)
+    router.push(`/spaces/${route.params.id}`)
   } catch (e: any) {
     alert(e.message || '刪除失敗')
   }
@@ -296,39 +296,35 @@ const handleDelete = async () => {
 
 const fetchData = async () => {
   try {
-    const ledgers = await api.get<any[]>('/api/spaces')
-    if (ledgers.length > 0) {
-      ledgerId.value = ledgers[0].id
-      const txn = await api.get<any>(
-        `/api/spaces/${ledgerId.value}/transactions/${route.params.id}`
-      )
-      
-      form.value.date = new Date(txn.date)
-      form.value.category = txn.category
-      form.value.note = txn.note || ''
-      form.value.currency = txn.currency || 'TWD'
-      form.value.exchange_rate = Number(txn.exchange_rate || 0)
-      form.value.billing_amount = Number(txn.billing_amount || 0)
-      form.value.handling_fee = Number(txn.handling_fee || 0)
-      
-      // Determine mode
-      if (form.value.handling_fee > 0 || (form.value.billing_amount > 0 && Math.abs(form.value.billing_amount - Math.round(Number(txn.total_amount) * form.value.exchange_rate)) > 2)) {
-          form.value.manual_rate = false
-      } else {
-          form.value.manual_rate = true
-      }
+    const txn = await api.get<any>(
+      `/api/spaces/${route.params.id}/transactions/${route.params.txnId}`
+    )
+    
+    form.value.date = new Date(txn.date)
+    form.value.category = txn.category
+    form.value.note = txn.note || ''
+    form.value.currency = txn.currency || 'TWD'
+    form.value.exchange_rate = Number(txn.exchange_rate || 0)
+    form.value.billing_amount = Number(txn.billing_amount || 0)
+    form.value.handling_fee = Number(txn.handling_fee || 0)
+    
+    // Determine mode
+    if (form.value.handling_fee > 0 || (form.value.billing_amount > 0 && Math.abs(form.value.billing_amount - Math.round(Number(txn.total_amount) * form.value.exchange_rate)) > 2)) {
+        form.value.manual_rate = false
+    } else {
+        form.value.manual_rate = true
+    }
 
-      if (txn.items && txn.items.length > 0) {
-        form.value.items = txn.items.map((i: any) => ({
-          name: i.name,
-          unit_price: Number(i.unit_price),
-          quantity: Number(i.quantity)
-        }))
-      }
+    if (txn.items && txn.items.length > 0) {
+      form.value.items = txn.items.map((i: any) => ({
+        name: i.name,
+        unit_price: Number(i.unit_price),
+        quantity: Number(i.quantity)
+      }))
     }
   } catch (e) {
     console.error('Failed to fetch transaction:', e)
-    router.push('/spaces')
+    router.push(`/spaces/${route.params.id}`)
   } finally {
     loading.value = false
   }
