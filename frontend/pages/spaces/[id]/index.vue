@@ -1,62 +1,73 @@
 <template>
   <div class="flex flex-col">
-    <!-- Unified Space Header -->
-    <div class="px-2 pt-0 pb-6 flex items-center gap-3">
-      <button @click="router.push('/')" class="w-10 h-10 rounded-full bg-neutral-800 text-white flex items-center justify-center hover:bg-neutral-700 transition-colors border-0 cursor-pointer shrink-0">
-          <Icon icon="mdi:arrow-left" class="text-xl" />
-      </button>
-
-      <div class="flex-1 min-w-0">
-         <h1 class="text-xl font-bold text-white tracking-tight truncate">{{ space?.name || '載入中...' }}</h1>
-         <div class="flex items-center gap-1.5 text-neutral-500 text-xs font-medium mt-0.5">
-            <Icon :icon="spaceTheme.icon" :class="spaceTheme.color" />
-            <span v-if="space?.type === 'trip'">{{ formatDateRange(space?.start_date, space?.end_date) }}</span>
-            <span v-else>{{ spaceTheme.label }}</span>
-         </div>
-      </div>
-      
-      <button @click="router.push(`/spaces/${route.params.id}/settings`)" class="w-10 h-10 rounded-full bg-neutral-800 text-white flex items-center justify-center hover:bg-neutral-700 transition-colors border-0 cursor-pointer shrink-0">
+    <!-- Space Navigation -->
+    <SpaceHeader 
+      v-if="space"
+      :title="space.name"
+      :show-back="true"
+      :show-switcher="false"
+      class="pt-0 px-2"
+    >
+      <template #right>
+        <button 
+            @click="router.push(`/spaces/${route.params.id}/settings`)" 
+            class="w-10 h-10 rounded-full bg-neutral-800 text-white flex items-center justify-center hover:bg-neutral-700 transition-colors border-0 cursor-pointer shrink-0"
+        >
           <Icon icon="mdi:cog-outline" class="text-xl" />
-      </button>
-    </div>
+        </button>
+      </template>
+    </SpaceHeader>
 
-    <div class="flex flex-col gap-6">
-      <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-4">
-          <div class="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
-          <div class="text-neutral-500 text-sm">載入空間資料...</div>
-      </div>
+    <div v-if="space" class="p-4 pt-0">
+      <!-- 1. Ledger Tab -->
+      <div v-if="activeTab === 'ledger'" class="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div class="space-summary bg-neutral-900 rounded-3xl border border-neutral-800/60 p-6 flex flex-col gap-5 shadow-sm">
+              <div class="flex items-start justify-between">
+                <div class="flex flex-col gap-1.5">
+                   <div class="flex items-center gap-2 mb-1">
+                      <div class="px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-500/20">
+                         {{ space.type === 'trip' ? '旅行專案' : '個人空間' }}
+                      </div>
+                   </div>
+                   <h2 class="text-neutral-500 text-xs font-bold uppercase tracking-widest px-0.5">總支出 ({{ space.base_currency }})</h2>
+                   <div class="text-4xl font-black text-white tracking-tighter">{{ formatAmount(totalExpenses) }}</div>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 border border-indigo-500/20">
+                  <Icon icon="mdi:finance" class="text-2xl" />
+                </div>
+              </div>
 
-      <template v-else-if="space">
-          <!-- Main Module Tabs -->
-          <div class="flex items-center gap-1 bg-neutral-900 p-1 rounded-2xl border border-neutral-800/50">
-              <button 
-                  v-for="tab in availableTabs" 
-                  :key="tab.id"
-                  @click="activeTab = tab.id"
-                  class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all"
-                  :class="activeTab === tab.id ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'"
-              >
-                  <Icon :icon="tab.icon" class="text-lg" />
-                  {{ tab.label }}
-              </button>
+              <div class="grid grid-cols-2 gap-3">
+                 <div class="bg-neutral-800/40 rounded-2xl p-4 border border-white/5 flex flex-col gap-1">
+                    <span class="text-[10px] font-black text-neutral-500 uppercase tracking-widest">交易數量</span>
+                    <span class="text-lg font-bold">{{ transactions.length }} 筆</span>
+                 </div>
+                 <div class="bg-neutral-800/40 rounded-2xl p-4 border border-white/5 flex flex-col gap-1">
+                    <span class="text-[10px] font-black text-neutral-500 uppercase tracking-widest">成員人數</span>
+                    <span class="text-lg font-bold">{{ members.length }} 位</span>
+                 </div>
+              </div>
           </div>
 
-          <!-- Tab Contents -->
-          
-          <!-- 1. Ledger (Transactions) Tab -->
-          <div v-if="activeTab === 'ledger'" class="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-              <!-- FAB for Ledger -->
-              <NuxtLink 
-                  :to="`/spaces/add?ledger_id=${space.id}`" 
-                  class="fixed bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20 cursor-pointer border-0"
-              >
-                  <Icon icon="mdi:plus" class="text-3xl" />
-              </NuxtLink>
+          <div class="flex flex-col gap-4">
+              <div class="flex items-center justify-between px-1">
+                <h2 class="text-xs font-black text-neutral-500 uppercase tracking-widest">最近交易</h2>
+                <div class="flex gap-1.5">
+                   <button class="w-8 h-8 rounded-full bg-neutral-800/50 flex items-center justify-center text-neutral-400 hover:text-white transition-colors border-0 cursor-pointer">
+                      <Icon icon="mdi:filter-variant" class="text-lg" />
+                   </button>
+                   <button class="w-8 h-8 rounded-full bg-neutral-800/50 flex items-center justify-center text-neutral-400 hover:text-white transition-colors border-0 cursor-pointer">
+                      <Icon icon="mdi:magnify" class="text-lg" />
+                   </button>
+                </div>
+              </div>
 
               <div v-if="transactions.length === 0" class="text-center py-20 px-6 bg-neutral-900 rounded-3xl border border-neutral-800/50 flex flex-col items-center">
-                <Icon icon="mdi:receipt-text-outline" class="text-4xl text-neutral-700 mb-4" />
-                <h3 class="text-lg font-bold mb-1">尚無交易</h3>
-                <p class="text-neutral-500 text-sm">點擊下方按鈕開始記錄第一筆支出</p>
+                <div class="w-16 h-16 rounded-3xl bg-neutral-800 flex items-center justify-center text-neutral-600 mb-4 border border-white/5">
+                  <Icon icon="mdi:receipt-text-outline" class="text-3xl" />
+                </div>
+                <p class="text-neutral-500 font-bold mb-1">尚無交易明細</p>
+                <p class="text-neutral-600 text-xs">點擊下方的 + 按鈕開始記帳吧！</p>
               </div>
 
               <div v-else class="flex flex-col gap-3">
@@ -86,128 +97,101 @@
                 </div>
               </div>
           </div>
+      </div>
 
-          <!-- 2. Comparison Tab -->
-          <div v-else-if="activeTab === 'comparison'" class="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-              <!-- FAB for Comparison -->
-              <button 
-                  @click="showAddStore = true"
-                  class="fixed bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20 cursor-pointer border-0"
-              >
-                  <Icon icon="mdi:store-plus-outline" class="text-3xl" />
-              </button>
+      <!-- 2. Comparison Tab -->
+      <div v-else-if="activeTab === 'comparison'" class="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <button 
+              @click="router.push(`/spaces/${route.params.id}/stores/add`)"
+              class="fixed bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20 cursor-pointer border-0"
+          >
+              <Icon icon="mdi:store-plus-outline" class="text-3xl" />
+          </button>
 
-              <div v-if="stores.length === 0" class="text-center py-20 px-6 bg-neutral-900 rounded-3xl border border-neutral-800/50 flex flex-col items-center">
-                <Icon icon="mdi:scale-balance" class="text-4xl text-neutral-700 mb-4" />
-                <h3 class="text-lg font-bold mb-1">尚無比價商店</h3>
-                <p class="text-neutral-500 text-sm">在此記錄不同店家的商品價格</p>
-                <button @click="showAddStore = true" class="mt-6 px-6 py-2 bg-indigo-500 text-white rounded-full font-bold text-sm border-0 cursor-pointer">新增商店</button>
+          <div v-if="stores.length === 0" class="text-center py-20 px-6 bg-neutral-900 rounded-3xl border border-neutral-800/50 flex flex-col items-center">
+            <div class="w-16 h-16 rounded-3xl bg-neutral-800 flex items-center justify-center text-neutral-600 mb-4 border border-white/5">
+              <Icon icon="mdi:scale-balance" class="text-3xl" />
+            </div>
+            <p class="text-neutral-500 font-bold mb-1">還沒有店家資料</p>
+            <p class="text-neutral-600 text-xs">新增店家開始比較商品價格</p>
+          </div>
+
+          <div v-else class="flex flex-col gap-5">
+            <div v-for="store in stores" :key="store.id" class="bg-neutral-900 rounded-3xl border border-neutral-800/60 overflow-hidden shadow-sm">
+              <div class="p-5 border-b border-neutral-800/60 flex items-center justify-between bg-neutral-800/10">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 border border-indigo-500/10">
+                    <Icon icon="mdi:store-outline" class="text-xl" />
+                  </div>
+                  <h3 class="font-bold text-white">{{ store.name }}</h3>
+                </div>
+                <button 
+                  @click="router.push(`/spaces/${space.id}/stores/${store.id}`)"
+                  class="px-4 py-2 rounded-xl bg-neutral-800 text-neutral-100 text-xs font-bold hover:bg-neutral-700 transition-colors border-0 cursor-pointer"
+                >
+                  查看明細
+                </button>
               </div>
               
-              <div v-else class="grid grid-cols-1 gap-4">
-                  <div v-for="store in stores" :key="store.id" class="bg-neutral-900 rounded-3xl p-6 border border-neutral-800/60">
-                      <div class="flex justify-between items-start mb-4">
-                          <div>
-                              <h3 class="font-bold text-lg text-white">{{ store.name }}</h3>
-                              <p v-if="store.location" class="text-xs text-neutral-500">{{ store.location }}</p>
-                          </div>
-                          <div class="flex gap-2">
-                              <button v-if="store.google_map_url" @click="openMap(store.google_map_url)" class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-indigo-400 border-0 cursor-pointer hover:bg-neutral-700">
-                                  <Icon icon="mdi:map-marker-outline" />
-                              </button>
-                              <button @click="openStoreDetails(store.id)" class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 border-0 cursor-pointer hover:bg-neutral-700">
-                                  <Icon icon="mdi:chevron-right" />
-                              </button>
-                          </div>
-                      </div>
-                      
-                      <!-- Product Quick List -->
-                      <div class="flex flex-col gap-2">
-                          <div v-for="p in (store.products || []).slice(0, 3)" :key="p.id" class="flex justify-between text-sm py-1 border-b border-neutral-800/30 last:border-0">
-                              <span class="text-white font-medium">{{ p.currency }} {{ formatAmount(p.price) }}</span>
-                          </div>
-                          <p v-if="(store.products || []).length > 3" class="text-xs text-center text-neutral-600 font-bold uppercase tracking-widest mt-1">還有 {{ (store.products || []).length - 3 }} 個項目</p>
-                      </div>
+              <div class="p-5">
+                <div v-if="!store.products || store.products.length === 0" class="text-center py-6 text-neutral-600 text-xs italic">
+                  目前沒有商品紀錄
+                </div>
+                <div v-else class="flex flex-col gap-3">
+                  <div v-for="product in (store.products || []).slice(0, 3)" :key="product.id" class="flex justify-between items-center text-sm">
+                    <span class="text-neutral-300 font-medium">{{ product.name }}</span>
+                    <span class="text-white font-black">{{ space.base_currency }} {{ formatAmount(product.price) }}</span>
                   </div>
-                  
-                  <button @click="showAddStore = true" class="p-5 rounded-3xl border-2 border-dashed border-neutral-800 text-neutral-500 font-bold hover:border-indigo-500/50 hover:text-indigo-400 transition-all bg-transparent cursor-pointer">
-                      + 新增商店
-                  </button>
+                  <div v-if="store.products.length > 3" class="text-center pt-2 text-[10px] font-black text-neutral-600 uppercase tracking-widest">
+                    及其他 {{ store.products.length - 3 }} 項商品
+                  </div>
+                </div>
               </div>
+            </div>
           </div>
+      </div>
 
-          <!-- 3. Stats Tab -->
-          <div v-else-if="activeTab === 'stats'" class="animate-in fade-in slide-in-from-bottom-2 duration-500">
-              <SpaceStats 
-                  :transactions="transactions" 
-                  :members="members" 
-                  :base-currency="space?.base_currency || 'TWD'"
-              />
-          </div>
-
-      </template>
+      <!-- 3. Stats Tab -->
+      <div v-else-if="activeTab === 'stats'" class="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+         <SpaceStats 
+            v-if="space"
+            :transactions="transactions" 
+            :members="members" 
+            :base-currency="space.base_currency" 
+         />
+      </div>
     </div>
 
-    <!-- Modals (Add Store, etc.) -->
-    <Transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
+    <!-- Floating Action Button -->
+    <button 
+        v-if="activeTab === 'ledger' && space"
+        @click="router.push(`/spaces/${route.params.id}/transaction/add`)"
+        class="fixed bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20 cursor-pointer border-0"
     >
-        <div v-if="showAddStore" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div class="w-full max-w-lg bg-neutral-900 rounded-t-3xl sm:rounded-3xl p-8 border border-neutral-800 animate-in slide-in-from-bottom duration-300">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold">新增商店</h2>
-                    <button @click="showAddStore = false" class="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 border-0 cursor-pointer">
-                        <Icon icon="mdi:close" class="text-xl" />
-                    </button>
-                </div>
+        <Icon icon="mdi:plus" class="text-3xl" />
+    </button>
 
-                <div class="flex flex-col gap-6">
-                    <BaseInput 
-                        v-model="storeForm.name" 
-                        label="商店名稱" 
-                        placeholder="例如：唐吉訶德、全家" 
-                        required
-                    />
-                    <BaseInput 
-                        v-model="storeForm.location" 
-                        label="分店或地點" 
-                        placeholder="例如：澀谷店、新宿" 
-                    />
-                    <BaseInput 
-                        v-model="storeForm.google_map_url" 
-                        label="Google Map 連結" 
-                        placeholder="選填" 
-                    />
-
-                    <button 
-                        @click="handleCreateStore" 
-                        :disabled="submittingStore || !storeForm.name"
-                        class="w-full py-4 rounded-2xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 mt-2"
-                    >
-                        {{ submittingStore ? '建立中...' : '建立商店' }}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </Transition>
+    <!-- Custom Footer for Tab Navigation -->
+    <NuxtLayout name="default">
+      <template #footer>
+        <BottomNav v-model="activeTab" :items="navItems" />
+      </template>
+    </NuxtLayout>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
-import SpaceStats from '~/components/SpaceStats.vue'
-import BaseInput from '~/components/BaseInput.vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import SpaceHeader from '~/components/SpaceHeader.vue'
+import SpaceStats from '~/components/SpaceStats.vue'
+import BottomNav from '~/components/BottomNav.vue'
 
+// Back to default layout which provides Header
 definePageMeta({
-  layout: 'main'
+  layout: 'default'
 })
 
 const router = useRouter()
@@ -219,101 +203,59 @@ const space = ref<any>(null)
 const transactions = ref<any[]>([])
 const stores = ref<any[]>([])
 const members = ref<any[]>([])
-const loading = ref(true)
-const activeTab = ref('ledger')
+const activeTab = ref(route.query.tab?.toString() || 'ledger')
 
-// Add Store Modal Logic
-const showAddStore = ref(false)
-const submittingStore = ref(false)
-const storeForm = ref({
-    name: '',
-    location: '',
-    google_map_url: ''
-})
-
-const handleCreateStore = async () => {
-    if (!storeForm.value.name.trim()) return
-    submittingStore.value = true
-    try {
-        const newStore = await api.post<any>(`/api/spaces/${route.params.id}/stores`, storeForm.value)
-        stores.value.push(newStore)
-        showAddStore.value = false
-        storeForm.value = { name: '', location: '', google_map_url: '' }
-    } catch (e: any) {
-        alert(e.message || '建立商店失敗')
-    } finally {
-        submittingStore.value = false
-    }
-}
-
-// Atmosphere Engine: Styles based on Space Type
-const spaceTheme = computed(() => {
-    const type = space.value?.type || 'personal'
-    const themes: Record<string, { icon: string, color: string, bg: string, label: string }> = {
-        'trip': { icon: 'mdi:airplane', color: 'text-blue-400', bg: 'bg-blue-500/10', label: '旅遊計畫' },
-        'personal': { icon: 'mdi:wallet-outline', color: 'text-green-400', bg: 'bg-green-500/10', label: '個人空間' },
-        'group': { icon: 'mdi:account-group-outline', color: 'text-indigo-400', bg: 'bg-indigo-500/10', label: '團隊空間' }
-    }
-    return themes[type] || themes.personal
-})
-
-const availableTabs = [
-    { id: 'ledger', label: '明細', icon: 'mdi:receipt-text-outline' },
-    { id: 'stats', label: '統計', icon: 'mdi:chart-pie-outline' },
-    { id: 'comparison', label: '比價', icon: 'mdi:scale-balance' }
+const navItems = [
+  { id: 'ledger', label: '帳本', icon: 'mdi:receipt-text-outline' },
+  { id: 'comparison', label: '比價', icon: 'mdi:scale-balance' },
+  { id: 'stats', label: '分帳', icon: 'mdi:chart-pie-outline' }
 ]
+
+const totalExpenses = computed(() => {
+  return transactions.value.reduce((sum, txn) => {
+    const amount = (txn.billing_amount && Number(txn.billing_amount) > 0) ? txn.billing_amount : txn.total_amount
+    return sum + Number(amount || 0)
+  }, 0)
+})
 
 const formatAmount = (amount: string | number) => {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount
-  return num.toLocaleString('zh-TW')
+  return num.toLocaleString('zh-TW', { maximumFractionDigits: 0 })
 }
 
 const formatDateShort = (dateStr: string) => {
   const date = new Date(dateStr)
-  return date.toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', weekday: 'short' })
-}
-
-const formatDateRange = (start: string | null, end: string | null) => {
-  if (!start && !end) return '日期未設定'
-  const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
-  const startStr = start ? new Date(start).toLocaleDateString('zh-TW', opts) : '?'
-  const endStr = end ? new Date(end).toLocaleDateString('zh-TW', opts) : '?'
-  return `${startStr} - ${endStr}`
+  return date.toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit' })
 }
 
 const getCategoryIcon = (category: string) => {
   const icons: Record<string, string> = {
-    '餐飲': 'mdi:food', '交通': 'mdi:train-car', '購物': 'mdi:shopping', '生活': 'mdi:home-outline', '娛樂': 'mdi:movie-open-outline',
+    '餐飲': 'mdi:food',
+    '交通': 'mdi:train-car',
+    '購物': 'mdi:shopping',
+    '娛樂': 'mdi:movie',
+    '生活': 'mdi:home',
   }
-  return icons[category] || 'mdi:receipt-outline'
+  return icons[category] || 'mdi:receipt'
 }
 
 const fetchData = async () => {
   try {
-    // Parallel fetch for speed
-    const [spaceData, txns, storesData, membersData] = await Promise.all([
+    const [spaceData, txnData, storeData, membersData] = await Promise.all([
       api.get<any>(`/api/spaces/${route.params.id}`),
       api.get<any[]>(`/api/spaces/${route.params.id}/transactions`),
       api.get<any[]>(`/api/spaces/${route.params.id}/stores`),
       api.get<any[]>(`/api/spaces/${route.params.id}/members`)
     ])
-
+    
     space.value = spaceData
-    transactions.value = txns
-    stores.value = storesData
-    members.value = membersData
+    transactions.value = txnData || []
+    stores.value = storeData || []
+    members.value = membersData || []
   } catch (e) {
     console.error('Failed to fetch space data:', e)
     router.push('/')
-  } finally {
-    loading.value = false
   }
-}
-
-const openMap = (url: string) => window.open(url, '_blank')
-const openStoreDetails = (storeId: string) => {
-    // Navigate to store details (to be implemented/refactored)
-    router.push(`/spaces/${route.params.id}/stores/${storeId}`)
 }
 
 onMounted(() => {

@@ -1,10 +1,10 @@
-<template>
+﻿<template>
   <div class="flex flex-col min-h-screen font-sans transition-colors duration-200" :class="[bgClass, textClass]">
     
     <!-- Optional Header Slot -->
-    <header v-if="$slots.header" class="shrink-0 py-2">
+    <div v-if="$slots.header" class="shrink-0 py-2" :class="headerClass">
       <slot name="header" />
-    </header>
+    </div>
 
     <!-- Main Content -->
     <main class="flex-1 w-full mx-auto relative flex flex-col" :class="contentClass">
@@ -24,6 +24,7 @@ interface Props {
   bgClass?: string
   textClass?: string
   contentClass?: string
+  headerClass?: string
   footerClass?: string
 }
 

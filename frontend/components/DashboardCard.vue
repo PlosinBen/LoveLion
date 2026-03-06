@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <NuxtLink v-if="to" :to="to" class="dashboard-card group">
     <Icon :icon="icon" class="text-3xl" :class="[iconColor || 'text-indigo-500']" />
     <span>{{ label }}</span>

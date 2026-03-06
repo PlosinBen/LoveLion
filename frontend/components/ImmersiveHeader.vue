@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="relative w-full overflow-hidden shrink-0 bg-neutral-800" :class="[height]">
     <!-- Background: Image or Fallback -->
     <div class="absolute inset-0 bg-neutral-900 overflow-hidden">

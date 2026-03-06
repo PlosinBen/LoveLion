@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="px-2 pt-0 pb-4 flex items-center gap-3">
     <!-- Back Button -->
     <button 
@@ -9,17 +9,21 @@
       <Icon icon="mdi:arrow-left" class="text-xl" />
     </button>
 
-    <!-- Title and Switcher -->
+    <!-- Title or Switcher -->
     <div class="flex-1 min-w-0">
-      <h1 class="text-xl font-bold text-white tracking-tight truncate">{{ title }}</h1>
-      <SpaceSwitcher />
+      <SpaceSwitcher v-if="showSwitcher" />
+      <h1 v-else class="text-xl font-bold text-white tracking-tight truncate">{{ title }}</h1>
+    </div>
+
+    <!-- Right Actions -->
+    <div class="shrink-0">
+      <slot name="right" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { useSpace } from '~/composables/useSpace'
 import SpaceSwitcher from './SpaceSwitcher.vue'
 
 defineProps({
@@ -27,16 +31,15 @@ defineProps({
     type: String,
     required: true
   },
-  icon: {
-    type: String,
-    default: 'mdi:wallet-outline'
-  },
   showBack: {
+    type: Boolean,
+    default: true
+  },
+  showSwitcher: {
     type: Boolean,
     default: false
   }
 })
 
 const router = useRouter()
-const { currentSpace: currentLedger } = useSpace()
 </script>

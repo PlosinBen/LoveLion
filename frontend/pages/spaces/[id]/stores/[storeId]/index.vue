@@ -123,7 +123,7 @@ import ImageManager from '~/components/ImageManager.vue'
 
 const router = useRouter()
 definePageMeta({
-  layout: 'main'
+  layout: 'default'
 })
 const route = useRoute()
 const api = useApi()

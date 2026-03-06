@@ -1,7 +1,7 @@
-<template>
+﻿<template>
   <div class="relative group cursor-pointer" v-click-outside="() => showSwitcher = false">
     <div @click="showSwitcher = !showSwitcher" class="flex items-center gap-1.5 text-indigo-400 font-medium py-1 px-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors">
-       <span class="truncate w-40">{{ currentLedger?.name || '正在載入...' }}</span>
+       <span class="truncate w-40">{{ currentLedger?.name || '甇?頛...' }}</span>
        <Icon icon="mdi:chevron-down" class="text-lg flex-shrink-0 transition-transform duration-300" :class="{ 'rotate-180': showSwitcher }" />
     </div>
     
@@ -22,7 +22,7 @@
           >
             <div class="flex flex-col min-w-0 flex-1">
               <span class="font-medium truncate">{{ l.name }}</span>
-              <span class="text-xs text-neutral-500">{{ l.user?.display_name || '系統' }} 的帳本</span>
+              <span class="text-xs text-neutral-500">{{ l.user?.display_name || '蝟餌絞' }} ?董??/span>
             </div>
 
             <div class="flex items-center gap-2 shrink-0 ml-3">
@@ -42,7 +42,7 @@
           <div class="border-t border-neutral-800 my-1"></div>
           
           <NuxtLink to="/spaces/add-new" class="w-full text-left px-4 py-3 hover:bg-neutral-800 text-sm text-neutral-400 flex items-center gap-2 no-underline" @click="showSwitcher = false">
-            <Icon icon="mdi:plus-circle-outline" /> 新增帳本
+            <Icon icon="mdi:plus-circle-outline" /> ?啣?撣單
           </NuxtLink>
       </div>
     </Transition>

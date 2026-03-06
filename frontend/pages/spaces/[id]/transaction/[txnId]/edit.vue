@@ -1,170 +1,176 @@
 <template>
-  <div class="edit-transaction-page min-h-screen bg-neutral-900 text-neutral-50 p-4">
-    <header class="flex justify-between items-center mb-6">
-      <button @click="router.back()" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-white border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
-        <Icon icon="mdi:arrow-left" class="text-2xl" />
-      </button>
-      <h1 class="text-xl font-bold">編輯交易</h1>
-      <button @click="handleDelete" class="flex justify-center items-center w-10 h-10 rounded-xl bg-red-500/10 text-red-500 border-0 cursor-pointer hover:bg-red-500/20 transition-colors">
-        <Icon icon="mdi:trash-can-outline" class="text-xl" />
-      </button>
-    </header>
+  <div class="edit-transaction-page min-h-screen bg-neutral-900 text-neutral-50">
+    <SpaceHeader 
+      title="編輯交易" 
+      class="pt-0 px-2"
+    >
+      <template #right>
+        <button @click="handleDelete" class="flex justify-center items-center w-10 h-10 rounded-xl bg-red-500/10 text-red-500 border-0 cursor-pointer hover:bg-red-500/20 transition-colors">
+          <Icon icon="mdi:trash-can-outline" class="text-xl" />
+        </button>
+      </template>
+    </SpaceHeader>
 
-    <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
+    <div class="p-4 pt-0">
+      <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
 
-    <form v-else @submit.prevent="handleSubmit" class="flex flex-col gap-5">
-      <!-- Date -->
-      <VueDatePicker 
-        v-model="form.date" 
-        :dark="true"
-        :formats="{input: 'yyyy-MM-dd HH:mm'}"
-        :enable-seconds="false"
-        time-picker-inline
-        cancel-text="取消"
-        select-text="確定"
-        placeholder="日期與時間"
-        class="date-picker-dark"
-      />
-
-      <!-- Currency Selection -->
-      <div class="flex flex-col gap-2">
-        <label class="block mb-2 text-sm text-neutral-400">幣別</label>
-        <BaseSelect
-          v-model="form.currency"
-          :options="availableCurrencies"
-          placeholder="選擇幣別"
+      <form v-else @submit.prevent="handleSubmit" class="flex flex-col gap-5">
+        <!-- Date -->
+        <VueDatePicker 
+          v-model="form.date" 
+          :dark="true"
+          :formats="{input: 'yyyy-MM-dd HH:mm'}"
+          :enable-seconds="false"
+          time-picker-inline
+          cancel-text="取消"
+          select-text="確定"
+          placeholder="日期與時間"
+          class="date-picker-dark"
         />
-      </div>
 
-      <!-- Category -->
-      <div class="flex flex-col gap-2">
-        <label class="block mb-2 text-sm text-neutral-400">類別</label>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="cat in categories"
-            :key="cat"
-            type="button"
-            class="px-4 py-2.5 rounded-3xl border border-neutral-800 bg-neutral-900 text-white cursor-pointer transition-all duration-200 hover:border-indigo-500"
-            :class="{ 'bg-indigo-500 border-indigo-500': form.category === cat }"
-            @click="form.category = cat"
-          >
-            {{ cat }}
-          </button>
+        <!-- Currency Selection -->
+        <div class="flex flex-col gap-2">
+          <label class="block mb-2 text-sm text-neutral-400">幣別</label>
+          <BaseSelect
+            v-model="form.currency"
+            :options="availableCurrencies"
+            placeholder="選擇幣別"
+          />
         </div>
-      </div>
 
-      <!-- Items -->
-      <div class="flex flex-col gap-2">
-        <label class="block mb-2 text-sm text-neutral-400">項目明細 ({{ form.currency }})</label>
-        <div class="flex flex-col gap-3">
-          <div v-for="(item, index) in form.items" :key="index" class="bg-neutral-900 rounded-2xl p-4 border border-neutral-800">
-            <div class="flex flex-col gap-2">
-              <BaseInput
-                v-model="item.name"
-                placeholder="項目名稱"
-                input-class="font-medium"
-              />
-              <div class="flex items-center gap-2">
-                <BaseInput
-                  v-model.number="item.unit_price"
-                  type="number"
-                  placeholder="單價"
-                  input-class="flex-auto"
-                />
-                <span class="text-neutral-400">×</span>
-                <BaseInput
-                  v-model.number="item.quantity"
-                  type="number"
-                  placeholder="數量"
-                  min="1"
-                  input-class="flex-1 w-14"
-                />
-                <button type="button" @click="removeItem(index)" class="flex justify-center items-center w-9 h-9 rounded-lg bg-red-500 text-white border-0 cursor-pointer hover:bg-red-600 transition-colors" v-if="form.items.length > 1">
-                  <Icon icon="mdi:close" />
-                </button>
-              </div>
-            </div>
-            <div class="text-right text-neutral-400 text-sm mt-3">
-              {{ form.currency }} {{ (item.unit_price * item.quantity).toLocaleString() }}
-            </div>
+        <!-- Category -->
+        <div class="flex flex-col gap-2">
+          <label class="block mb-2 text-sm text-neutral-400">類別</label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="cat in categories"
+              :key="cat"
+              type="button"
+              class="px-4 py-2.5 rounded-3xl border border-neutral-800 bg-neutral-900 text-white cursor-pointer transition-all duration-200 hover:border-indigo-500"
+              :class="{ 'bg-indigo-500 border-indigo-500': form.category === cat }"
+              @click="form.category = cat"
+            >
+              {{ cat }}
+            </button>
           </div>
         </div>
-        <button type="button" @click="addItem" class="flex justify-center items-center gap-1.5 p-3 border-2 border-dashed border-neutral-800 rounded-xl bg-transparent text-neutral-400 cursor-pointer mt-3 hover:border-indigo-500 hover:text-indigo-500 transition-colors">
-          <Icon icon="mdi:plus" /> 新增項目
+
+        <!-- Items -->
+        <div class="flex flex-col gap-2">
+          <label class="block mb-2 text-sm text-neutral-400">項目明細 ({{ form.currency }})</label>
+          <div class="flex flex-col gap-3">
+            <div v-for="(item, index) in form.items" :key="index" class="bg-neutral-900 rounded-2xl p-4 border border-neutral-800">
+              <div class="flex flex-col gap-2">
+                <BaseInput
+                  v-model="item.name"
+                  placeholder="項目名稱"
+                  input-class="font-medium"
+                />
+                <div class="flex items-center gap-2">
+                  <BaseInput
+                    v-model.number="item.unit_price"
+                    type="number"
+                    placeholder="單價"
+                    input-class="flex-auto"
+                  />
+                  <span class="text-neutral-400">×</span>
+                  <BaseInput
+                    v-model.number="item.quantity"
+                    type="number"
+                    placeholder="數量"
+                    min="1"
+                    input-class="flex-1 w-14"
+                  />
+                  <button type="button" @click="removeItem(index)" class="flex justify-center items-center w-9 h-9 rounded-lg bg-red-500 text-white border-0 cursor-pointer hover:bg-red-600 transition-colors" v-if="form.items.length > 1">
+                    <Icon icon="mdi:close" />
+                  </button>
+                </div>
+              </div>
+              <div class="text-right text-neutral-400 text-sm mt-3">
+                {{ form.currency }} {{ (item.unit_price * item.quantity).toLocaleString() }}
+              </div>
+            </div>
+          </div>
+          <button type="button" @click="addItem" class="flex justify-center items-center gap-1.5 p-3 border-2 border-dashed border-neutral-800 rounded-xl bg-transparent text-neutral-400 cursor-pointer mt-3 hover:border-indigo-500 hover:text-indigo-500 transition-colors">
+            <Icon icon="mdi:plus" /> 新增項目
+          </button>
+        </div>
+
+        <!-- Total -->
+        <div class="flex justify-between items-center text-lg bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
+          <span>總計 ({{ form.currency }})</span>
+          <span class="text-2xl font-bold text-indigo-500">{{ form.currency }} {{ totalAmount.toLocaleString() }}</span>
+        </div>
+
+        <!-- Foreign Currency Settlement -->
+        <div v-if="form.currency !== 'TWD'" class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800 flex flex-col gap-4">
+          <div class="flex justify-between items-center">
+            <h3 class="font-bold text-lg">外幣結算</h3>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" v-model="form.manual_rate" class="w-4 h-4 rounded text-indigo-500 focus:ring-indigo-500 bg-neutral-800 border-gray-600">
+              <span class="text-sm">自行輸入匯率 (現金)</span>
+            </label>
+          </div>
+
+          <div v-if="form.manual_rate" class="flex flex-col gap-4 animate-fade-in">
+             <!-- Manual Rate Mode -->
+             <BaseInput
+                v-model.number="form.exchange_rate"
+                type="number"
+                label="匯率"
+                step="0.0001"
+                placeholder="1 TWD = ? Foreign"
+             />
+             <div class="flex justify-between items-center p-3 bg-neutral-800 rounded-xl">
+                <span class="text-neutral-400">折合台幣</span>
+                <span class="text-xl font-bold">TWD {{ calculatedBillingAmount.toLocaleString() }}</span>
+             </div>
+          </div>
+
+          <div v-else class="flex flex-col gap-4 animate-fade-in">
+             <!-- Auto Rate Mode (Credit Card) -->
+             <BaseInput
+                v-model.number="form.billing_amount"
+                type="number"
+                label="銀行入帳金額 (TWD)"
+                placeholder="信用卡帳單上的台幣金額"
+             />
+             <BaseInput
+                v-model.number="form.handling_fee"
+                type="number"
+                label="海外手續費 (TWD)"
+                placeholder="選填"
+             />
+             <div class="flex justify-between items-center p-3 bg-neutral-800 rounded-xl">
+                <span class="text-neutral-400">換算匯率</span>
+                <span class="text-xl font-bold text-indigo-400">{{ calculatedExchangeRate }}</span>
+             </div>
+          </div>
+        </div>
+
+        <!-- Note -->
+        <div class="flex flex-col gap-2">
+          <label class="block mb-2 text-sm text-neutral-400">備註</label>
+          <BaseTextarea 
+            v-model="form.note" 
+            rows="2" 
+            placeholder="選填" 
+          />
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="w-full mt-3 px-6 py-3 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" :disabled="submitting">
+          {{ submitting ? '更新中...' : '更新' }}
         </button>
-      </div>
-
-      <!-- Total -->
-      <div class="flex justify-between items-center text-lg bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
-        <span>總計 ({{ form.currency }})</span>
-        <span class="text-2xl font-bold text-indigo-500">{{ form.currency }} {{ totalAmount.toLocaleString() }}</span>
-      </div>
-
-      <!-- Foreign Currency Settlement -->
-      <div v-if="form.currency !== 'TWD'" class="bg-neutral-900 rounded-2xl p-5 border border-neutral-800 flex flex-col gap-4">
-        <div class="flex justify-between items-center">
-          <h3 class="font-bold text-lg">外幣結算</h3>
-          <label class="flex items-center gap-2 cursor-pointer select-none">
-            <input type="checkbox" v-model="form.manual_rate" class="w-4 h-4 rounded text-indigo-500 focus:ring-indigo-500 bg-neutral-800 border-gray-600">
-            <span class="text-sm">自行輸入匯率 (現金)</span>
-          </label>
-        </div>
-
-        <div v-if="form.manual_rate" class="flex flex-col gap-4 animate-fade-in">
-           <!-- Manual Rate Mode -->
-           <BaseInput
-              v-model.number="form.exchange_rate"
-              type="number"
-              label="匯率"
-              step="0.0001"
-              placeholder="1 TWD = ? Foreign"
-           />
-           <div class="flex justify-between items-center p-3 bg-neutral-800 rounded-xl">
-              <span class="text-neutral-400">折合台幣</span>
-              <span class="text-xl font-bold">TWD {{ calculatedBillingAmount.toLocaleString() }}</span>
-           </div>
-        </div>
-
-        <div v-else class="flex flex-col gap-4 animate-fade-in">
-           <!-- Auto Rate Mode (Credit Card) -->
-           <BaseInput
-              v-model.number="form.billing_amount"
-              type="number"
-              label="銀行入帳金額 (TWD)"
-              placeholder="信用卡帳單上的台幣金額"
-           />
-           <BaseInput
-              v-model.number="form.handling_fee"
-              type="number"
-              label="海外手續費 (TWD)"
-              placeholder="選填"
-           />
-           <div class="flex justify-between items-center p-3 bg-neutral-800 rounded-xl">
-              <span class="text-neutral-400">換算匯率</span>
-              <span class="text-xl font-bold text-indigo-400">{{ calculatedExchangeRate }}</span>
-           </div>
-        </div>
-      </div>
-
-      <!-- Note -->
-      <div class="flex flex-col gap-2">
-        <label class="block mb-2 text-sm text-neutral-400">備註</label>
-        <BaseTextarea 
-          v-model="form.note" 
-          rows="2" 
-          placeholder="選填" 
-        />
-      </div>
-
-      <!-- Submit -->
-      <button type="submit" class="w-full mt-3 px-6 py-3 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" :disabled="submitting">
-        {{ submitting ? '更新中...' : '更新' }}
-      </button>
-    </form>
+      </form>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  hideGlobalNav: true
+})
 import { ref, computed, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
@@ -172,11 +178,9 @@ import { useAuth } from '~/composables/useAuth'
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import BaseSelect from '~/components/BaseSelect.vue'
+import SpaceHeader from '~/components/SpaceHeader.vue'
 
-definePageMeta({
-  layout: 'empty'
-})
-
+// definePageMeta setup below
 const router = useRouter()
 const route = useRoute()
 const api = useApi()

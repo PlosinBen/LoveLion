@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <BaseLayout content-class="">
     <slot />
   </BaseLayout>

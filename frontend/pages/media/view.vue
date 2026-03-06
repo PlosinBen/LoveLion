@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="flex flex-col h-screen bg-black relative">
     <!-- Header / Close Button -->
     <div class="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-20 bg-gradient-to-b from-black/80 to-transparent">
@@ -17,7 +17,7 @@
     <div class="flex-1 flex items-center justify-center p-4 overflow-hidden">
         <img v-if="imageUrl" :src="imageUrl" class="max-w-full max-h-full object-contain shadow-2xl" />
         <div v-else class="text-neutral-500">
-            無法載入圖片
+            ?⊥?頛??
         </div>
     </div>
   </div>

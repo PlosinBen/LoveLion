@@ -248,6 +248,9 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({
+  hideGlobalNav: true
+})
 import { ref, onMounted, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'

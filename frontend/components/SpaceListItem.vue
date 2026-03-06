@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div 
     class="bg-neutral-900 border border-neutral-800/50 py-5 rounded-3xl flex items-center justify-between hover:bg-neutral-800 transition-all cursor-pointer group active:scale-95"
     @click="$emit('click')"
@@ -17,7 +17,7 @@
         <h3 class="font-bold text-white group-hover:text-indigo-400 transition-colors">{{ space.name }}</h3>
         <div class="flex items-center gap-2 mt-0.5">
             <span class="text-xs font-bold uppercase tracking-wider text-neutral-500">
-                {{ space.type === 'trip' ? '旅行專案' : '個人空間' }}
+                {{ space.type === 'trip' ? '??撠?' : '?犖蝛粹?' }}
             </span>
             <span class="w-1 h-1 rounded-full bg-neutral-800"></span>
             <span class="text-xs font-bold text-neutral-500 uppercase tracking-wider">

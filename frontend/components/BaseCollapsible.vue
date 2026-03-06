@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="flex flex-col transition-all duration-300">
     <!-- Header -->
     <div 
@@ -8,7 +8,7 @@
       <slot name="header" :open="isOpen" :toggle="toggle">
         <div class="flex items-center gap-2">
            <Icon :icon="isOpen ? 'mdi:chevron-down' : 'mdi:chevron-right'" class="text-xl text-neutral-400" />
-           <h3 class="font-bold text-white">詳細資訊</h3>
+           <h3 class="font-bold text-white">閰喟敦鞈?</h3>
         </div>
       </slot>
     </div>

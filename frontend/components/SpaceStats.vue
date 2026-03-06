@@ -1,11 +1,11 @@
-<template>
+﻿<template>
     <div class="flex flex-col gap-6 px-4">
         
         <!-- Total Spending Card -->
         <div class="bg-neutral-800 rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
             <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 z-0"></div>
             <div class="relative z-10 text-center">
-                <span class="text-neutral-400 text-sm mb-1 block">總支出 ({{ baseCurrency }})</span>
+                <span class="text-neutral-400 text-sm mb-1 block">蝮賣??({{ baseCurrency }})</span>
                 <div class="text-4xl font-bold text-white tracking-tight">
                     <span class="text-2xl text-neutral-500 mr-1">$</span>
                     {{ formatNumber(totalSpent) }}
@@ -17,7 +17,7 @@
         <div v-if="settlements.length > 0">
              <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
                 <Icon icon="mdi:handshake-outline" class="text-indigo-400" />
-                應收應付 (Settlement)
+                ??? (Settlement)
             </h2>
             <div class="bg-neutral-900 rounded-xl border border-neutral-800 divide-y divide-neutral-800">
                 <div v-for="member in settlements" :key="member.name" class="p-4 flex items-center justify-between">
@@ -27,7 +27,7 @@
                          <div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-sm font-bold text-neutral-400 border border-neutral-700">
                              {{ (member.name || '?').charAt(0) }}
                          </div>
-                         <span class="font-bold text-base">{{ member.name || '未知使用者' }}</span>
+                         <span class="font-bold text-base">{{ member.name || '?芰雿輻?? }}</span>
                      </div>
 
                      <!-- Right: Amounts -->
@@ -52,7 +52,7 @@
         <div v-if="categories.length > 0">
             <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
                 <Icon icon="mdi:shape-outline" class="text-indigo-400" />
-                分類支出
+                ???臬
             </h2>
             <div class="flex flex-col gap-3">
                 <div v-for="cat in categories" :key="cat.name" class="bg-neutral-900 rounded-xl p-3 border border-neutral-800">
@@ -80,7 +80,7 @@
         <div v-if="spenders.length > 0">
              <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
                 <Icon icon="mdi:account-cash-outline" class="text-indigo-400" />
-                花費排行
+                ?梯祥??
             </h2>
             <div class="bg-neutral-900 rounded-xl border border-neutral-800 divide-y divide-neutral-800">
                 <div v-for="(spender, index) in spenders" :key="spender.name" class="p-4 flex items-center justify-between">
@@ -124,13 +124,13 @@ const getCategoryIcon = (category: string) => {
     'Shopping': 'mdi:shopping',
     'Entertainment': 'mdi:movie',
     'Accommodation': 'mdi:bed',
-    '餐飲': 'mdi:food',
-    '交通': 'mdi:train-car',
-    '購物': 'mdi:shopping',
-    '娛樂': 'mdi:movie',
-    '住宿': 'mdi:bed',
-    '生活': 'mdi:home',
-    '其他': 'mdi:dots-horizontal',
+    '擗ㄡ': 'mdi:food',
+    '鈭日?: 'mdi:train-car',
+    '鞈潛': 'mdi:shopping',
+    '憡?': 'mdi:movie',
+    '雿挪': 'mdi:bed',
+    '?暑': 'mdi:home',
+    '?嗡?': 'mdi:dots-horizontal',
   }
   return icons[category] || 'mdi:shape'
 }
@@ -151,7 +151,7 @@ const calculateStats = () => {
 
     // Init Members
     props.members?.forEach(m => {
-        const name = m.alias || m.user?.display_name || m.name || '未知使用者'
+        const name = m.alias || m.user?.display_name || m.name || '?芰雿輻??
         const id = m.id || m.user_id || name
         balances[id] = {
             name: name,
@@ -181,7 +181,7 @@ const calculateStats = () => {
         
         total += baseAmountForStats
 
-        const cat = txn.category || '未分類'
+        const cat = txn.category || '?芸?憿?
         catMap[cat] = (catMap[cat] || 0) + baseAmountForStats
 
         // 2. Settlement (Payables/Receivables)

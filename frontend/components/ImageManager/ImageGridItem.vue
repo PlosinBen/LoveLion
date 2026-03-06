@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
     <img 
       :src="image.isPending ? image.file_path : getImageUrl(image.file_path)" 

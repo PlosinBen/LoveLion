@@ -1,4 +1,4 @@
-export default defineNuxtPlugin((nuxtApp) => {
+﻿export default defineNuxtPlugin((nuxtApp) => {
   nuxtApp.vueApp.directive('click-outside', {
     mounted(el, binding) {
       el._clickOutside = (event: Event) => {

@@ -1,7 +1,7 @@
-<template>
+﻿<template>
   <div class="flex justify-between items-center p-4 rounded-xl border border-neutral-800 bg-neutral-900">
     <div class="flex flex-col">
-      <h4 class="text-sm font-medium">{{ transaction.category || '未分類' }}</h4>
+      <h4 class="text-sm font-medium">{{ transaction.category || '?芸?憿? }}</h4>
       <p class="text-xs text-neutral-400 mt-1">{{ formatDate(transaction.date) }}</p>
     </div>
     <div class="font-semibold text-indigo-500 text-right">

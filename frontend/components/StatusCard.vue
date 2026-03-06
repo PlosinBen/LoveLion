@@ -1,10 +1,10 @@
-<template>
+﻿<template>
   <div class="flex items-center gap-4 mb-6 p-5 rounded-2xl border bg-neutral-900 duration-200" :class="statusClasses">
     <div class="text-3xl" :class="statusIconColor">
       <Icon :icon="statusIcon" />
     </div>
     <div class="flex flex-col">
-      <h3 class="text-sm text-neutral-400">系統狀態</h3>
+      <h3 class="text-sm text-neutral-400">蝟餌絞???/h3>
       <p class="text-base mt-1">{{ message }}</p>
     </div>
   </div>

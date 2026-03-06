@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="image-preview fixed inset-0 bg-black flex flex-col h-screen">
     <!-- Header / Close -->
     <header class="absolute top-0 left-0 right-0 p-4 pt-6 transition-opacity duration-300 pointer-events-none bg-gradient-to-b from-black/60 to-transparent flex justify-start items-center z-10" :class="showControls ? 'opacity-100' : 'opacity-0'">
@@ -75,7 +75,7 @@
         <!-- Feedback for empty/loading -->
          <div v-if="loading" class="text-neutral-400 flex flex-col items-center gap-2 absolute z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
             <Icon icon="mdi:loading" class="text-4xl animate-spin" />
-            <span class="text-sm">載入中...</span>
+            <span class="text-sm">頛銝?..</span>
         </div>
     </div>
             <!-- Filmstrip -->
@@ -92,7 +92,7 @@
             </div>
 
         <div v-if="!loading && images.length === 0" class="flex-1 flex justify-center items-center text-neutral-500">
-            無效的圖片連結
+            ?⊥??????
         </div>
   </div>
 </template>

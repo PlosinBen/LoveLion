@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="text-center py-16 px-5 bg-neutral-900 rounded-2xl border border-neutral-800">
     <Icon :icon="icon" class="text-6xl text-indigo-500 mb-4" />
     <h2 class="text-xl font-bold mb-2">{{ title }}</h2>

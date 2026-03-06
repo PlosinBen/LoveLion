@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div :class="{'flex flex-col gap-2': label}">
     <label v-if="label" class="block text-xs text-neutral-400">{{ label }}</label>
     <textarea
