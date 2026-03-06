@@ -29,7 +29,7 @@ func TestTransactionHandler_List(t *testing.T) {
 	// Test list transactions
 	router := testutil.TestRouter()
 	handler := NewTransactionHandler(db)
-	router.GET("/api/spaces/:id/transactions", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), handler.List)
+	router.GET("/api/spaces/:id/transactions", testutil.AuthContext(user.ID), middleware.SpaceAccess(db), handler.List)
 
 	w = httptest.NewRecorder()
 	req = testutil.JSONRequest("GET", "/api/spaces/"+spaceID+"/transactions", nil)
@@ -58,7 +58,7 @@ func TestTransactionHandler_Create(t *testing.T) {
 	// Test create transaction
 	router := testutil.TestRouter()
 	handler := NewTransactionHandler(db)
-	router.POST("/api/spaces/:id/transactions", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), handler.Create)
+	router.POST("/api/spaces/:id/transactions", testutil.AuthContext(user.ID), middleware.SpaceAccess(db), handler.Create)
 
 	tests := []struct {
 		name       string
@@ -110,8 +110,8 @@ func TestTransactionHandler_Get(t *testing.T) {
 
 	router := testutil.TestRouter()
 	router.POST("/api/spaces", testutil.AuthContext(user.ID), spaceHandler.Create)
-	router.POST("/api/spaces/:id/transactions", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), txnHandler.Create)
-	router.GET("/api/spaces/:id/transactions/:txn_id", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), txnHandler.Get)
+	router.POST("/api/spaces/:id/transactions", testutil.AuthContext(user.ID), middleware.SpaceAccess(db), txnHandler.Create)
+	router.GET("/api/spaces/:id/transactions/:txn_id", testutil.AuthContext(user.ID), middleware.SpaceAccess(db), txnHandler.Get)
 
 	// Create space
 	w := httptest.NewRecorder()
@@ -149,8 +149,8 @@ func TestTransactionHandler_Delete(t *testing.T) {
 
 	router := testutil.TestRouter()
 	router.POST("/api/spaces", testutil.AuthContext(user.ID), spaceHandler.Create)
-	router.POST("/api/spaces/:id/transactions", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), txnHandler.Create)
-	router.DELETE("/api/spaces/:id/transactions/:txn_id", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), txnHandler.Delete)
+	router.POST("/api/spaces/:id/transactions", testutil.AuthContext(user.ID), middleware.SpaceAccess(db), txnHandler.Create)
+	router.DELETE("/api/spaces/:id/transactions/:txn_id", testutil.AuthContext(user.ID), middleware.SpaceAccess(db), txnHandler.Delete)
 
 	// Create space
 	w := httptest.NewRecorder()

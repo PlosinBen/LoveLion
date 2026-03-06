@@ -75,7 +75,7 @@ func TestSpaceHandler_Get(t *testing.T) {
 	router := testutil.TestRouter()
 	handler := NewSpaceHandler(db)
 	router.POST("/api/spaces", testutil.AuthContext(user.ID), handler.Create)
-	router.GET("/api/spaces/:id", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), handler.Get)
+	router.GET("/api/spaces/:id", testutil.AuthContext(user.ID), middleware.SpaceAccess(db), handler.Get)
 
 	// Create a space first
 	body := map[string]interface{}{"name": "Test Space"}
@@ -101,7 +101,7 @@ func TestSpaceHandler_Update(t *testing.T) {
 	router := testutil.TestRouter()
 	handler := NewSpaceHandler(db)
 	router.POST("/api/spaces", testutil.AuthContext(user.ID), handler.Create)
-	router.PUT("/api/spaces/:id", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), middleware.LedgerOwnerOnly(), handler.Update)
+	router.PUT("/api/spaces/:id", testutil.AuthContext(user.ID), middleware.SpaceAccess(db), middleware.SpaceOwnerOnly(), handler.Update)
 
 	// Create a space first
 	createBody := map[string]interface{}{"name": "Original Name"}
@@ -137,7 +137,7 @@ func TestSpaceHandler_Delete(t *testing.T) {
 	router := testutil.TestRouter()
 	handler := NewSpaceHandler(db)
 	router.POST("/api/spaces", testutil.AuthContext(user.ID), handler.Create)
-	router.DELETE("/api/spaces/:id", testutil.AuthContext(user.ID), middleware.LedgerAccess(db), middleware.LedgerOwnerOnly(), handler.Delete)
+	router.DELETE("/api/spaces/:id", testutil.AuthContext(user.ID), middleware.SpaceAccess(db), middleware.SpaceOwnerOnly(), handler.Delete)
 
 	// Create a space first
 	createBody := map[string]interface{}{"name": "To Delete"}

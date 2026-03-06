@@ -138,7 +138,7 @@
 
           <!-- 3. Stats Tab -->
           <div v-else-if="activeTab === 'stats'" class="animate-in fade-in slide-in-from-bottom-2 duration-500">
-              <TripStats 
+              <SpaceStats 
                   :transactions="transactions" 
                   :members="members" 
                   :base-currency="space?.base_currency || 'TWD'"
@@ -201,7 +201,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { Icon } from '@iconify/vue'
-import TripStats from '~/components/TripStats.vue'
+import SpaceStats from '~/components/SpaceStats.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'

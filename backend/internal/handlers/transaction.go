@@ -67,13 +67,13 @@ type UpdateTransactionRequest struct {
 	Splits        []TransactionSplitRequest `json:"splits"`
 }
 
-// List transactions for a ledger
+// List transactions for a space
 func (h *TransactionHandler) List(c *gin.Context) {
-	ledgerVal, _ := c.Get("ledger")
-	ledger := ledgerVal.(*models.Ledger)
+	spaceVal, _ := c.Get("space")
+	space := spaceVal.(*models.Ledger)
 
 	var transactions []models.Transaction
-	if err := h.db.Where("ledger_id = ?", ledger.ID).
+	if err := h.db.Where("ledger_id = ?", space.ID).
 		Preload("Items").
 		Preload("Splits").
 		Preload("Images", "entity_type = ?", "transaction").
@@ -88,8 +88,8 @@ func (h *TransactionHandler) List(c *gin.Context) {
 
 // Create a new transaction with items
 func (h *TransactionHandler) Create(c *gin.Context) {
-	ledgerVal, _ := c.Get("ledger")
-	ledger := ledgerVal.(*models.Ledger)
+	spaceVal, _ := c.Get("space")
+	space := spaceVal.(*models.Ledger)
 
 	var req CreateTransactionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -106,7 +106,7 @@ func (h *TransactionHandler) Create(c *gin.Context) {
 
 	txn := &models.Transaction{
 		ID:            txnID,
-		LedgerID:      ledger.ID,
+		LedgerID:      space.ID,
 		Payer:         req.Payer,
 		Currency:      req.Currency,
 		ExchangeRate:  req.ExchangeRate,
@@ -195,12 +195,12 @@ func (h *TransactionHandler) Create(c *gin.Context) {
 
 // Get a single transaction
 func (h *TransactionHandler) Get(c *gin.Context) {
-	ledgerVal, _ := c.Get("ledger")
-	ledger := ledgerVal.(*models.Ledger)
+	spaceVal, _ := c.Get("space")
+	space := spaceVal.(*models.Ledger)
 	txnID := c.Param("txn_id")
 
 	var txn models.Transaction
-	if err := h.db.Where("id = ? AND ledger_id = ?", txnID, ledger.ID).
+	if err := h.db.Where("id = ? AND ledger_id = ?", txnID, space.ID).
 		Preload("Items").
 		Preload("Splits").
 		First(&txn).Error; err != nil {
@@ -217,12 +217,12 @@ func (h *TransactionHandler) Get(c *gin.Context) {
 
 // Update a transaction
 func (h *TransactionHandler) Update(c *gin.Context) {
-	ledgerVal, _ := c.Get("ledger")
-	ledger := ledgerVal.(*models.Ledger)
+	spaceVal, _ := c.Get("space")
+	space := spaceVal.(*models.Ledger)
 	txnID := c.Param("txn_id")
 
 	var txn models.Transaction
-	if err := h.db.Where("id = ? AND ledger_id = ?", txnID, ledger.ID).First(&txn).Error; err != nil {
+	if err := h.db.Where("id = ? AND ledger_id = ?", txnID, space.ID).First(&txn).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found"})
 			return
@@ -338,11 +338,11 @@ func (h *TransactionHandler) Update(c *gin.Context) {
 
 // Delete a transaction
 func (h *TransactionHandler) Delete(c *gin.Context) {
-	ledgerVal, _ := c.Get("ledger")
-	ledger := ledgerVal.(*models.Ledger)
+	spaceVal, _ := c.Get("space")
+	space := spaceVal.(*models.Ledger)
 	txnID := c.Param("txn_id")
 
-	result := h.db.Where("id = ? AND ledger_id = ?", txnID, ledger.ID).Delete(&models.Transaction{})
+	result := h.db.Where("id = ? AND ledger_id = ?", txnID, space.ID).Delete(&models.Transaction{})
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete transaction"})
 		return

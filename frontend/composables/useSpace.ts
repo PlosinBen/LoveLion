@@ -16,12 +16,11 @@ export const useSpace = () => {
   // Grouped spaces for Dashboard
   const pinnedSpaces = computed(() => allSpaces.value.filter(s => s.is_pinned))
   const otherSpaces = computed(() => allSpaces.value.filter(s => !s.is_pinned))
-  
-  const tripSpaces = computed(() => allSpaces.value.filter(s => s.type === 'trip'))
+
+  const organizedSpaces = computed(() => allSpaces.value.filter(s => s.type === 'trip'))
   const personalSpaces = computed(() => allSpaces.value.filter(s => s.type === 'personal'))
 
-  const fetchSpaces = async (force = false) => {
-    if (allSpaces.value.length > 0 && !force) return
+  const fetchSpaces = async (force = false) => {    if (allSpaces.value.length > 0 && !force) return
     
     loading.value = true
     try {
@@ -68,7 +67,7 @@ export const useSpace = () => {
     currentSpaceId,
     pinnedSpaces,
     otherSpaces,
-    tripSpaces,
+    organizedSpaces,
     personalSpaces,
     loading,
     fetchSpaces,

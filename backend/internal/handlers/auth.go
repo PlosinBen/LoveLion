@@ -53,7 +53,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Start a transaction to ensure both user and ledger are created
+	// Start a transaction to ensure both user and space are created
 	err := h.db.Transaction(func(tx *gorm.DB) error {
 		// 1. Create new user
 		user := &models.User{
@@ -70,36 +70,26 @@ func (h *AuthHandler) Register(c *gin.Context) {
 			return err
 		}
 
-		// 2. Create default personal ledger
+		// 2. Create default personal space
 		defaultCategories := []string{"餐飲", "交通", "購物", "娛樂", "生活", "其他"}
 		categoriesJSON, _ := json.Marshal(defaultCategories)
 
 		defaultCurrencies := []string{"TWD"}
 		currenciesJSON, _ := json.Marshal(defaultCurrencies)
 
-				ledger := &models.Ledger{
+		space := &models.Ledger{
+			ID:             uuid.New(),
+			UserID:         user.ID,
+			Name:           "我的帳本",
+			Type:           "personal",
+			BaseCurrency:   "TWD",
+			Currencies:     datatypes.JSON(currenciesJSON),
+			Categories:     datatypes.JSON(categoriesJSON),
+			MemberNames:    datatypes.JSON("[]"),
+			PaymentMethods: datatypes.JSON("[]"),
+		}
 
-					ID:             uuid.New(),
-
-					UserID:         user.ID,
-
-					Name:           "我的帳本",
-
-					Type:           "personal",
-
-					BaseCurrency:   "TWD",
-
-					Currencies:     datatypes.JSON(currenciesJSON),
-
-					Categories:     datatypes.JSON(categoriesJSON),
-
-					MemberNames:    datatypes.JSON("[]"),
-
-					PaymentMethods: datatypes.JSON("[]"),
-
-				}
-
-		if err := tx.Create(ledger).Error; err != nil {
+		if err := tx.Create(space).Error; err != nil {
 			return err
 		}
 
@@ -109,7 +99,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	})
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user and create default ledger: " + err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user and create default space: " + err.Error()})
 		return
 	}
 

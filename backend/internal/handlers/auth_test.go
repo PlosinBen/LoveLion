@@ -58,16 +58,16 @@ func TestAuthHandler_Register(t *testing.T) {
 			router.ServeHTTP(w, req)
 			testutil.ExpectStatus(t, w, tt.wantStatus)
 
-			// If registration was successful, verify a ledger was created
+			// If registration was successful, verify a space was created
 			if tt.wantStatus == 201 {
 				var user models.User
 				db.Where("username = ?", tt.body["username"]).First(&user)
 				assert.NotEqual(t, uuid.Nil, user.ID)
 
-				var ledger models.Ledger
-				err := db.Where("user_id = ? AND type = 'personal'", user.ID).First(&ledger).Error
-				assert.NoError(t, err, "A default personal ledger should be created for the new user")
-				assert.Equal(t, "我的帳本", ledger.Name)
+				var space models.Ledger
+				err := db.Where("user_id = ? AND type = 'personal'", user.ID).First(&space).Error
+				assert.NoError(t, err, "A default personal space should be created for the new user")
+				assert.Equal(t, "我的帳本", space.Name)
 			}
 		})
 	}

@@ -14,12 +14,12 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-type LedgerSharingHandler struct {
+type SpaceSharingHandler struct {
 	db *gorm.DB
 }
 
-func NewLedgerSharingHandler(db *gorm.DB) *LedgerSharingHandler {
-	return &LedgerSharingHandler{db: db}
+func NewSpaceSharingHandler(db *gorm.DB) *SpaceSharingHandler {
+	return &SpaceSharingHandler{db: db}
 }
 
 type CreateInviteRequest struct {
@@ -35,10 +35,10 @@ func generateToken() string {
 }
 
 // Create an invite link
-func (h *LedgerSharingHandler) CreateInvite(c *gin.Context) {
+func (h *SpaceSharingHandler) CreateInvite(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
-	ledgerVal, _ := c.Get("ledger")
-	ledger := ledgerVal.(*models.Ledger)
+	spaceVal, _ := c.Get("space")
+	space := spaceVal.(*models.Ledger)
 
 	var req CreateInviteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -48,7 +48,7 @@ func (h *LedgerSharingHandler) CreateInvite(c *gin.Context) {
 
 	invite := &models.LedgerInvite{
 		ID:        uuid.New(),
-		LedgerID:  ledger.ID,
+		LedgerID:  space.ID,
 		Token:     generateToken(),
 		IsOneTime: req.IsOneTime,
 		MaxUses:   req.MaxUses,
@@ -70,7 +70,7 @@ func (h *LedgerSharingHandler) CreateInvite(c *gin.Context) {
 }
 
 // Get invite info (publicly accessible to show preview)
-func (h *LedgerSharingHandler) GetInviteInfo(c *gin.Context) {
+func (h *SpaceSharingHandler) GetInviteInfo(c *gin.Context) {
 	token := c.Param("token")
 
 	var invite models.LedgerInvite
@@ -92,14 +92,14 @@ func (h *LedgerSharingHandler) GetInviteInfo(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"ledger_name":  invite.Ledger.Name,
+		"space_name":   invite.Ledger.Name,
 		"creator_name": invite.Creator.DisplayName,
 		"is_one_time":  invite.IsOneTime,
 	})
 }
 
-// Join a ledger via invite link
-func (h *LedgerSharingHandler) JoinLedger(c *gin.Context) {
+// Join a space via invite link
+func (h *SpaceSharingHandler) JoinSpace(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 	token := c.Param("token")
 
@@ -154,21 +154,21 @@ func (h *LedgerSharingHandler) JoinLedger(c *gin.Context) {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Invite link invalid"})
 		} else {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to join ledger: invite link may be expired or full"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to join space: invite link may be expired or full"})
 		}
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Successfully joined the ledger"})
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully joined the space"})
 }
 
-// List all members of a ledger
-func (h *LedgerSharingHandler) ListMembers(c *gin.Context) {
-	ledgerVal, _ := c.Get("ledger")
-	ledger := ledgerVal.(*models.Ledger)
+// List all members of a space
+func (h *SpaceSharingHandler) ListMembers(c *gin.Context) {
+	spaceVal, _ := c.Get("space")
+	space := spaceVal.(*models.Ledger)
 
 	var members []models.LedgerMember
-	if err := h.db.Where("ledger_id = ?", ledger.ID).Preload("User").Find(&members).Error; err != nil {
+	if err := h.db.Where("ledger_id = ?", space.ID).Preload("User").Find(&members).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch members"})
 		return
 	}
@@ -180,10 +180,10 @@ type UpdateMemberRequest struct {
 	Alias string `json:"alias"`
 }
 
-// Update a member's alias (Owner only via LedgerOwnerOnly middleware)
-func (h *LedgerSharingHandler) UpdateMemberAlias(c *gin.Context) {
-	ledgerVal, _ := c.Get("ledger")
-	ledger := ledgerVal.(*models.Ledger)
+// Update a member's alias (Owner only via SpaceOwnerOnly middleware)
+func (h *SpaceSharingHandler) UpdateMemberAlias(c *gin.Context) {
+	spaceVal, _ := c.Get("space")
+	space := spaceVal.(*models.Ledger)
 	targetUserID, err := uuid.Parse(c.Param("user_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid User ID"})
@@ -197,7 +197,7 @@ func (h *LedgerSharingHandler) UpdateMemberAlias(c *gin.Context) {
 	}
 
 	result := h.db.Model(&models.LedgerMember{}).
-		Where("ledger_id = ? AND user_id = ?", ledger.ID, targetUserID).
+		Where("ledger_id = ? AND user_id = ?", space.ID, targetUserID).
 		Update("alias", req.Alias)
 
 	if result.Error != nil {
@@ -206,7 +206,7 @@ func (h *LedgerSharingHandler) UpdateMemberAlias(c *gin.Context) {
 	}
 
 	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Member not found in this ledger"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Member not found in this space"})
 		return
 	}
 
@@ -214,10 +214,10 @@ func (h *LedgerSharingHandler) UpdateMemberAlias(c *gin.Context) {
 }
 
 // Remove a member (Kick by owner OR leave by self)
-func (h *LedgerSharingHandler) RemoveMember(c *gin.Context) {
+func (h *SpaceSharingHandler) RemoveMember(c *gin.Context) {
 	requestorID := c.MustGet("userID").(uuid.UUID)
-	ledgerVal, _ := c.Get("ledger")
-	ledger := ledgerVal.(*models.Ledger)
+	spaceVal, _ := c.Get("space")
+	space := spaceVal.(*models.Ledger)
 	memberVal, _ := c.Get("member")
 	requestorMember := memberVal.(*models.LedgerMember)
 	
@@ -228,7 +228,7 @@ func (h *LedgerSharingHandler) RemoveMember(c *gin.Context) {
 	}
 
 	// Permission logic:
-	// 1. If requestor is Owner, they can remove anyone EXCEPT themselves (to delete ledger, use DeleteLedger)
+	// 1. If requestor is Owner, they can remove anyone EXCEPT themselves (to delete space, use DeleteSpace)
 	// 2. If requestor is NOT Owner, they can ONLY remove themselves (leaving)
 	
 	isOwner := requestorMember.Role == "owner"
@@ -240,32 +240,32 @@ func (h *LedgerSharingHandler) RemoveMember(c *gin.Context) {
 	}
 
 	if isOwner && isSelf {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Owner cannot leave their own ledger. Please delete the ledger instead."})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Owner cannot leave their own space. Please delete the space instead."})
 		return
 	}
 
-	result := h.db.Where("ledger_id = ? AND user_id = ?", ledger.ID, targetUserID).Delete(&models.LedgerMember{})
+	result := h.db.Where("ledger_id = ? AND user_id = ?", space.ID, targetUserID).Delete(&models.LedgerMember{})
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove member"})
 		return
 	}
 
 	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Member not found in this ledger"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Member not found in this space"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Member removed successfully"})
 }
 
-// List all active invites for a ledger (Owner only via LedgerOwnerOnly)
-func (h *LedgerSharingHandler) ListInvites(c *gin.Context) {
-	ledgerVal, _ := c.Get("ledger")
-	ledger := ledgerVal.(*models.Ledger)
+// List all active invites for a space (Owner only via SpaceOwnerOnly)
+func (h *SpaceSharingHandler) ListInvites(c *gin.Context) {
+	spaceVal, _ := c.Get("space")
+	space := spaceVal.(*models.Ledger)
 
 	var invites []models.LedgerInvite
 	// Only show active ones: not expired AND (max_uses=0 OR use_count < max_uses)
-	err := h.db.Where("ledger_id = ? AND (expires_at IS NULL OR expires_at > ?) AND (max_uses = 0 OR use_count < max_uses)", ledger.ID, time.Now()).
+	err := h.db.Where("ledger_id = ? AND (expires_at IS NULL OR expires_at > ?) AND (max_uses = 0 OR use_count < max_uses)", space.ID, time.Now()).
 		Order("created_at DESC").
 		Find(&invites).Error
 
@@ -277,17 +277,17 @@ func (h *LedgerSharingHandler) ListInvites(c *gin.Context) {
 	c.JSON(http.StatusOK, invites)
 }
 
-// Revoke an invite link (Owner only via LedgerOwnerOnly)
-func (h *LedgerSharingHandler) RevokeInvite(c *gin.Context) {
-	ledgerVal, _ := c.Get("ledger")
-	ledger := ledgerVal.(*models.Ledger)
+// Revoke an invite link (Owner only via SpaceOwnerOnly)
+func (h *SpaceSharingHandler) RevokeInvite(c *gin.Context) {
+	spaceVal, _ := c.Get("space")
+	space := spaceVal.(*models.Ledger)
 	inviteID, err := uuid.Parse(c.Param("invite_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Invite ID"})
 		return
 	}
 
-	result := h.db.Where("id = ? AND ledger_id = ?", inviteID, ledger.ID).Delete(&models.LedgerInvite{})
+	result := h.db.Where("id = ? AND ledger_id = ?", inviteID, space.ID).Delete(&models.LedgerInvite{})
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to revoke invite"})
 		return

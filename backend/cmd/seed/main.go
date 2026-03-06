@@ -50,7 +50,7 @@ func main() {
 	db.Create(userMei)
 	fmt.Println("✓ Created collaborator users: ming, mei")
 
-	// 3. Create personal space (ledger)
+	// 3. Create personal space
 	personalSpace := &models.Ledger{
 		ID:             uuid.New(),
 		UserID:         user.ID,
@@ -101,8 +101,8 @@ func main() {
 	}
 	fmt.Println("✓ Created sample transactions for personal space")
 
-	// 5. Create a trip space (unified Ledger + Trip)
-	tripSpace := &models.Ledger{
+	// 5. Create a sample space (unified Ledger + Trip)
+	sampleSpace := &models.Ledger{
 		ID:             uuid.New(),
 		UserID:         user.ID,
 		Name:           "2024 東京春櫻季",
@@ -117,29 +117,29 @@ func main() {
 		IsPinned:       true,
 		CoverImage:     "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=800&auto=format&fit=crop",
 	}
-	db.Create(tripSpace)
-	fmt.Println("✓ Created space: 2024 東京春櫻季 (pinned trip)")
+	db.Create(sampleSpace)
+	fmt.Println("✓ Created space: 2024 東京春櫻季 (pinned)")
 
-	// 6. Add ledger members for trip space
-	memberDev := models.LedgerMember{ID: uuid.New(), LedgerID: tripSpace.ID, UserID: user.ID, Role: "owner", Alias: "Antigravity"}
-	memberMing := models.LedgerMember{ID: uuid.New(), LedgerID: tripSpace.ID, UserID: userMing.ID, Role: "member", Alias: "小明"}
-	memberMei := models.LedgerMember{ID: uuid.New(), LedgerID: tripSpace.ID, UserID: userMei.ID, Role: "member", Alias: "小美"}
+	// 6. Add ledger members for sample space
+	memberDev := models.LedgerMember{ID: uuid.New(), LedgerID: sampleSpace.ID, UserID: user.ID, Role: "owner", Alias: "Antigravity"}
+	memberMing := models.LedgerMember{ID: uuid.New(), LedgerID: sampleSpace.ID, UserID: userMing.ID, Role: "member", Alias: "小明"}
+	memberMei := models.LedgerMember{ID: uuid.New(), LedgerID: sampleSpace.ID, UserID: userMei.ID, Role: "member", Alias: "小美"}
 	db.Create(&memberDev)
 	db.Create(&memberMing)
 	db.Create(&memberMei)
-	fmt.Println("✓ Added members to trip space")
+	fmt.Println("✓ Added members to sample space")
 
-	// 7. Create comparison stores for trip space
+	// 7. Create comparison stores for sample space
 	store1 := &models.ComparisonStore{
 		ID:       "store_s_01",
-		LedgerID: tripSpace.ID,
+		LedgerID: sampleSpace.ID,
 		Name:     "唐吉軻德 澀谷店",
 		Location: "澀谷",
 		GoogleMapURL: "https://maps.app.goo.gl/ShibuyaDonki",
 	}
 	store2 := &models.ComparisonStore{
 		ID:       "store_s_02",
-		LedgerID: tripSpace.ID,
+		LedgerID: sampleSpace.ID,
 		Name:     "Bic Camera 新宿",
 		Location: "新宿",
 	}
@@ -158,11 +158,11 @@ func main() {
 	}
 	fmt.Println("✓ Created comparison products")
 
-	// 9. Create Trip Transactions with Splits
-	txnTripID := "txn_t_01"
-	txnTrip := models.Transaction{
-		ID:            txnTripID,
-		LedgerID:      tripSpace.ID,
+	// 9. Create sample transactions with splits
+	txnSampleID := "txn_s_01"
+	txnSample := models.Transaction{
+		ID:            txnSampleID,
+		LedgerID:      sampleSpace.ID,
 		Title:         "成田機場利木津巴士",
 		Payer:         "Antigravity",
 		Date:          now.AddDate(0, 1, 0),
@@ -173,19 +173,19 @@ func main() {
 		Category:      "交通",
 		PaymentMethod: "信用卡",
 	}
-	db.Create(&txnTrip)
+	db.Create(&txnSample)
 
 	// Splits: Antigravity paid for everyone, split 3 ways
 	splits := []models.TransactionSplit{
-		{ID: uuid.New(), TransactionID: txnTripID, Name: "Antigravity", Amount: decimal.NewFromInt(9000), IsPayer: true, MemberID: &memberDev.ID},
-		{ID: uuid.New(), TransactionID: txnTripID, Name: "Antigravity", Amount: decimal.NewFromInt(3000), IsPayer: false, MemberID: &memberDev.ID},
-		{ID: uuid.New(), TransactionID: txnTripID, Name: "小明", Amount: decimal.NewFromInt(3000), IsPayer: false, MemberID: &memberMing.ID},
-		{ID: uuid.New(), TransactionID: txnTripID, Name: "小美", Amount: decimal.NewFromInt(3000), IsPayer: false, MemberID: &memberMei.ID},
+		{ID: uuid.New(), TransactionID: txnSampleID, Name: "Antigravity", Amount: decimal.NewFromInt(9000), IsPayer: true, MemberID: &memberDev.ID},
+		{ID: uuid.New(), TransactionID: txnSampleID, Name: "Antigravity", Amount: decimal.NewFromInt(3000), IsPayer: false, MemberID: &memberDev.ID},
+		{ID: uuid.New(), TransactionID: txnSampleID, Name: "小明", Amount: decimal.NewFromInt(3000), IsPayer: false, MemberID: &memberMing.ID},
+		{ID: uuid.New(), TransactionID: txnSampleID, Name: "小美", Amount: decimal.NewFromInt(3000), IsPayer: false, MemberID: &memberMei.ID},
 	}
 	for _, s := range splits {
 		db.Create(&s)
 	}
-	fmt.Println("✓ Created trip transaction with 3-way split")
+	fmt.Println("✓ Created sample transaction with 3-way split")
 
 	fmt.Println("\n🎉 Seed completed successfully!")
 	fmt.Println("   Login User: dev")

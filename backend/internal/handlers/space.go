@@ -58,7 +58,7 @@ func toJSON(v interface{}) datatypes.JSON {
 	return datatypes.JSON(bytes)
 }
 
-// List user's spaces (ledgers)
+// List user's spaces
 func (h *SpaceHandler) List(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 	spaceType := c.Query("type")
@@ -155,13 +155,13 @@ func (h *SpaceHandler) Create(c *gin.Context) {
 
 // Get a single space
 func (h *SpaceHandler) Get(c *gin.Context) {
-	space, _ := c.Get("ledger") // Using existing middleware's key for now
+	space, _ := c.Get("space")
 	c.JSON(http.StatusOK, space)
 }
 
 // Update a space
 func (h *SpaceHandler) Update(c *gin.Context) {
-	spaceVal, _ := c.Get("ledger")
+	spaceVal, _ := c.Get("space")
 	space := spaceVal.(*models.Ledger)
 
 	var req UpdateSpaceRequest
@@ -214,7 +214,7 @@ func (h *SpaceHandler) Update(c *gin.Context) {
 
 // Delete a space
 func (h *SpaceHandler) Delete(c *gin.Context) {
-	spaceVal, _ := c.Get("ledger")
+	spaceVal, _ := c.Get("space")
 	space := spaceVal.(*models.Ledger)
 
 	if err := h.db.Delete(space).Error; err != nil {

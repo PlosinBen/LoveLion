@@ -44,11 +44,11 @@ func main() {
 		}
 
 		// Sharing routes (Public Info)
-		sharingHandler := handlers.NewLedgerSharingHandler(db)
+		sharingHandler := handlers.NewSpaceSharingHandler(db)
 		api.GET("/invites/:token", sharingHandler.GetInviteInfo)
-		api.POST("/invites/:token/join", middleware.AuthRequiredWithDB(cfg.JWTSecret, db), sharingHandler.JoinLedger)
+		api.POST("/invites/:token/join", middleware.AuthRequiredWithDB(cfg.JWTSecret, db), sharingHandler.JoinSpace)
 
-		// Unified Space (Ledger) routes
+		// Unified Space routes
 		spaces := api.Group("/spaces")
 		spaces.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db))
 		{
@@ -58,13 +58,13 @@ func main() {
 
 			// Single space operations
 			spaceGroup := spaces.Group("/:id")
-			spaceGroup.Use(middleware.LedgerAccess(db))
+			spaceGroup.Use(middleware.SpaceAccess(db))
 			{
 				spaceGroup.GET("", spaceHandler.Get)
 				
 				// Owner only operations
 				ownerGroup := spaceGroup.Group("")
-				ownerGroup.Use(middleware.LedgerOwnerOnly())
+				ownerGroup.Use(middleware.SpaceOwnerOnly())
 				{
 					ownerGroup.PUT("", spaceHandler.Update)
 					ownerGroup.PATCH("", spaceHandler.Update) // Add PATCH support
@@ -102,68 +102,6 @@ func main() {
 				spaceGroup.PUT("/transactions/:txn_id", transactionHandler.Update)
 				spaceGroup.DELETE("/transactions/:txn_id", transactionHandler.Delete)
 			}
-		}
-
-		// Backward compatibility: Aliasing /ledgers and /trips to /spaces
-		ledgerHandler := handlers.NewSpaceHandler(db)
-		ledgers := api.Group("/ledgers")
-		ledgers.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db))
-		{
-			ledgers.GET("", ledgerHandler.List)
-			ledgers.POST("", ledgerHandler.Create)
-			
-			ledgerGroup := ledgers.Group("/:id")
-			ledgerGroup.Use(middleware.LedgerAccess(db))
-			{
-				ledgerGroup.GET("", ledgerHandler.Get)
-				ownerGroup := ledgerGroup.Group("")
-				ownerGroup.Use(middleware.LedgerOwnerOnly())
-				{
-					ownerGroup.PUT("", ledgerHandler.Update)
-					ownerGroup.PATCH("", ledgerHandler.Update)
-					ownerGroup.DELETE("", ledgerHandler.Delete)
-					ownerGroup.POST("/invites", sharingHandler.CreateInvite)
-					ownerGroup.GET("/invites", sharingHandler.ListInvites)
-					ownerGroup.DELETE("/invites/:invite_id", sharingHandler.RevokeInvite)
-				}
-				ledgerGroup.GET("/members", sharingHandler.ListMembers)
-				ledgerGroup.PATCH("/members/:user_id", sharingHandler.UpdateMemberAlias)
-				ledgerGroup.DELETE("/members/:user_id", sharingHandler.RemoveMember)
-
-				transactionHandler := handlers.NewTransactionHandler(db)
-				ledgerGroup.GET("/transactions", transactionHandler.List)
-				ledgerGroup.POST("/transactions", transactionHandler.Create)
-				ledgerGroup.GET("/transactions/:txn_id", transactionHandler.Get)
-				ledgerGroup.PUT("/transactions/:txn_id", transactionHandler.Update)
-				ledgerGroup.DELETE("/transactions/:txn_id", transactionHandler.Delete)
-			}
-		}
-
-		trips := api.Group("/trips")
-		trips.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db))
-		{
-			// For List, we can filter by type=trip automatically in the handler or here
-			// Let's use the SpaceHandler's List and rely on query params from frontend if they update, 
-			// or we could wrap it. For compatibility, we just map them.
-			trips.GET("", ledgerHandler.List) 
-			trips.POST("", ledgerHandler.Create)
-			trips.GET("/:id", ledgerHandler.Get)
-			trips.PUT("/:id", ledgerHandler.Update)
-			trips.DELETE("/:id", ledgerHandler.Delete)
-			
-			// For trips, members and comparisons are now under the same ID
-			comparisonHandler := handlers.NewComparisonHandler(db)
-			trips.GET("/:id/members", sharingHandler.ListMembers)
-			trips.GET("/:id/stores", comparisonHandler.ListStores)
-			trips.POST("/:id/stores", comparisonHandler.CreateStore)
-			trips.GET("/:id/stores/:store_id", comparisonHandler.GetStore)
-			trips.PUT("/:id/stores/:store_id", comparisonHandler.UpdateStore)
-			trips.DELETE("/:id/stores/:store_id", comparisonHandler.DeleteStore)
-			trips.GET("/:id/products", comparisonHandler.ListAllProducts)
-			trips.POST("/:id/stores/:store_id/products", comparisonHandler.CreateProduct)
-			trips.GET("/:id/stores/:store_id/products/:product_id", comparisonHandler.GetProduct)
-			trips.PUT("/:id/stores/:store_id/products/:product_id", comparisonHandler.UpdateProduct)
-			trips.DELETE("/:id/stores/:store_id/products/:product_id", comparisonHandler.DeleteProduct)
 		}
 
 		// Image routes
