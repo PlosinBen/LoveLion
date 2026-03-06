@@ -123,11 +123,11 @@
                       
                       <!-- Product Quick List -->
                       <div class="flex flex-col gap-2">
-                          <div v-for="p in store.products.slice(0, 3)" :key="p.id" class="flex justify-between text-sm py-1 border-b border-neutral-800/30 last:border-0">
+                          <div v-for="p in (store.products || []).slice(0, 3)" :key="p.id" class="flex justify-between text-sm py-1 border-b border-neutral-800/30 last:border-0">
                               <span class="text-neutral-400">{{ p.name }}</span>
                               <span class="text-white font-medium">{{ p.currency }} {{ formatAmount(p.price) }}</span>
                           </div>
-                          <p v-if="store.products.length > 3" class="text-[10px] text-center text-neutral-600 font-bold uppercase tracking-widest mt-1">還有 {{ store.products.length - 3 }} 個項目</p>
+                          <p v-if="(store.products || []).length > 3" class="text-[10px] text-center text-neutral-600 font-bold uppercase tracking-widest mt-1">還有 {{ (store.products || []).length - 3 }} 個項目</p>
                       </div>
                   </div>
                   
@@ -141,8 +141,8 @@
           <div v-else-if="activeTab === 'stats'" class="animate-in fade-in slide-in-from-bottom-2 duration-500 pb-24">
               <TripStats 
                   :transactions="transactions" 
-                  :members="space.members" 
-                  :base-currency="space.base_currency"
+                  :members="members" 
+                  :base-currency="space?.base_currency || 'TWD'"
               />
           </div>
 
@@ -219,6 +219,7 @@ const { isAuthenticated, initAuth } = useAuth()
 const space = ref<any>(null)
 const transactions = ref<any[]>([])
 const stores = ref<any[]>([])
+const members = ref<any[]>([])
 const loading = ref(true)
 const activeTab = ref('ledger')
 
@@ -290,16 +291,18 @@ const getCategoryIcon = (category: string) => {
 
 const fetchData = async () => {
   try {
-    // Fetch Space Details
-    space.value = await api.get<any>(`/api/spaces/${route.params.id}`)
-    
-    // Fetch Transactions
-    const txns = await api.get<any[]>(`/api/spaces/${route.params.id}/transactions`)
-    transactions.value = txns
+    // Parallel fetch for speed
+    const [spaceData, txns, storesData, membersData] = await Promise.all([
+      api.get<any>(`/api/spaces/${route.params.id}`),
+      api.get<any[]>(`/api/spaces/${route.params.id}/transactions`),
+      api.get<any[]>(`/api/spaces/${route.params.id}/stores`),
+      api.get<any[]>(`/api/spaces/${route.params.id}/members`)
+    ])
 
-    // Fetch Comparison Stores
-    const storesData = await api.get<any[]>(`/api/spaces/${route.params.id}/stores`)
+    space.value = spaceData
+    transactions.value = txns
     stores.value = storesData
+    members.value = membersData
   } catch (e) {
     console.error('Failed to fetch space data:', e)
     router.push('/')

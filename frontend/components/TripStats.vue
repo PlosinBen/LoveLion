@@ -25,9 +25,9 @@
                      <!-- Left: Name -->
                      <div class="flex items-center gap-3">
                          <div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-sm font-bold text-neutral-400 border border-neutral-700">
-                             {{ member.name.charAt(0) }}
+                             {{ (member.name || '?').charAt(0) }}
                          </div>
-                         <span class="font-bold text-base">{{ member.name }}</span>
+                         <span class="font-bold text-base">{{ member.name || '未知使用者' }}</span>
                      </div>
 
                      <!-- Right: Amounts -->
@@ -151,12 +151,14 @@ const calculateStats = () => {
 
     // Init Members
     props.members?.forEach(m => {
-        balances[m.id || m.name] = {
-            name: m.name,
+        const name = m.alias || m.user?.display_name || m.name || '未知使用者'
+        const id = m.id || m.user_id || name
+        balances[id] = {
+            name: name,
             baseAmount: 0,
             foreign: {}
         }
-        spenderMap[m.name] = 0
+        spenderMap[name] = 0
     })
 
     props.transactions.forEach(txn => {
@@ -166,10 +168,10 @@ const calculateStats = () => {
         const isSameCurrency = txn.currency === baseCurrency
         
         if (isSameCurrency) {
-            baseAmountForStats = parseFloat(txn.total_amount)
+            baseAmountForStats = parseFloat(txn.total_amount) || 0
         } else {
              // If Billing Amount exists, use it.
-             const billing = parseFloat(txn.billing_amount)
+             const billing = parseFloat(txn.billing_amount) || 0
              if (billing > 0) {
                  baseAmountForStats = billing
              } else {
@@ -183,7 +185,7 @@ const calculateStats = () => {
         catMap[cat] = (catMap[cat] || 0) + baseAmountForStats
 
         // 2. Settlement (Payables/Receivables)
-        const txnTotal = parseFloat(txn.total_amount)
+        const txnTotal = parseFloat(txn.total_amount) || 0
         if (txnTotal === 0) return 
 
         let rate = 0
@@ -195,7 +197,10 @@ const calculateStats = () => {
         
         const isUnconverted = (rate === 0 && !isSameCurrency)
 
-        const processFlow = (memberId: string | undefined, memberName: string, amount: number, isPayer: boolean) => {
+        const processFlow = (memberId: string | undefined, memberName: string, amountStr: any, isPayer: boolean) => {
+             const amount = parseFloat(amountStr) || 0
+             if (amount === 0) return
+
              let balanceEntry = null
              if (memberId && balances[memberId]) {
                  balanceEntry = balances[memberId]
@@ -217,7 +222,7 @@ const calculateStats = () => {
 
              // Update Settlement
              if (isUnconverted) {
-                 const cur = txn.currency
+                 const cur = txn.currency || '???'
                  const val = amount * sign
                  balanceEntry.foreign[cur] = (balanceEntry.foreign[cur] || 0) + val
              } else {
@@ -228,7 +233,7 @@ const calculateStats = () => {
 
         if (txn.splits && txn.splits.length > 0) {
             txn.splits.forEach((split: any) => {
-                processFlow(split.member_id, split.name, parseFloat(split.amount), split.is_payer)
+                processFlow(split.member_id, split.name, split.amount, split.is_payer)
             })
         } else {
             // No splits? Assume Payer paid, Payer consumed
