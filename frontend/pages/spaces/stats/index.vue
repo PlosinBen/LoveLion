@@ -1,70 +1,79 @@
-﻿<template>
-  <div class="flex flex-col">
+<template>
+  <div class="flex flex-col min-h-screen bg-neutral-900 text-neutral-50 pb-24">
     <SpaceHeader
-      title="?亙虜蝯梯?"
-      icon="mdi:chart-bar"
+      title="統計分析"
+      :show-back="false"
+      class="pt-0 px-2"
     />
 
     <div v-if="loading" class="flex justify-center items-center py-20 text-neutral-400">
-        <Icon icon="eos-icons:loading" class="text-3xl animate-spin" />
+        <Icon icon="mdi:loading" class="text-4xl animate-spin" />
     </div>
 
-    <div v-else class="flex flex-col gap-6 px-4">
+    <div v-else class="flex flex-col gap-8 p-4 pt-0 animate-in fade-in duration-500">
         
-        <!-- Total Spending Card -->
-        <div class="bg-neutral-800 rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-br from-green-500/10 to-teal-500/10 z-0"></div>
+        <!-- Summary Header -->
+        <div class="bg-neutral-900 rounded-3xl border border-neutral-800/60 p-8 flex flex-col items-center justify-center relative overflow-hidden shadow-sm">
+            <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 z-0"></div>
             <div class="relative z-10 text-center">
-                <span class="text-neutral-400 text-sm mb-1 block">?祆?蝮賣??({{ currentLedger?.base_currency || 'TWD' }})</span>
-                <div class="text-4xl font-bold text-white tracking-tight">
-                    <span class="text-2xl text-neutral-500 mr-1">$</span>
+                <span class="text-neutral-500 text-[10px] font-black uppercase tracking-[0.2em] mb-2 block">當前空間總支出</span>
+                <div class="text-4xl font-black text-white tracking-tighter">
+                    <span class="text-lg text-neutral-600 mr-1 font-bold">{{ currentSpace?.base_currency || 'TWD' }}</span>
                     {{ formatNumber(totalSpent) }}
                 </div>
             </div>
         </div>
 
-        <!-- Weekly Activity (Bar Chart Mock) -->
-        <div>
-            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                <Icon icon="mdi:calendar-week" class="text-green-400" />
-                瘥梯隅??            </h2>
-            <div class="flex justify-between items-end h-32 px-2 gap-2">
-                <div v-for="(val, index) in weeklyData" :key="index" class="flex-1 flex flex-col items-center gap-2 group">
-                    <div class="w-full bg-neutral-800 rounded-t-lg relative group-hover:bg-neutral-700 transition-colors overflow-hidden">
-                        <div class="absolute bottom-0 w-full bg-green-500/50 rounded-t-lg group-hover:bg-green-500 transition-all" :style="{ height: val + '%' }"></div>
-                    </div>
-                    <span class="text-xs text-neutral-500">W{{ index + 1 }}</span>
-                </div>
-            </div>
-        </div>
-
         <!-- Category Breakdown -->
-        <div>
-            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                <Icon icon="mdi:shape-outline" class="text-green-400" />
-                ???臬
-            </h2>
-            <div class="flex flex-col gap-3 pb-24">
-                <div v-for="cat in categories" :key="cat.name" class="bg-neutral-900 rounded-xl p-3 border border-neutral-800">
-                     <div class="flex justify-between items-center mb-2">
-                         <div class="flex items-center gap-2">
-                             <div class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-lg">
-                                 {{ cat.icon || '?' }}
+        <section class="flex flex-col gap-4">
+            <div class="flex items-center justify-between px-1">
+                <h2 class="text-xs font-black text-neutral-500 uppercase tracking-widest">支出類別佔比</h2>
+                <Icon icon="mdi:chart-donut" class="text-indigo-500 text-xl" />
+            </div>
+            
+            <div v-if="categories.length === 0" class="text-center py-16 bg-neutral-900 rounded-3xl border border-neutral-800/50 border-dashed">
+                <p class="text-neutral-600 text-sm font-medium">尚無交易數據</p>
+            </div>
+
+            <div v-else class="flex flex-col gap-3">
+                <div v-for="cat in categories" :key="cat.name" class="bg-neutral-900 rounded-3xl p-5 border border-neutral-800/60 hover:border-indigo-500/30 transition-colors shadow-sm">
+                     <div class="flex justify-between items-center mb-4">
+                         <div class="flex items-center gap-3">
+                             <div class="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center text-xl text-indigo-400">
+                                 <Icon :icon="cat.icon" />
                              </div>
-                             <span class="font-medium text-sm">{{ cat.name }}</span>
+                             <div class="flex flex-col">
+                                 <span class="font-bold text-neutral-100 text-sm">{{ cat.name }}</span>
+                                 <span class="text-neutral-500 text-[10px] font-black uppercase tracking-wider">{{ cat.percentage }}%</span>
+                             </div>
                          </div>
-                         <div class="text-right">
-                             <div class="font-bold text-sm">{{ formatNumber(cat.amount) }}</div>
-                             <div class="text-xs text-neutral-500">{{ cat.percentage }}%</div>
+                         <div class="text-right flex flex-col">
+                             <span class="font-black text-white tracking-tight">{{ formatNumber(cat.amount) }}</span>
+                             <span class="text-[10px] text-neutral-600 font-bold uppercase">{{ currentSpace?.base_currency }}</span>
                          </div>
                      </div>
                      <!-- Progress Bar -->
                      <div class="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-                         <div class="h-full bg-green-500 rounded-full transition-all duration-1000" :style="{ width: cat.percentage + '%' }"></div>
+                         <div class="h-full bg-indigo-500 rounded-full transition-all duration-1000" :style="{ width: cat.percentage + '%' }"></div>
                      </div>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- Weekly Activity (Bar Chart Mock) -->
+        <section class="flex flex-col gap-4">
+            <h2 class="text-xs font-black text-neutral-500 uppercase tracking-widest px-1">支出週趨勢</h2>
+            <div class="bg-neutral-900 rounded-3xl border border-neutral-800/60 p-6 shadow-sm">
+                <div class="flex justify-between items-end h-32 px-2 gap-3">
+                    <div v-for="(val, index) in weeklyData" :key="index" class="flex-1 flex flex-col items-center gap-3 group">
+                        <div class="w-full bg-neutral-800/50 rounded-xl relative group-hover:bg-neutral-800 transition-colors overflow-hidden h-full">
+                            <div class="absolute bottom-0 w-full bg-indigo-500/40 rounded-xl group-hover:bg-indigo-500 transition-all" :style="{ height: val + '%' }"></div>
+                        </div>
+                        <span class="text-[10px] font-black text-neutral-600 uppercase tracking-widest">W{{ index + 1 }}</span>
+                    </div>
+                </div>
+            </div>
+        </section>
 
     </div>
   </div>
@@ -75,76 +84,79 @@ import { ref, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useSpace } from '~/composables/useSpace'
 import { useApi } from '~/composables/useApi'
+import SpaceHeader from '~/components/SpaceHeader.vue'
 
 definePageMeta({
   layout: 'default'
 })
 
-const router = useRouter()
 const api = useApi()
-const { currentSpace: currentLedger, currentSpaceId: currentLedgerId, fetchSpaces: fetchLedgers } = useSpace()
+const { currentSpace, currentSpaceId, fetchSpaces } = useSpace()
 
 const loading = ref(true)
 const totalSpent = ref(0)
 const categories = ref<any[]>([])
-const weeklyData = ref<number[]>([])
+const weeklyData = ref<number[]>([30, 60, 45, 80]) // Mock data for trend
 
 const formatNumber = (num: number) => {
-    return num.toLocaleString()
+    return num.toLocaleString('zh-TW', { maximumFractionDigits: 0 })
 }
 
-// Watch for ledger selection changes to reload stats
-watch(currentLedgerId, () => {
-  if (currentLedgerId.value) {
+const getCategoryIcon = (category: string) => {
+  const icons: Record<string, string> = {
+    '餐飲': 'mdi:food',
+    '交通': 'mdi:train-car',
+    '購物': 'mdi:shopping',
+    '娛樂': 'mdi:movie',
+    '生活': 'mdi:home',
+    '其他': 'mdi:receipt'
+  }
+  return icons[category] || 'mdi:receipt'
+}
+
+watch(currentSpaceId, () => {
+  if (currentSpaceId.value) {
     fetchData()
   }
 })
 
-// Generator for visualization based on transactions
 const processStats = (transactions: any[]) => {
-    // Basic calculation for now
     let total = 0
     const catMap: Record<string, number> = {}
     
     transactions.forEach(t => {
-        const amount = Number(t.billing_amount || t.total_amount)
+        const amount = Number(t.billing_amount && Number(t.billing_amount) > 0 ? t.billing_amount : t.total_amount)
         total += amount
-        catMap[t.category || '?芸?憿?] = (catMap[t.category || '?芸?憿?] || 0) + amount
+        const cat = t.category || '其他'
+        catMap[cat] = (catMap[cat] || 0) + amount
     })
 
     totalSpent.value = total
     
-    const catIcons: Record<string, string> = {
-        '擗ㄡ': '??', '鈭日?: '??', '鞈潛': '??儭?, '?暑': '??', '憡?': '?', '憌': '??'
-    }
-
     categories.value = Object.entries(catMap).map(([name, amount]) => ({
         name,
         amount,
         percentage: total > 0 ? Math.round((amount / total) * 100) : 0,
-        icon: catIcons[name] || '?'
+        icon: getCategoryIcon(name)
     })).sort((a,b) => b.amount - a.amount)
-
-    // Mock weekly spending relative percentage
-    weeklyData.value = [30, 60, 45, 80]
 }
 
 const fetchData = async () => {
-    if (!currentLedger.value) return
+    if (!currentSpace.value) return
 
     loading.value = true
     try {
-        const txns = await api.get<any[]>(`/api/spaces/${currentLedger.value.id}/transactions`)
-        processStats(txns)
+        const txns = await api.get<any[]>(`/api/spaces/${currentSpace.value.id}/transactions`)
+        processStats(txns || [])
     } catch (e) {
-        console.error(e)
+        console.error('Failed to fetch stats:', e)
     } finally {
         loading.value = false
     }
 }
 
 onMounted(async () => {
-    await fetchLedgers()
+    await fetchSpaces()
     fetchData()
 })
 </script>

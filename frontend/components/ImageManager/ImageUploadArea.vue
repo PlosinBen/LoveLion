@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer bg-gray-50" @click="$emit('trigger')">
     <input 
       type="file" 

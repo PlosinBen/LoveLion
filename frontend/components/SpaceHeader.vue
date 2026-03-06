@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="px-2 pt-0 pb-4 flex items-center gap-3">
     <!-- Back Button -->
     <button 

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <canvas ref="canvasRef" :width="width" :height="height" class="w-full h-full object-cover"></canvas>
 </template>
 

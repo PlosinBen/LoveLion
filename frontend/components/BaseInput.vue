@@ -1,6 +1,6 @@
-﻿<template>
-  <div :class="{'flex flex-col gap-2': label}">
-    <label v-if="label" class="block text-xs text-neutral-400">{{ label }}</label>
+<template>
+  <div class="flex flex-col gap-2">
+    <label v-if="label" class="text-[10px] font-black text-neutral-500 uppercase tracking-widest px-1">{{ label }}</label>
     <input
       :value="modelValue"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
@@ -11,7 +11,7 @@
       :min="min"
       :max="max"
       :step="step"
-      class="w-full cursor-pointer px-2 py-1.5 rounded border border-neutral-800 bg-neutral-800 text-white text-base focus:outline-none focus:border-neutral-400 placeholder-neutral-400 disabled:opacity-50 disabled:cursor-not-allowed"
+      class="w-full bg-neutral-900 border border-neutral-800 text-white py-4 px-5 rounded-2xl outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/5 transition-all placeholder-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
       :class="inputClass"
       v-bind="$attrs"
     />
@@ -19,12 +19,10 @@
 </template>
 
 <script setup lang="ts">
-
-
 defineProps<{
   modelValue: string | number | null | undefined
   label?: string
-  type?: 'text' | 'password' | 'email' | 'number' | 'date' | 'tel' | 'datetime-local' | 'time'
+  type?: string
   placeholder?: string
   required?: boolean
   disabled?: boolean
@@ -38,4 +36,3 @@ defineEmits<{
   (e: 'update:modelValue', value: string): void
 }>()
 </script>
-

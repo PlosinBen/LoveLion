@@ -1,5 +1,5 @@
-﻿<template>
-  <div class="flex flex-col gap-10">
+<template>
+  <div class="flex flex-col gap-10 pb-24">
     <!-- Status (Optional, minimized) -->
     <StatusCard
       v-if="backendStatus !== 'online'"
@@ -12,7 +12,7 @@
       <div class="flex items-center justify-between mb-4 px-1">
         <h2 class="text-xl font-black text-white tracking-tight flex items-center gap-2">
           <Icon icon="mdi:pin" class="text-indigo-500" />
-          ?阡?蝛粹?
+          焦點空間
         </h2>
       </div>
       
@@ -30,9 +30,9 @@
     <!-- All Spaces Section -->
     <section>
       <div class="flex items-center justify-between mb-4 px-1">
-        <h2 class="text-xl font-black text-white tracking-tight">??征??/h2>
+        <h2 class="text-xl font-black text-white tracking-tight">所有空間</h2>
         <NuxtLink to="/spaces/add-new" class="text-sm font-bold text-indigo-400 no-underline hover:text-indigo-300">
-          + ?啣?
+          + 新增
         </NuxtLink>
       </div>
 
@@ -42,8 +42,8 @@
 
       <div v-else-if="allSpaces.length === 0" class="py-12 flex flex-col items-center justify-center bg-neutral-900 rounded-3xl border border-neutral-800 border-dashed">
         <Icon icon="mdi:folder-open-outline" class="text-5xl text-neutral-700 mb-4" />
-        <p class="text-neutral-500 text-sm font-medium">?桀????遙雿征??/p>
-        <NuxtLink to="/spaces/add-new" class="mt-4 px-6 py-2 bg-indigo-500 text-white rounded-full font-bold text-sm no-underline">撱箇?蝚砌??征??/NuxtLink>
+        <p class="text-neutral-500 text-sm font-medium">目前還沒有任何空間</p>
+        <NuxtLink to="/spaces/add-new" class="mt-4 px-6 py-2 bg-indigo-500 text-white rounded-full font-bold text-sm no-underline shadow-lg shadow-indigo-500/20 active:scale-95 transition-transform">建立第一個空間</NuxtLink>
       </div>
 
       <div v-else class="flex flex-col gap-3">
@@ -62,13 +62,13 @@
        <button @click="router.push('/settings')" class="flex items-center justify-between p-6 rounded-3xl bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white transition-all border-0 cursor-pointer active:scale-95">
           <div class="flex items-center gap-4">
             <Icon icon="mdi:cog-outline" class="text-2xl" />
-            <span class="font-bold">蝟餌絞閮剖?</span>
+            <span class="font-bold">系統設定</span>
           </div>
           <Icon icon="mdi:chevron-right" class="text-xl" />
        </button>
        
        <button @click="handleLogout" class="flex items-center justify-center gap-2 p-4 text-neutral-600 hover:text-red-500 text-sm font-bold border-0 bg-transparent cursor-pointer transition-colors">
-          <Icon icon="mdi:logout" /> ?餃撣唾?
+          <Icon icon="mdi:logout" /> 登出帳號
        </button>
     </div>
   </div>
@@ -94,9 +94,9 @@ const backendStatus = ref<'online' | 'offline' | 'checking'>('checking')
 
 const statusMessage = computed(() => {
   switch (backendStatus.value) {
-    case 'online': return '敺垢??甇?虜??'
-    case 'offline': return '?⊥???敺垢??'
-    default: return '甇?瑼Ｘ???...'
+    case 'online': return '後端服務正常運行'
+    case 'offline': return '無法連接後端服務'
+    default: return '正在檢查連線...'
   }
 })
 
@@ -125,7 +125,3 @@ onMounted(async () => {
   fetchSpaces()
 })
 </script>
-
-<style scoped>
-/* Unified simple style */
-</style>

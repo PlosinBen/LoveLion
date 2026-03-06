@@ -1,16 +1,12 @@
 <template>
-  <div class="edit-transaction-page min-h-screen bg-neutral-900 text-neutral-50">
+  <div class="add-transaction-page min-h-screen bg-neutral-900 text-neutral-50">
     <SpaceHeader 
-      title="編輯交易" 
+      title="新增交易" 
       :show-back="true"
       class="pt-0 px-2"
     />
 
-    <div v-if="loading" class="p-20 flex justify-center items-center text-neutral-500">
-        <Icon icon="mdi:loading" class="text-4xl animate-spin" />
-    </div>
-
-    <div v-else class="p-4 pt-0">
+    <div class="p-4 pt-0">
       <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
         <!-- Date & Time -->
         <div class="flex flex-col gap-2">
@@ -54,7 +50,7 @@
           </label>
           
           <div class="flex flex-col gap-3">
-            <div v-for="(item, index) in form.items" :key="index" class="bg-neutral-900 rounded-3xl p-5 border border-neutral-800/60 flex flex-col gap-4 relative">
+            <div v-for="(item, index) in form.items" :key="index" class="bg-neutral-900 rounded-3xl p-5 border border-neutral-800 flex flex-col gap-4 relative">
               <BaseInput
                 v-model="item.name"
                 placeholder="項目名稱"
@@ -79,7 +75,7 @@
                   v-if="form.items.length > 1"
                   type="button" 
                   @click="removeItem(index)" 
-                  class="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center border-0 cursor-pointer hover:bg-red-500/20 active:scale-90 transition-transform"
+                  class="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center border-0 cursor-pointer hover:bg-red-500/20"
                 >
                   <Icon icon="mdi:close" />
                 </button>
@@ -92,7 +88,7 @@
           </button>
         </div>
 
-        <!-- Foreign Currency Settlement (Conditional) -->
+        <!-- Foreign Currency (Conditional) -->
         <div v-if="form.currency !== baseCurrency" class="bg-indigo-500/5 rounded-3xl p-6 border border-indigo-500/10 flex flex-col gap-5">
           <div class="flex justify-between items-center">
             <h3 class="font-black text-sm text-indigo-400 uppercase tracking-widest">外幣結算</h3>
@@ -138,24 +134,14 @@
           />
         </div>
 
-        <!-- Actions -->
-        <div class="flex flex-col gap-3 mt-4">
-          <button 
-            type="submit" 
-            class="w-full py-4 rounded-2xl font-black bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-[0.98] disabled:opacity-50 border-0 cursor-pointer shadow-lg shadow-indigo-500/20" 
-            :disabled="submitting"
-          >
-            {{ submitting ? '儲存中...' : '儲存變更' }}
-          </button>
-          
-          <button 
-            type="button"
-            @click="handleDelete"
-            class="w-full py-4 rounded-2xl font-black bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all active:scale-[0.98] border-0 cursor-pointer"
-          >
-            刪除此筆交易
-          </button>
-        </div>
+        <!-- Submit -->
+        <button 
+          type="submit" 
+          class="w-full mt-4 py-4 rounded-2xl font-black bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-[0.98] disabled:opacity-50 border-0 cursor-pointer shadow-lg shadow-indigo-500/20" 
+          :disabled="submitting"
+        >
+          {{ submitting ? '儲存中...' : '儲存交易' }}
+        </button>
       </form>
     </div>
   </div>
@@ -196,13 +182,12 @@ const availableCurrencies = [
   { label: 'EUR', value: 'EUR' }
 ]
 
-const loading = ref(true)
-const submitting = ref(false)
 const baseCurrency = ref('TWD')
+const submitting = ref(false)
 
 const form = ref({
   date: new Date(),
-  category: '',
+  category: '其他',
   note: '',
   items: [{ name: '', unit_price: 0, quantity: 1 }],
   currency: 'TWD',
@@ -248,34 +233,12 @@ const removeItem = (index: number) => {
   form.value.items.splice(index, 1)
 }
 
-const fetchData = async () => {
-  try {
-    const [txn, space] = await Promise.all([
-      api.get<any>(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`),
-      api.get<any>(`/api/spaces/${route.params.id}`)
-    ])
-    
-    baseCurrency.value = space.base_currency || 'TWD'
-    
-    form.value = {
-      date: new Date(txn.date),
-      category: txn.category,
-      note: txn.note,
-      items: txn.items.length > 0 ? txn.items : [{ name: '', unit_price: 0, quantity: 1 }],
-      currency: txn.currency,
-      manual_rate: txn.handling_fee === 0,
-      exchange_rate: txn.exchange_rate,
-      billing_amount: txn.billing_amount,
-      handling_fee: txn.handling_fee || 0
-    }
-  } catch (e) {
-    console.error('Failed to fetch transaction:', e)
-  } finally {
-    loading.value = false
-  }
-}
-
 const handleSubmit = async () => {
+  if (!form.value.items.some(item => item.name && Number(item.unit_price) > 0)) {
+    alert('請至少填寫一個項目名稱與金額')
+    return
+  }
+  
   submitting.value = true
   try {
     const payload = {
@@ -289,32 +252,28 @@ const handleSubmit = async () => {
       total_amount: totalAmount.value
     }
 
-    await api.put(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`, payload)
+    await api.post(`/api/spaces/${route.params.id}/transactions`, payload)
     router.push(`/spaces/${route.params.id}`)
   } catch (e: any) {
-    alert(e.message || '更新失敗')
+    alert(e.message || '儲存失敗')
   } finally {
     submitting.value = false
   }
 }
 
-const handleDelete = async () => {
-  if (!confirm('確定要刪除這筆交易嗎？')) return
-  
-  try {
-    await api.delete(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`)
-    router.push(`/spaces/${route.params.id}`)
-  } catch (e: any) {
-    alert(e.message || '刪除失敗')
-  }
-}
-
-onMounted(() => {
+onMounted(async () => {
   initAuth()
   if (!isAuthenticated.value) {
     router.push('/login')
     return
   }
-  fetchData()
+  
+  try {
+    const space = await api.get<any>(`/api/spaces/${route.params.id}`)
+    baseCurrency.value = space.base_currency || 'TWD'
+    form.value.currency = baseCurrency.value
+  } catch (e) {
+    console.error('Failed to fetch space currency', e)
+  }
 })
 </script>

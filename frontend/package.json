@@ -21,6 +21,6 @@
   "devDependencies": {
     "@nuxtjs/tailwindcss": "^6.14.0",
     "typescript": "^5.9.0",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.18"
   }
 }

@@ -1,57 +1,88 @@
-﻿<template>
-  <div class="flex flex-col justify-center py-6">
-    <!-- Header is provided by layout 'default' -->
+<template>
+  <div class="flex flex-col justify-center py-6 min-h-[80vh]">
     <div class="text-center mb-8">
-      <!-- Removed duplicate logo -->
-      <p class="text-neutral-400">?犖閮董 & ???拇?</p>
+      <p class="text-neutral-400 font-medium">個人記帳 & 旅遊專案助手</p>
     </div>
 
-    <div class="w-full max-w-sm mx-auto bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
+    <div class="w-full max-w-sm mx-auto bg-neutral-900 rounded-3xl p-6 border border-neutral-800 shadow-xl">
       <div v-if="!isRegister">
-        <h2 class="mb-6 text-center text-xl font-semibold">?餃</h2>
+        <h2 class="mb-8 text-center text-2xl font-black text-white tracking-tight">歡迎回來</h2>
 
-        <div class="mb-4">
-          <BaseInput v-model="username" label="撣唾?" placeholder="隢撓?亙董?? />
+        <div class="flex flex-col gap-4">
+          <BaseInput 
+            v-model="username" 
+            label="帳號" 
+            placeholder="請輸入您的帳號" 
+            required
+          />
+
+          <BaseInput 
+            v-model="password" 
+            type="password" 
+            label="密碼" 
+            placeholder="請輸入您的密碼" 
+            required
+          />
         </div>
 
-        <div class="mb-4">
-          <BaseInput v-model="password" type="password" label="撖Ⅳ" placeholder="隢撓?亙?蝣? />
+        <div v-if="error" class="text-red-500 text-xs mt-4 font-bold bg-red-500/10 p-3 rounded-xl border border-red-500/20">
+          {{ error }}
         </div>
 
-        <div v-if="error" class="text-red-500 text-sm mt-2">{{ error }}</div>
-
-        <button @click="handleLogin" class="w-full mt-6 px-6 py-3 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" :disabled="loading">
-          {{ loading ? '?餃銝?..' : '?餃' }}
+        <button 
+          @click="handleLogin" 
+          class="w-full mt-8 py-4 rounded-2xl font-black bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-[0.98] disabled:opacity-50 border-0 cursor-pointer shadow-lg shadow-indigo-500/20" 
+          :disabled="loading"
+        >
+          {{ loading ? '登入中...' : '登入' }}
         </button>
 
-        <p class="text-center mt-4 text-neutral-400">
-          ???董?? <a @click="isRegister = true" class="text-indigo-500 cursor-pointer hover:underline">閮餃?</a>
+        <p class="text-center mt-6 text-neutral-500 text-sm font-medium">
+          還沒有帳號嗎？ <button @click="isRegister = true" class="text-indigo-400 bg-transparent border-0 cursor-pointer font-black hover:underline p-0">立即註冊</button>
         </p>
       </div>
 
       <div v-else>
-        <h2 class="mb-6 text-center text-xl font-semibold">閮餃?</h2>
+        <h2 class="mb-8 text-center text-2xl font-black text-white tracking-tight">加入 LoveLion</h2>
 
-        <div class="mb-4">
-          <BaseInput v-model="username" label="撣唾?" placeholder="隢撓?亙董?? />
+        <div class="flex flex-col gap-4">
+          <BaseInput 
+            v-model="username" 
+            label="帳號" 
+            placeholder="設定登入帳號" 
+            required
+          />
+
+          <BaseInput 
+            v-model="displayName" 
+            label="顯示名稱" 
+            placeholder="大家如何稱呼您" 
+            required
+          />
+
+          <BaseInput 
+            v-model="password" 
+            type="password" 
+            label="密碼" 
+            placeholder="設定登入密碼" 
+            required
+          />
         </div>
 
-        <div class="mb-4">
-          <BaseInput v-model="displayName" label="憿舐內?迂" placeholder="隢撓?仿＊蝷箏?蝔? />
+        <div v-if="error" class="text-red-500 text-xs mt-4 font-bold bg-red-500/10 p-3 rounded-xl border border-red-500/20">
+          {{ error }}
         </div>
 
-        <div class="mb-4">
-          <BaseInput v-model="password" type="password" label="撖Ⅳ" placeholder="隢撓?亙?蝣? />
-        </div>
-
-        <div v-if="error" class="text-red-500 text-sm mt-2">{{ error }}</div>
-
-        <button @click="handleRegister" class="w-full mt-6 px-6 py-3 rounded-xl font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" :disabled="loading">
-          {{ loading ? '閮餃?銝?..' : '閮餃?' }}
+        <button 
+          @click="handleRegister" 
+          class="w-full mt-8 py-4 rounded-2xl font-black bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-[0.98] disabled:opacity-50 border-0 cursor-pointer shadow-lg shadow-indigo-500/20" 
+          :disabled="loading"
+        >
+          {{ loading ? '註冊中...' : '註冊帳號' }}
         </button>
 
-        <p class="text-center mt-4 text-neutral-400">
-          撌脫?撣唾?嚗?<a @click="isRegister = false" class="text-indigo-500 cursor-pointer hover:underline">?餃</a>
+        <p class="text-center mt-6 text-neutral-500 text-sm font-medium">
+          已經有帳號了？ <button @click="isRegister = false" class="text-indigo-400 bg-transparent border-0 cursor-pointer font-black hover:underline p-0">點此登入</button>
         </p>
       </div>
     </div>
@@ -62,10 +93,12 @@
 import { ref } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 
-const router = useRouter()
 definePageMeta({
-  layout: 'default'
+  layout: 'default',
+  hideGlobalNav: true
 })
+
+const router = useRouter()
 const { login, register } = useAuth()
 
 const isRegister = ref(false)
@@ -77,7 +110,7 @@ const error = ref('')
 
 const handleLogin = async () => {
   if (!username.value || !password.value) {
-    error.value = '隢‵撖怠董??撖Ⅳ'
+    error.value = '請填寫帳號與密碼'
     return
   }
 
@@ -88,7 +121,7 @@ const handleLogin = async () => {
     await login(username.value, password.value)
     router.push('/')
   } catch (e: any) {
-    error.value = e.message || '?餃憭望?'
+    error.value = e.message || '登入失敗，請檢查帳號密碼'
   } finally {
     loading.value = false
   }
@@ -96,7 +129,7 @@ const handleLogin = async () => {
 
 const handleRegister = async () => {
   if (!username.value || !password.value || !displayName.value) {
-    error.value = '隢‵撖急???雿?
+    error.value = '請填寫所有欄位'
     return
   }
 
@@ -107,7 +140,7 @@ const handleRegister = async () => {
     await register(username.value, password.value, displayName.value)
     router.push('/')
   } catch (e: any) {
-    error.value = e.message || '閮餃?憭望?'
+    error.value = e.message || '註冊失敗'
   } finally {
     loading.value = false
   }

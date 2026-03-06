@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="flex flex-col gap-3">
     <label class="text-sm text-neutral-400">{{ label }}</label>
     

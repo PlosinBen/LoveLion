@@ -1,42 +1,44 @@
 <template>
-  <div class="join-ledger-page min-h-screen flex flex-col items-center justify-center p-6 bg-neutral-950">
-    <div v-if="loading" class="text-neutral-400 animate-pulse">
-      正在讀取邀請資訊...
+  <div class="join-space-page min-h-screen flex flex-col items-center justify-center p-6 bg-neutral-950 text-neutral-50">
+    <div v-if="loading" class="text-neutral-400 animate-pulse font-bold">
+      正在驗證邀請連結...
     </div>
 
-    <div v-else-if="error" class="bg-neutral-900 p-8 rounded-3xl border border-neutral-800 text-center max-w-sm w-full">
-      <Icon icon="mdi:alert-circle-outline" class="text-6xl text-red-500 mb-4 mx-auto" />
-      <h1 class="text-xl font-bold mb-2">邀請失效</h1>
-      <p class="text-neutral-400 mb-6">{{ error }}</p>
-      <button @click="router.push('/')" class="w-full py-3 rounded-xl bg-neutral-800 font-semibold hover:bg-neutral-700 transition-colors">
-        回首頁
+    <div v-else-if="error" class="bg-neutral-900 p-8 rounded-3xl border border-neutral-800 text-center max-w-sm w-full shadow-2xl">
+      <div class="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+        <Icon icon="mdi:alert-circle-outline" class="text-5xl text-red-500" />
+      </div>
+      <h1 class="text-xl font-black mb-2">邀請無效</h1>
+      <p class="text-neutral-400 mb-8 leading-relaxed">{{ error }}</p>
+      <button @click="router.push('/')" class="w-full py-4 rounded-2xl bg-neutral-800 text-white font-bold hover:bg-neutral-700 transition-all border-0 cursor-pointer">
+        回到首頁
       </button>
     </div>
 
-    <div v-else-if="inviteInfo" class="bg-neutral-900 p-8 rounded-3xl border border-neutral-800 text-center max-w-sm w-full">
+    <div v-else-if="inviteInfo" class="bg-neutral-900 p-8 rounded-3xl border border-neutral-800 text-center max-w-sm w-full shadow-2xl">
       <div class="w-20 h-20 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-        <Icon icon="mdi:account-group-outline" class="text-4xl text-indigo-500" />
+        <Icon icon="mdi:account-group-outline" class="text-5xl text-indigo-500" />
       </div>
       
-      <h1 class="text-xl font-bold mb-1">加入帳本邀請</h1>
-      <p class="text-neutral-400 mb-6">
-        <span class="text-white font-bold">{{ inviteInfo.creator_name }}</span> 邀請您加入
+      <h1 class="text-xl font-black mb-1">受邀加入空間</h1>
+      <p class="text-neutral-400 mb-8 font-medium">
+        <span class="text-white font-black">{{ inviteInfo.creator_name }}</span> 邀請您一同協作
       </p>
 
-      <div class="bg-neutral-800/50 p-4 rounded-2xl mb-8 border border-neutral-800">
-        <div class="text-xs text-neutral-500 mb-1 uppercase tracking-wider">帳本名稱</div>
-        <div class="text-lg font-bold text-indigo-400">{{ inviteInfo.ledger_name }}</div>
+      <div class="bg-neutral-800/50 p-5 rounded-2xl mb-8 border border-neutral-800/50">
+        <div class="text-[10px] text-neutral-500 mb-1 uppercase font-black tracking-[0.2em]">空間名稱</div>
+        <div class="text-xl font-black text-indigo-400">{{ inviteInfo.space_name }}</div>
       </div>
 
       <button 
         @click="handleJoin" 
         :disabled="joining"
-        class="w-full py-4 rounded-2xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50"
+        class="w-full py-4 rounded-2xl bg-indigo-500 text-white font-black hover:bg-indigo-600 transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-indigo-500/20 border-0 cursor-pointer"
       >
-        {{ joining ? '加入中...' : '確認加入' }}
+        {{ joining ? '加入中...' : '接受邀請並加入' }}
       </button>
-      
-      <button @click="router.push('/')" class="mt-4 text-sm text-neutral-500 hover:text-neutral-300 transition-colors">
+
+      <button @click="router.push('/')" class="mt-6 text-sm text-neutral-500 font-bold hover:text-neutral-300 transition-colors bg-transparent border-0 cursor-pointer">
         暫時不要
       </button>
     </div>
@@ -48,6 +50,10 @@ import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+
+definePageMeta({
+  layout: 'empty'
+})
 
 const route = useRoute()
 const router = useRouter()
@@ -72,7 +78,6 @@ const fetchInviteInfo = async () => {
 
 const handleJoin = async () => {
   if (!isAuthenticated.value) {
-    // Save current path to return after login
     localStorage.setItem('redirect_after_login', route.fullPath)
     router.push('/login')
     return
@@ -81,8 +86,7 @@ const handleJoin = async () => {
   joining.value = true
   try {
     await api.post(`/api/invites/${route.params.token}/join`, {})
-    // Redirect to the newly joined ledger
-    router.push('/spaces')
+    router.push('/')
   } catch (e: any) {
     alert(e.message || '加入失敗')
   } finally {

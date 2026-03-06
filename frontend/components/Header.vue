@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <header class="inline-block">
     <NuxtLink to="/" class="inline-block">
       <h1 class="text-3xl font-bold bg-gradient-to-br from-indigo-500 to-purple-500 bg-clip-text text-transparent flex items-center">

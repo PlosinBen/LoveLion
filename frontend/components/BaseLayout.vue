@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="flex flex-col min-h-screen font-sans transition-colors duration-200" :class="[bgClass, textClass]">
     
     <!-- Optional Header Slot -->

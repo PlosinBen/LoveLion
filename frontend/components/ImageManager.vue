@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="image-manager">
     <!-- Image Grid -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4" v-if="images.length > 0 || pendingUploads.length > 0">
