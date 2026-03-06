@@ -78,6 +78,9 @@ export function useApi() {
     const put = <T>(endpoint: string, body: any) =>
         request<T>(endpoint, { method: 'PUT', body: JSON.stringify(body) })
 
+    const patch = <T>(endpoint: string, body: any) =>
+        request<T>(endpoint, { method: 'PATCH', body: JSON.stringify(body) })
+
     const del = <T>(endpoint: string) => request<T>(endpoint, { method: 'DELETE' })
 
     return {
@@ -86,6 +89,7 @@ export function useApi() {
         get,
         post,
         put,
+        patch,
         del,
         upload,
     }
