@@ -257,13 +257,15 @@ const fetchData = async () => {
     
     baseCurrency.value = space.base_currency || 'TWD'
     
+    const itemsData = txn.items || []
+    
     form.value = {
       date: new Date(txn.date),
       category: txn.category,
       note: txn.note,
-      items: txn.items.length > 0 ? txn.items : [{ name: '', unit_price: 0, quantity: 1 }],
+      items: itemsData.length > 0 ? itemsData : [{ name: '', unit_price: 0, quantity: 1 }],
       currency: txn.currency,
-      manual_rate: txn.handling_fee === 0,
+      manual_rate: txn.handling_fee === 0 || !txn.handling_fee,
       exchange_rate: txn.exchange_rate,
       billing_amount: txn.billing_amount,
       handling_fee: txn.handling_fee || 0

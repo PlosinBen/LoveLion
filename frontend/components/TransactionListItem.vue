@@ -1,22 +1,22 @@
 <template>
-  <div class="flex justify-between items-center p-5 rounded-3xl border border-neutral-800/60 bg-neutral-900 hover:bg-neutral-800/50 transition-all cursor-pointer group active:scale-[0.98] shadow-sm">
-    <div class="flex items-center gap-4">
+  <div class="flex justify-between items-center p-4 rounded-2xl border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 transition-colors cursor-pointer group active:scale-95 shadow-sm">
+    <div class="flex items-center gap-3">
       <!-- Category Icon -->
-      <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/10">
-        <Icon :icon="getCategoryIcon(transaction.category)" class="text-2xl text-indigo-400" />
+      <div class="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center text-indigo-500 border border-neutral-700">
+        <Icon :icon="getCategoryIcon(transaction.category)" class="text-xl" />
       </div>
       
       <div class="flex flex-col">
-        <h4 class="text-sm font-bold text-neutral-100 tracking-tight">{{ transaction.category || '其他' }}</h4>
-        <p class="text-[10px] text-neutral-500 font-black uppercase tracking-widest mt-0.5">{{ formatDate(transaction.date) }}</p>
+        <h4 class="text-sm font-semibold text-neutral-100">{{ transaction.title || transaction.category || '未分類' }}</h4>
+        <p class="text-xs text-neutral-500 mt-0.5">{{ formatDate(transaction.date) }}</p>
       </div>
     </div>
 
-    <div class="text-right flex flex-col items-end">
-      <div class="text-[10px] text-neutral-600 font-black uppercase tracking-widest mb-0.5 leading-none">
+    <div class="text-right">
+      <div class="text-[10px] text-neutral-500 uppercase font-bold leading-none mb-1">
         {{ isBaseCurrency ? (baseCurrency || 'TWD') : transaction.currency }}
       </div>
-      <div class="text-lg font-black text-indigo-400 tracking-tighter">
+      <div class="text-lg font-bold text-indigo-500">
         {{ formatAmount(displayAmount) }}
       </div>
     </div>
@@ -53,7 +53,7 @@ const formatDate = (dateStr: string) => {
 
 const formatAmount = (amount: string | number | undefined) => {
   const num = typeof amount === 'string' ? parseFloat(amount) : (amount || 0)
-  return num.toLocaleString('zh-TW', { maximumFractionDigits: 0 })
+  return num.toLocaleString('zh-TW')
 }
 
 const getCategoryIcon = (category?: string) => {

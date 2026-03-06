@@ -1,33 +1,40 @@
 <template>
-  <nav class="fixed bottom-0 left-0 right-0 bg-neutral-900/90 backdrop-blur-xl border-t border-neutral-800 px-6 pt-3 pb-10 z-50 flex justify-around items-center shadow-2xl">
-    <NuxtLink 
-      v-for="item in navItems" 
-      :key="item.to"
-      :to="item.to"
-      class="flex flex-col items-center gap-1.5 no-underline transition-all active:scale-90 relative"
-      :class="isCurrent(item.to) ? 'text-indigo-400' : 'text-neutral-500'"
-    >
-      <!-- Active Glow Background -->
-      <div 
-        v-if="isCurrent(item.to)"
-        class="absolute -top-1 w-12 h-8 bg-indigo-500/10 blur-xl rounded-full"
-      ></div>
+  <nav class="fixed bottom-0 left-0 right-0 bg-neutral-900 border-t border-neutral-800 flex justify-around items-center px-4 pt-3 pb-8 z-50">
+    <template v-if="!items">
+      <NuxtLink 
+        v-for="item in defaultNavItems" 
+        :key="item.to"
+        :to="item.to"
+        class="flex flex-col items-center gap-1 no-underline"
+        :class="isCurrent(item.to) ? 'text-indigo-500' : 'text-neutral-500'"
+      >
+        <Icon 
+          :icon="isCurrent(item.to) ? item.activeIcon : item.icon" 
+          class="text-2xl"
+        />
+        <span class="text-xs font-medium">
+          {{ item.label }}
+        </span>
+      </NuxtLink>
+    </template>
 
-      <Icon 
-        :icon="isCurrent(item.to) ? item.activeIcon : item.icon" 
-        class="text-2xl transition-transform"
-        :class="{ 'scale-110': isCurrent(item.to) }"
-      />
-      <span class="text-[10px] font-black uppercase tracking-[0.2em]">
-        {{ item.label }}
-      </span>
-
-      <!-- Indicator Dot -->
-      <div 
-        v-if="isCurrent(item.to)"
-        class="w-1 h-1 rounded-full bg-indigo-500 mt-0.5"
-      ></div>
-    </NuxtLink>
+    <template v-else>
+      <button 
+        v-for="item in items" 
+        :key="item.id"
+        @click="$emit('update:modelValue', item.id)"
+        class="flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer"
+        :class="modelValue === item.id ? 'text-indigo-500' : 'text-neutral-500'"
+      >
+        <Icon 
+          :icon="modelValue === item.id ? (item.activeIcon || item.icon) : item.icon" 
+          class="text-2xl"
+        />
+        <span class="text-xs font-medium">
+          {{ item.label }}
+        </span>
+      </button>
+    </template>
   </nav>
 </template>
 
@@ -37,31 +44,30 @@ import { Icon } from '@iconify/vue'
 import { useRoute } from 'vue-router'
 import { useSpace } from '~/composables/useSpace'
 
+interface NavItem {
+  id?: string
+  label: string
+  icon: string
+  activeIcon?: string
+  to?: string
+}
+
+const props = defineProps<{
+  modelValue?: string
+  items?: NavItem[]
+}>()
+
+defineEmits(['update:modelValue'])
+
 const route = useRoute()
 const { currentSpaceId } = useSpace()
 
-const navItems = computed(() => {
-  const base = currentSpaceId.value ? `/spaces/${currentSpaceId.value}` : '/spaces'
-  
+const defaultNavItems = computed(() => {
+  const base = currentSpaceId.value ? `/spaces/${currentSpaceId.value}` : '/'
   return [
-    { 
-      label: '我的空間', 
-      icon: 'mdi:view-grid-outline', 
-      activeIcon: 'mdi:view-grid',
-      to: '/' 
-    },
-    { 
-      label: '目前活動', 
-      icon: 'mdi:wallet-outline', 
-      activeIcon: 'mdi:wallet',
-      to: base 
-    },
-    { 
-      label: '數據統計', 
-      icon: 'mdi:chart-bar', 
-      activeIcon: 'mdi:chart-bar',
-      to: '/spaces/stats' 
-    }
+    { label: '我的空間', icon: 'mdi:view-grid-outline', activeIcon: 'mdi:view-grid', to: '/' },
+    { label: '目前活動', icon: 'mdi:wallet-outline', activeIcon: 'mdi:wallet', to: base },
+    { label: '數據統計', icon: 'mdi:chart-bar', activeIcon: 'mdi:chart-bar', to: '/spaces/stats' }
   ]
 })
 
