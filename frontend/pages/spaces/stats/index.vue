@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col">
-    <LedgerHeader
+    <SpaceHeader
       title="日常統計"
       icon="mdi:chart-bar"
     />
@@ -74,7 +74,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useLedger } from '~/composables/useLedger'
+import { useSpace } from '~/composables/useSpace'
 import { useApi } from '~/composables/useApi'
 
 definePageMeta({
@@ -83,7 +83,7 @@ definePageMeta({
 
 const router = useRouter()
 const api = useApi()
-const { currentLedger, currentLedgerId, fetchLedgers } = useLedger()
+const { currentSpace: currentLedger, currentSpaceId: currentLedgerId, fetchSpaces: fetchLedgers } = useSpace()
 
 const loading = ref(true)
 const totalSpent = ref(0)
@@ -135,7 +135,7 @@ const fetchData = async () => {
 
     loading.value = true
     try {
-        const txns = await api.get<any[]>(`/api/ledgers/${currentLedger.value.id}/transactions`)
+        const txns = await api.get<any[]>(`/api/spaces/${currentLedger.value.id}/transactions`)
         processStats(txns)
     } catch (e) {
         console.error(e)

@@ -12,15 +12,15 @@
     <!-- Title and Switcher -->
     <div class="flex-1 min-w-0">
       <h1 class="text-xl font-bold text-white tracking-tight truncate">{{ title }}</h1>
-      <LedgerSwitcher />
+      <SpaceSwitcher />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import { useLedger } from '~/composables/useLedger'
-import LedgerSwitcher from './LedgerSwitcher.vue'
+import { useSpace } from '~/composables/useSpace'
+import SpaceSwitcher from './SpaceSwitcher.vue'
 
 defineProps({
   title: {
@@ -38,5 +38,5 @@ defineProps({
 })
 
 const router = useRouter()
-const { currentLedger } = useLedger()
+const { currentSpace: currentLedger } = useSpace()
 </script>

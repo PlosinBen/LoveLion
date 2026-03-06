@@ -275,8 +275,8 @@ const handleSubmit = async () => {
       total_amount: totalAmount.value
     }
 
-    await api.put(`/api/ledgers/${ledgerId.value}/transactions/${route.params.id}`, payload)
-    router.push('/ledger')
+    await api.put(`/api/spaces/${ledgerId.value}/transactions/${route.params.id}`, payload)
+    router.push('/spaces')
   } catch (e: any) {
     alert(e.message || '更新失敗')
   } finally {
@@ -287,8 +287,8 @@ const handleSubmit = async () => {
 const handleDelete = async () => {
   if (!confirm('確定要刪除這筆交易嗎？')) return
   try {
-    await api.del(`/api/ledgers/${ledgerId.value}/transactions/${route.params.id}`)
-    router.push('/ledger')
+    await api.del(`/api/spaces/${ledgerId.value}/transactions/${route.params.id}`)
+    router.push('/spaces')
   } catch (e: any) {
     alert(e.message || '刪除失敗')
   }
@@ -296,11 +296,11 @@ const handleDelete = async () => {
 
 const fetchData = async () => {
   try {
-    const ledgers = await api.get<any[]>('/api/ledgers')
+    const ledgers = await api.get<any[]>('/api/spaces')
     if (ledgers.length > 0) {
       ledgerId.value = ledgers[0].id
       const txn = await api.get<any>(
-        `/api/ledgers/${ledgerId.value}/transactions/${route.params.id}`
+        `/api/spaces/${ledgerId.value}/transactions/${route.params.id}`
       )
       
       form.value.date = new Date(txn.date)
@@ -328,7 +328,7 @@ const fetchData = async () => {
     }
   } catch (e) {
     console.error('Failed to fetch transaction:', e)
-    router.push('/ledger')
+    router.push('/spaces')
   } finally {
     loading.value = false
   }

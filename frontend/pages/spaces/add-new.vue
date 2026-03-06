@@ -4,14 +4,14 @@
       <button @click="router.back()" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-white border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
         <Icon icon="mdi:arrow-left" class="text-2xl" />
       </button>
-      <h1 class="text-xl font-bold">建立新帳本</h1>
+      <h1 class="text-xl font-bold">建立新空間</h1>
       <div class="w-10"></div>
     </header>
 
     <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
       <div class="bg-neutral-900 p-6 rounded-3xl border border-neutral-800 flex flex-col gap-6">
         <div>
-          <label class="block text-xs text-neutral-500 uppercase tracking-wider mb-2 px-1">帳本名稱</label>
+          <label class="block text-xs text-neutral-500 uppercase tracking-wider mb-2 px-1">空間名稱</label>
           <input 
             v-model="form.name" 
             type="text" 
@@ -33,7 +33,7 @@
       </div>
 
       <p class="text-xs text-neutral-500 px-4 leading-relaxed">
-        建立帳本後，您可以透過分享連結邀請其他成員加入協作，共同紀錄收支。
+        建立空間後，您可以透過分享連結邀請其他成員加入協作，共同紀錄收支。
       </p>
 
       <button 
@@ -41,7 +41,7 @@
         :disabled="submitting"
         class="w-full py-4 rounded-2xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 mt-4 shadow-lg shadow-indigo-500/20"
       >
-        {{ submitting ? '建立中...' : '建立帳本' }}
+        {{ submitting ? '建立中...' : '建立空間' }}
       </button>
     </form>
   </div>
@@ -76,8 +76,8 @@ const handleSubmit = async () => {
         form.value.currencies.push(form.value.base_currency)
     }
 
-    await api.post('/api/ledgers', form.value)
-    router.push('/ledger')
+    await api.post('/api/spaces', form.value)
+    router.push('/spaces')
   } catch (e: any) {
     alert(e.message || '建立失敗')
   } finally {

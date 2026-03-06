@@ -29,7 +29,7 @@
               <!-- Settings Button (Visible only if owner) -->
               <button 
                 v-if="l.user_id === user?.id"
-                @click.stop="router.push(`/ledger/${l.id}/settings`); showSwitcher = false"
+                @click.stop="router.push(`/spaces/${l.id}/settings`); showSwitcher = false"
                 class="w-8 h-8 rounded-full flex items-center justify-center text-neutral-500 hover:bg-neutral-700 hover:text-white transition-colors border-0 cursor-pointer bg-transparent"
               >
                 <Icon icon="mdi:cog-outline" class="text-lg" />
@@ -41,7 +41,7 @@
           
           <div class="border-t border-neutral-800 my-1"></div>
           
-          <NuxtLink to="/ledger/add-new" class="w-full text-left px-4 py-3 hover:bg-neutral-800 text-sm text-neutral-400 flex items-center gap-2 no-underline" @click="showSwitcher = false">
+          <NuxtLink to="/spaces/add-new" class="w-full text-left px-4 py-3 hover:bg-neutral-800 text-sm text-neutral-400 flex items-center gap-2 no-underline" @click="showSwitcher = false">
             <Icon icon="mdi:plus-circle-outline" /> 新增帳本
           </NuxtLink>
       </div>
@@ -52,12 +52,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useLedger } from '~/composables/useLedger'
+import { useSpace } from '~/composables/useSpace'
 import { useAuth } from '~/composables/useAuth'
 
 const router = useRouter()
 const { user } = useAuth()
-const { allLedgers, currentLedger, selectLedger } = useLedger()
+const { allSpaces: allLedgers, currentSpace: currentLedger, selectSpace: selectLedger } = useSpace()
 const showSwitcher = ref(false)
 
 const onSwitch = (id: string) => {

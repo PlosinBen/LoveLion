@@ -82,7 +82,7 @@ const handleJoin = async () => {
   try {
     await api.post(`/api/invites/${route.params.token}/join`, {})
     // Redirect to the newly joined ledger
-    router.push('/ledger')
+    router.push('/spaces')
   } catch (e: any) {
     alert(e.message || '加入失敗')
   } finally {

@@ -6,7 +6,7 @@
       </button>
       <h1 class="text-xl font-bold">交易詳情</h1>
       <div class="flex gap-2">
-        <button @click="router.push(`/ledger/${route.params.id}/edit`)" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-indigo-400 border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
+        <button @click="router.push(`/spaces/${route.params.id}/transaction/${route.params.txnId}/edit`)" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-indigo-400 border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
           <Icon icon="mdi:pencil" class="text-2xl" />
         </button>
         <button @click="handleDelete" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-red-500 border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
@@ -87,7 +87,6 @@ const { isAuthenticated, initAuth } = useAuth()
 
 const transaction = ref<any>(null)
 const loading = ref(true)
-const ledgerId = ref('')
 
 const getCategoryIcon = (category: string) => {
   const icons: Record<string, string> = {
@@ -125,15 +124,12 @@ const formatDateTime = (dateStr: string) => {
 
 const fetchData = async () => {
   try {
-    const ledgers = await api.get<any[]>('/api/ledgers')
-    if (ledgers.length > 0) {
-      ledgerId.value = ledgers[0].id
-      transaction.value = await api.get<any>(
-        `/api/ledgers/${ledgerId.value}/transactions/${route.params.id}`
-      )
-    }
+    transaction.value = await api.get<any>(
+      `/api/spaces/${route.params.id}/transactions/${route.params.txnId}`
+    )
   } catch (e) {
     console.error('Failed to fetch transaction:', e)
+    router.push(`/spaces/${route.params.id}`)
   } finally {
     loading.value = false
   }
@@ -143,8 +139,8 @@ const handleDelete = async () => {
   if (!confirm('確定要刪除這筆交易嗎？')) return
 
   try {
-    await api.del(`/api/ledgers/${ledgerId.value}/transactions/${route.params.id}`)
-    router.push('/ledger')
+    await api.del(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`)
+    router.push(`/spaces/${route.params.id}`)
   } catch (e: any) {
     alert(e.message || '刪除失敗')
   }

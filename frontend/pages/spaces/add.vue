@@ -165,6 +165,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { useSpace } from '~/composables/useSpace'
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import BaseSelect from '~/components/BaseSelect.vue'
@@ -177,12 +178,14 @@ const router = useRouter()
 const route = useRoute()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
+const { currentSpace, fetchSpaces } = useSpace()
 
 const isEdit = computed(() => !!route.params.id)
 const categories = ['餐飲', '交通', '購物', '娛樂', '生活', '其他']
-const availableCurrencies = ref(['TWD', 'JPY', 'USD', 'EUR', 'KRW', 'THB', 'CNY', 'GBP']) // Default list, could be dynamic
-const ledgerId = ref('')
+const availableCurrencies = ref(['TWD', 'JPY', 'USD', 'EUR', 'KRW', 'THB', 'CNY', 'GBP'])
 const submitting = ref(false)
+
+const ledgerId = computed(() => (route.query.ledger_id as string) || currentSpace.value?.id)
 
 const form = ref({
   date: new Date(),
@@ -190,7 +193,7 @@ const form = ref({
   note: '',
   items: [{ name: '', unit_price: 0, quantity: 1 }],
   currency: 'TWD',
-  manual_rate: true, // true = input rate, false = input billing
+  manual_rate: true, 
   exchange_rate: 0,
   billing_amount: 0,
   handling_fee: 0
@@ -202,7 +205,6 @@ const totalAmount = computed(() => {
   }, 0)
 })
 
-// Calculated Billing Amount (For Manual Rate Mode)
 const calculatedBillingAmount = computed(() => {
     if (form.value.manual_rate && form.value.exchange_rate > 0) {
         return Math.round(totalAmount.value * form.value.exchange_rate)
@@ -210,7 +212,6 @@ const calculatedBillingAmount = computed(() => {
     return 0
 })
 
-// Calculated Exchange Rate (For Auto Rate Mode)
 const calculatedExchangeRate = computed(() => {
     if (!form.value.manual_rate && totalAmount.value > 0 && form.value.billing_amount > 0) {
         const netBilling = form.value.billing_amount - form.value.handling_fee
@@ -220,11 +221,10 @@ const calculatedExchangeRate = computed(() => {
     return 0
 })
 
-// Watchers to keep internal state consistent
 watch(calculatedBillingAmount, (newVal) => {
     if (form.value.manual_rate) {
         form.value.billing_amount = newVal
-        form.value.handling_fee = 0 // Reset fee in cash mode? Or optional? Usually cash has no separate fee, but exchange rate implies it.
+        form.value.handling_fee = 0
     }
 })
 
@@ -243,12 +243,16 @@ const removeItem = (index: number) => {
 }
 
 const handleSubmit = async () => {
+  if (!ledgerId.value) {
+    alert('空間 ID 遺失')
+    return
+  }
+  
   if (!form.value.items.some(item => item.name && item.unit_price > 0)) {
     alert('請至少填寫一個項目')
     return
   }
   
-  // Validation for foreign currency
   if (form.value.currency !== 'TWD') {
       if (form.value.manual_rate && form.value.exchange_rate <= 0) {
           alert('請輸入有效的匯率')
@@ -269,15 +273,14 @@ const handleSubmit = async () => {
       note: form.value.note,
       currency: form.value.currency,
       items: form.value.items.filter(item => item.name && item.unit_price > 0),
-      // Foreign currency fields
       exchange_rate: form.value.currency === 'TWD' ? 1 : form.value.exchange_rate,
       billing_amount: form.value.currency === 'TWD' ? Math.round(totalAmount.value) : form.value.billing_amount,
       handling_fee: form.value.currency === 'TWD' ? 0 : form.value.handling_fee,
       total_amount: totalAmount.value
     }
 
-    await api.post(`/api/ledgers/${ledgerId.value}/transactions`, payload)
-    router.push('/ledger')
+    await api.post(`/api/spaces/${ledgerId.value}/transactions`, payload)
+    router.push(`/spaces/${ledgerId.value}`)
   } catch (e: any) {
     alert(e.message || '儲存失敗')
   } finally {
@@ -285,34 +288,16 @@ const handleSubmit = async () => {
   }
 }
 
-const fetchLedger = async () => {
-  try {
-    const ledgers = await api.get<any[]>('/api/ledgers')
-    if (ledgers.length === 0) {
-      const newLedger = await api.post<any>('/api/ledgers', {
-        name: '我的帳本',
-        type: 'personal',
-        currencies: ['TWD'],
-        categories
-      })
-      ledgerId.value = newLedger.id
-    } else {
-      ledgerId.value = ledgers[0].id
-      // Optional: Load supported currencies from ledger settings if implemented
-      // if (ledgers[0].currencies) availableCurrencies.value = ledgers[0].currencies
-    }
-  } catch (e) {
-    console.error('Failed to fetch ledger:', e)
-  }
-}
-
-onMounted(() => {
+onMounted(async () => {
   initAuth()
   if (!isAuthenticated.value) {
     router.push('/login')
     return
   }
-  fetchLedger()
+  await fetchSpaces()
+  if (currentSpace.value?.base_currency) {
+    form.value.currency = currentSpace.value.base_currency
+  }
 })
 </script>
 
@@ -320,7 +305,6 @@ onMounted(() => {
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
 }
-
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
