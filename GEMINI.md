@@ -1,6 +1,7 @@
 # LoveLion AI 核心規範 (Index)
 
 ## 🛠️ 環境執行標準 (MANDATORY)
+- **換行規範**: **嚴禁使用 CRLF！** 所有檔案必須統一使用 **LF**。若偵測到 CRLF，視為嚴重違規，必須立即修正。
 - **Git 提交**: 嚴禁在 `run_shell_command` 中使用 `&&`。必須拆分：
   1. `git add .`
   2. `bash bin/commit "標題" "描述"` (署名: Antigravity)

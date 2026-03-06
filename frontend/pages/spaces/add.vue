@@ -7,7 +7,6 @@
       <h1 class="text-xl font-bold">{{ isEdit ? '編輯交易' : '新增記帳' }}</h1>
       <div style="width: 40px;"></div>
     </header>
-
     <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
       <!-- Date -->
       <VueDatePicker 

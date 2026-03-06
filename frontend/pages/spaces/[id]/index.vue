@@ -9,9 +9,9 @@
       <div class="flex-1 min-w-0">
          <h1 class="text-xl font-bold text-white tracking-tight truncate">{{ space?.name || '載入中...' }}</h1>
          <div class="flex items-center gap-1.5 text-neutral-500 text-[10px] font-medium mt-0.5">
-            <Icon :icon="space?.type === 'trip' ? 'mdi:airplane' : 'mdi:wallet-outline'" :class="space?.type === 'trip' ? 'text-blue-500' : 'text-green-500'" />
+            <Icon :icon="spaceTheme.icon" :class="spaceTheme.color" />
             <span v-if="space?.type === 'trip'">{{ formatDateRange(space?.start_date, space?.end_date) }}</span>
-            <span v-else>個人空間</span>
+            <span v-else>{{ spaceTheme.label }}</span>
          </div>
       </div>
       
@@ -89,7 +89,14 @@
 
           <!-- 2. Comparison Tab -->
           <div v-else-if="activeTab === 'comparison'" class="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-24">
-              <!-- Comparison Logic would go here (similar to old trip comparison) -->
+              <!-- FAB for Comparison -->
+              <button 
+                  @click="showAddStore = true"
+                  class="fixed bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/30 rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20 cursor-pointer border-0"
+              >
+                  <Icon icon="mdi:store-plus-outline" class="text-3xl" />
+              </button>
+
               <div v-if="stores.length === 0" class="text-center py-20 px-6 bg-neutral-900 rounded-3xl border border-neutral-800/50 flex flex-col items-center">
                 <Icon icon="mdi:scale-balance" class="text-4xl text-neutral-700 mb-4" />
                 <h3 class="text-lg font-bold mb-1">尚無比價商店</h3>
@@ -143,7 +150,52 @@
     </div>
 
     <!-- Modals (Add Store, etc.) -->
-    <!-- ... (Will integrate full comparison logic in next pass) ... -->
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+        <div v-if="showAddStore" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div class="w-full max-w-lg bg-neutral-900 rounded-t-[32px] sm:rounded-[32px] p-8 border border-neutral-800 animate-in slide-in-from-bottom duration-300">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold">新增商店</h2>
+                    <button @click="showAddStore = false" class="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 border-0 cursor-pointer">
+                        <Icon icon="mdi:close" class="text-xl" />
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-6">
+                    <BaseInput 
+                        v-model="storeForm.name" 
+                        label="商店名稱" 
+                        placeholder="例如：唐吉訶德、全家" 
+                        required
+                    />
+                    <BaseInput 
+                        v-model="storeForm.location" 
+                        label="分店或地點" 
+                        placeholder="例如：澀谷店、新宿" 
+                    />
+                    <BaseInput 
+                        v-model="storeForm.google_map_url" 
+                        label="Google Map 連結" 
+                        placeholder="選填" 
+                    />
+
+                    <button 
+                        @click="handleCreateStore" 
+                        :disabled="submittingStore || !storeForm.name"
+                        class="w-full py-4 rounded-2xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 mt-2"
+                    >
+                        {{ submittingStore ? '建立中...' : '建立商店' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </Transition>
   </div>
 </template>
 
@@ -151,6 +203,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import TripStats from '~/components/TripStats.vue'
+import BaseInput from '~/components/BaseInput.vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 
@@ -168,6 +221,41 @@ const transactions = ref<any[]>([])
 const stores = ref<any[]>([])
 const loading = ref(true)
 const activeTab = ref('ledger')
+
+// Add Store Modal Logic
+const showAddStore = ref(false)
+const submittingStore = ref(false)
+const storeForm = ref({
+    name: '',
+    location: '',
+    google_map_url: ''
+})
+
+const handleCreateStore = async () => {
+    if (!storeForm.value.name.trim()) return
+    submittingStore.value = true
+    try {
+        const newStore = await api.post<any>(`/api/spaces/${route.params.id}/stores`, storeForm.value)
+        stores.value.push(newStore)
+        showAddStore.value = false
+        storeForm.value = { name: '', location: '', google_map_url: '' }
+    } catch (e: any) {
+        alert(e.message || '建立商店失敗')
+    } finally {
+        submittingStore.value = false
+    }
+}
+
+// Atmosphere Engine: Styles based on Space Type
+const spaceTheme = computed(() => {
+    const type = space.value?.type || 'personal'
+    const themes: Record<string, { icon: string, color: string, bg: string, label: string }> = {
+        'trip': { icon: 'mdi:airplane', color: 'text-blue-400', bg: 'bg-blue-500/10', label: '旅遊計畫' },
+        'personal': { icon: 'mdi:wallet-outline', color: 'text-green-400', bg: 'bg-green-500/10', label: '個人空間' },
+        'group': { icon: 'mdi:account-group-outline', color: 'text-indigo-400', bg: 'bg-indigo-500/10', label: '團隊空間' }
+    }
+    return themes[type] || themes.personal
+})
 
 const availableTabs = [
     { id: 'ledger', label: '明細', icon: 'mdi:receipt-text-outline' },

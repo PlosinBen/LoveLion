@@ -171,8 +171,79 @@
     <!-- Hidden File Input for Image Upload -->
     <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleImageChange" />
 
-    <!-- Modals (Invite, Alias) -->
-    <!-- ... (Modals logic from original settings.vue) ... -->
+    <!-- Modals -->
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+        <!-- Invite Modal -->
+        <div v-if="showInviteModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div class="w-full max-w-lg bg-neutral-900 rounded-t-[32px] sm:rounded-[32px] p-8 border border-neutral-800 animate-in slide-in-from-bottom duration-300">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold">產生邀請連結</h2>
+                    <button @click="showInviteModal = false" class="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 border-0 cursor-pointer">
+                        <Icon icon="mdi:close" class="text-xl" />
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-6">
+                    <div class="flex flex-col gap-3">
+                        <label class="flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition-colors" :class="inviteForm.is_one_time ? 'border-indigo-500 bg-indigo-500/5' : 'border-neutral-800 bg-neutral-800/20'">
+                            <input type="checkbox" v-model="inviteForm.is_one_time" class="w-5 h-5 rounded border-neutral-700 bg-neutral-800 text-indigo-500" />
+                            <div class="flex flex-col">
+                                <span class="font-bold text-sm">一次性連結</span>
+                                <span class="text-[10px] text-neutral-500 mt-0.5">使用一次後立即失效（適合單人邀請）</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <button 
+                        @click="handleCreateInvite" 
+                        :disabled="updating"
+                        class="w-full py-4 rounded-2xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 mt-2 border-0 cursor-pointer"
+                    >
+                        產生連結
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alias Modal -->
+        <div v-else-if="showAliasModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div class="w-full max-w-lg bg-neutral-900 rounded-t-[32px] sm:rounded-[32px] p-8 border border-neutral-800 animate-in slide-in-from-bottom duration-300">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold">修改成員暱稱</h2>
+                    <button @click="showAliasModal = false" class="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 border-0 cursor-pointer">
+                        <Icon icon="mdi:close" class="text-xl" />
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-6">
+                    <div>
+                        <label class="block text-xs text-neutral-500 uppercase tracking-widest mb-3 ml-1">成員：{{ selectedMember?.user?.display_name }}</label>
+                        <input 
+                            v-model="aliasValue" 
+                            type="text" 
+                            class="w-full bg-neutral-800 border-neutral-700 text-white py-4 px-4 rounded-2xl outline-none focus:border-indigo-500 transition-colors"
+                            placeholder="請輸入暱稱"
+                        />
+                    </div>
+
+                    <button 
+                        @click="handleUpdateAlias" 
+                        :disabled="updating"
+                        class="w-full py-4 rounded-2xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 mt-2 border-0 cursor-pointer"
+                    >
+                        儲存暱稱
+                    </button>
+                </div>
+            </div>
+        </div>
+    </Transition>
   </div>
 </template>
 
@@ -206,6 +277,13 @@ const form = ref({
 const members = ref<any[]>([])
 const invites = ref<any[]>([])
 const fileInput = ref<HTMLInputElement | null>(null)
+
+// Modal States
+const showInviteModal = ref(false)
+const showAliasModal = ref(false)
+const inviteForm = ref({ is_one_time: false })
+const selectedMember = ref<any>(null)
+const aliasValue = ref('')
 
 // Date conversion helpers
 const startDateStr = computed({
@@ -262,9 +340,47 @@ const handleImageChange = async (e: Event) => {
     try {
         const result = await uploadImage(file, spaceId, 'space_cover')
         form.value.cover_image = result.file_path
-        // Auto-save name change if any? For now just update state.
+        // Auto-save change
+        await handleUpdateSpace()
     } catch (e) {
         alert('照片上傳失敗')
+    }
+}
+
+const openAliasModal = (member: any) => {
+    selectedMember.value = member
+    aliasValue.value = member.alias || ''
+    showAliasModal.value = true
+}
+
+const handleUpdateAlias = async () => {
+    if (!selectedMember.value) return
+    updating.value = true
+    try {
+        await api.put(`/api/spaces/${spaceId}/members/${selectedMember.value.user_id}`, {
+            alias: aliasValue.value
+        })
+        showAliasModal.value = false
+        await fetchData()
+    } catch (e: any) {
+        alert(e.message || '更新暱稱失敗')
+    } finally {
+        updating.value = false
+    }
+}
+
+const handleCreateInvite = async () => {
+    updating.value = true
+    try {
+        await api.post(`/api/spaces/${spaceId}/invites`, {
+            is_one_time: inviteForm.value.is_one_time
+        })
+        showInviteModal.value = false
+        await fetchData()
+    } catch (e: any) {
+        alert(e.message || '產生連結失敗')
+    } finally {
+        updating.value = false
     }
 }
 
