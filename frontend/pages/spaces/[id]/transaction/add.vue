@@ -87,7 +87,7 @@
           </button>
         </div>
 
-        <!-- Foreign Currency (Conditional) -->
+        <!-- Foreign Currency Settlement (Conditional) -->
         <div v-if="form.currency !== baseCurrency" class="bg-indigo-500/5 rounded-xl p-5 border border-indigo-500/10 flex flex-col gap-5">
           <div class="flex justify-between items-center">
             <h3 class="font-bold text-xs text-indigo-400 uppercase tracking-wider">外幣結算</h3>
@@ -97,28 +97,52 @@
             </label>
           </div>
 
+          <!-- Manual Rate Mode -->
           <div v-if="form.manual_rate" class="flex flex-col gap-4">
-             <BaseInput
-                v-model.number="form.exchange_rate"
-                type="number"
-                label="匯率 (1 TWD = ? 外幣)"
-                step="0.0001"
-             />
-             <div class="flex justify-between items-center p-4 bg-neutral-800 rounded-xl border border-neutral-700">
-                <span class="text-neutral-500 text-xs font-bold">折合台幣</span>
-                <span class="text-xl font-bold text-white">TWD {{ calculatedBillingAmount.toLocaleString() }}</span>
+             <div class="flex flex-col gap-2">
+               <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">匯率 (1 TWD = ? 外幣)</label>
+               <BaseInput
+                  v-model.number="form.exchange_rate"
+                  type="number"
+                  step="0.0001"
+               />
+             </div>
+             <div class="flex flex-col gap-2">
+               <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">銀行手續費 (TWD)</label>
+               <BaseInput
+                  v-model.number="form.handling_fee"
+                  type="number"
+               />
+             </div>
+             <div class="flex flex-col gap-2">
+                <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">折合台幣 (含手續費)</label>
+                <div class="w-full bg-neutral-800/50 border border-neutral-700 border-dashed text-white py-3 px-4 rounded-xl text-xl font-bold">
+                   TWD {{ (calculatedBillingAmount + Number(form.handling_fee)).toLocaleString() }}
+                </div>
              </div>
           </div>
 
+          <!-- Billing Amount Mode -->
           <div v-else class="flex flex-col gap-4">
-             <BaseInput
-                v-model.number="form.billing_amount"
-                type="number"
-                label="銀行入帳金額 (TWD)"
-             />
-             <div class="flex justify-between items-center p-4 bg-neutral-800 rounded-xl border border-neutral-700">
-                <span class="text-neutral-500 text-xs font-bold">換算匯率</span>
-                <span class="text-xl font-bold text-indigo-400">{{ calculatedExchangeRate }}</span>
+             <div class="flex flex-col gap-2">
+               <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">銀行入帳金額 (TWD，不含手續費)</label>
+               <BaseInput
+                  v-model.number="form.billing_amount"
+                  type="number"
+               />
+             </div>
+             <div class="flex flex-col gap-2">
+               <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">銀行手續費 (TWD)</label>
+               <BaseInput
+                  v-model.number="form.handling_fee"
+                  type="number"
+               />
+             </div>
+             <div class="flex flex-col gap-2">
+                <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">換算匯率</label>
+                <div class="w-full bg-neutral-800/50 border border-neutral-700 border-dashed text-indigo-400 py-3 px-4 rounded-xl text-xl font-bold">
+                   {{ calculatedExchangeRate }}
+                </div>
              </div>
           </div>
         </div>
@@ -248,6 +272,7 @@ const handleSubmit = async () => {
       items: form.value.items.filter(item => item.name && Number(item.unit_price) > 0),
       exchange_rate: form.value.currency === baseCurrency.value ? 1 : form.value.exchange_rate,
       billing_amount: form.value.currency === baseCurrency.value ? totalAmount.value : form.value.billing_amount,
+      handling_fee: form.value.currency === baseCurrency.value ? 0 : form.value.handling_fee,
       total_amount: totalAmount.value
     }
 
