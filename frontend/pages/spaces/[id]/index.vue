@@ -7,8 +7,12 @@
     />
 
     <div class="flex flex-col gap-6">
-      <section>
-        <SpaceStats :space-id="space.id" />
+      <section v-if="transactions.length > 0">
+        <SpaceStats 
+          :transactions="transactions" 
+          :members="space.members || []" 
+          :base-currency="space.base_currency || 'TWD'"
+        />
       </section>
 
       <section class="flex flex-col gap-3">
@@ -24,7 +28,7 @@
         </div>
         <div v-else class="flex flex-col gap-2">
           <TransactionListItem 
-            v-for="txn in transactions" 
+            v-for="txn in transactions.slice(0, 5)" 
             :key="txn.id" 
             :transaction="txn" 
             :space-id="space.id"
@@ -63,8 +67,10 @@ const transactions = ref<any[]>([])
 const fetchData = async () => {
   try {
     const spaceId = route.params.id
+    // Fetch space with members
     space.value = await api.get<any>(`/api/spaces/${spaceId}`)
-    const txnData = await api.get<any>(`/api/spaces/${spaceId}/transactions?limit=5`)
+    // Fetch transactions
+    const txnData = await api.get<any>(`/api/spaces/${spaceId}/transactions`)
     transactions.value = txnData || []
   } catch (e) {
     console.error('Failed to fetch space data:', e)
