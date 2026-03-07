@@ -1,20 +1,19 @@
 <template>
   <div 
-    class="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl flex items-center justify-between hover:bg-neutral-800 transition-colors cursor-pointer group active:scale-95 shadow-sm"
+    class="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl flex items-center justify-between transition-none cursor-pointer group shadow-sm"
     @click="$emit('click')"
   >
     <div class="flex items-center gap-4">
       <!-- Icon Container -->
       <div 
-        class="w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-colors border border-neutral-800" 
-        :class="typeStyles.bg"
+        class="w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-none border border-neutral-800 bg-neutral-800"
       >
         <Icon :icon="typeStyles.icon" :class="typeStyles.color" />
       </div>
 
       <!-- Info -->
       <div class="flex flex-col">
-        <h3 class="font-bold text-white group-hover:text-indigo-400 transition-colors">{{ space.name }}</h3>
+        <h3 class="font-bold text-white transition-none">{{ space.name }}</h3>
         <div class="flex items-center gap-2 mt-0.5">
             <span class="text-xs text-neutral-500">
                 {{ typeStyles.label }}
@@ -30,8 +29,8 @@
     <!-- Pin Action -->
     <button 
       @click.stop="$emit('toggle-pin')" 
-      class="w-10 h-10 rounded-full flex items-center justify-center transition-colors border-0 bg-transparent cursor-pointer"
-      :class="space.is_pinned ? 'text-indigo-500' : 'text-neutral-700 hover:text-neutral-500'"
+      class="w-10 h-10 rounded-full flex items-center justify-center transition-none border-0 bg-transparent cursor-pointer"
+      :class="space.is_pinned ? 'text-indigo-500' : 'text-neutral-700'"
     >
       <Icon :icon="space.is_pinned ? 'mdi:pin' : 'mdi:pin-outline'" class="text-lg" />
     </button>
@@ -59,14 +58,12 @@ const typeStyles = computed(() => {
   if (props.space.type === 'trip' || props.space.type === 'project') {
     return {
       icon: 'mdi:airplane',
-      bg: 'bg-neutral-800',
       color: 'text-indigo-400',
       label: '旅行專案'
     }
   }
   return {
     icon: 'mdi:wallet-outline',
-    bg: 'bg-neutral-800',
     color: 'text-green-400',
     label: '個人空間'
   }
