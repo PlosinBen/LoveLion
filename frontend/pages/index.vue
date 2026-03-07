@@ -27,6 +27,7 @@
         :key="space.id" 
         :space="space" 
         @click="router.push(`/spaces/${space.id}`)"
+        @toggle-pin="handleTogglePin(space.id)"
       />
     </div>
   </div>
@@ -37,11 +38,13 @@ import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { useSpace } from '~/composables/useSpace'
 import SpaceListItem from '~/components/SpaceListItem.vue'
 
 const router = useRouter()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
+const { togglePin } = useSpace()
 
 const spaces = ref<any[]>([])
 const loading = ref(true)
@@ -54,6 +57,16 @@ const fetchSpaces = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const handleTogglePin = async (id: string) => {
+    try {
+        await togglePin(id)
+        // Refresh the list to show new order
+        await fetchSpaces()
+    } catch (e) {
+        console.error('Pin failed', e)
+    }
 }
 
 onMounted(() => {
