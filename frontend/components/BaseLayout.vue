@@ -7,13 +7,19 @@
     </div>
 
     <!-- Main Content -->
-    <main class="flex-1 w-full mx-auto relative flex flex-col px-6">
+    <!-- Auto-apply bottom padding if footer (BottomNav) exists to prevent overlap -->
+    <main 
+      class="flex-1 w-full mx-auto relative flex flex-col px-4" 
+      :class="[{ 'pb-32': $slots.footer }, mainClass]"
+    >
       <slot />
     </main>
 
     <!-- Optional Footer Slot (BottomNav) -->
-    <footer v-if="$slots.footer" class="shrink-0" :class="footerClass">
-      <slot name="footer" />
+    <footer v-if="$slots.footer" class="fixed bottom-0 left-0 right-0 z-50 pointer-events-none" :class="footerClass">
+      <div class="pointer-events-auto">
+        <slot name="footer" />
+      </div>
     </footer>
 
   </div>
@@ -25,6 +31,7 @@ interface Props {
   textClass?: string
   headerClass?: string
   footerClass?: string
+  mainClass?: string
 }
 
 withDefaults(defineProps<Props>(), {

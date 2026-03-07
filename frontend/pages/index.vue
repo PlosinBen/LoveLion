@@ -1,127 +1,66 @@
 <template>
-  <div class="flex flex-col gap-10 pb-24">
-    <!-- Status (Optional, minimized) -->
-    <StatusCard
-      v-if="backendStatus !== 'online'"
-      :status="backendStatus"
-      :message="statusMessage"
-    />
+  <div class="space-list-page">
+    <div class="flex items-center justify-between mb-8 px-2">
+      <h1 class="text-3xl font-extrabold tracking-tighter text-white">我的空間</h1>
+      <button 
+        @click="router.push('/spaces/add-new')"
+        class="flex items-center gap-2 px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-xl text-indigo-400 font-bold text-sm hover:bg-neutral-800 transition-colors active:scale-95 cursor-pointer"
+      >
+        <Icon icon="mdi:plus" class="text-lg" />
+        <span>新增空間</span>
+      </button>
+    </div>
 
-    <!-- Pinned Spaces Section -->
-    <section v-if="pinnedSpaces.length > 0">
-      <div class="flex items-center justify-between mb-4 px-1">
-        <h2 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-          <Icon icon="mdi:pin" class="text-indigo-500" />
-          焦點空間
-        </h2>
-      </div>
-      
-      <div class="flex flex-col gap-3">
-        <SpaceListItem 
-          v-for="space in pinnedSpaces" 
-          :key="space.id"
-          :space="space"
-          @click="router.push(`/spaces/${space.id}`)"
-          @toggle-pin="togglePin(space.id)"
-        />
-      </div>
-    </section>
+    <div v-if="loading" class="flex justify-center items-center py-20 text-neutral-500">
+      <Icon icon="mdi:loading" class="text-3xl animate-spin" />
+    </div>
 
-    <!-- All Spaces Section -->
-    <section>
-      <div class="flex items-center justify-between mb-4 px-1">
-        <h2 class="text-xl font-bold text-white tracking-tight">所有空間</h2>
-        <NuxtLink to="/spaces/add-new" class="text-sm font-bold text-indigo-400 no-underline hover:text-indigo-300">
-          + 新增
-        </NuxtLink>
-      </div>
+    <div v-else-if="spaces.length === 0" class="flex flex-col items-center justify-center py-20 bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed text-neutral-500">
+      <Icon icon="mdi:view-grid-plus-outline" class="text-5xl mb-4 opacity-20" />
+      <p class="text-sm">尚未建立任何管理空間</p>
+      <button @click="router.push('/spaces/add-new')" class="mt-6 px-6 py-2 bg-indigo-500 text-white rounded-full font-bold text-sm border-0 cursor-pointer hover:bg-indigo-600 transition-colors active:scale-95">立即建立</button>
+    </div>
 
-      <div v-if="loading" class="flex flex-col gap-3">
-        <div v-for="i in 3" :key="i" class="h-20 bg-neutral-800 animate-pulse rounded-2xl"></div>
-      </div>
-
-      <div v-else-if="allSpaces.length === 0" class="py-12 flex flex-col items-center justify-center bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed">
-        <Icon icon="mdi:folder-open-outline" class="text-5xl text-neutral-700 mb-4" />
-        <p class="text-neutral-500 text-sm font-medium">目前還沒有任何空間</p>
-        <NuxtLink to="/spaces/add-new" class="mt-4 px-6 py-2 bg-indigo-500 text-white rounded-full font-bold text-sm no-underline active:scale-95 transition-transform">建立第一個空間</NuxtLink>
-      </div>
-
-      <div v-else class="flex flex-col gap-3">
-        <SpaceListItem 
-          v-for="space in otherSpaces" 
-          :key="space.id"
-          :space="space"
-          @click="router.push(`/spaces/${space.id}`)"
-          @toggle-pin="togglePin(space.id)"
-        />
-      </div>
-    </section>
-
-    <!-- App Info / Settings Link -->
-    <div class="mt-4 pt-10 border-t border-neutral-800 flex flex-col gap-4">
-       <button @click="router.push('/settings')" class="flex items-center justify-between p-6 rounded-2xl bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white transition-all border-0 cursor-pointer active:scale-95">
-          <div class="flex items-center gap-4">
-            <Icon icon="mdi:cog-outline" class="text-2xl" />
-            <span class="font-bold">系統設定</span>
-          </div>
-          <Icon icon="mdi:chevron-right" class="text-xl" />
-       </button>
-       
-       <button @click="handleLogout" class="flex items-center justify-center gap-2 p-4 text-neutral-600 hover:text-red-500 text-sm font-bold border-0 bg-transparent cursor-pointer transition-colors">
-          <Icon icon="mdi:logout" /> 登出帳號
-       </button>
+    <div v-else class="flex flex-col gap-4">
+      <SpaceListItem 
+        v-for="space in spaces" 
+        :key="space.id" 
+        :space="space" 
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
-import StatusCard from '~/components/StatusCard.vue'
-import SpaceListItem from '~/components/SpaceListItem.vue'
+import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
-import { useSpace } from '~/composables/useSpace'
-
-definePageMeta({
-  layout: 'default'
-})
+import SpaceListItem from '~/components/SpaceListItem.vue'
 
 const router = useRouter()
-const { isAuthenticated, initAuth, logout } = useAuth()
-const { allSpaces, pinnedSpaces, otherSpaces, loading, fetchSpaces, togglePin } = useSpace()
+const api = useApi()
+const { isAuthenticated, initAuth } = useAuth()
 
-const backendStatus = ref<'online' | 'offline' | 'checking'>('checking')
+const spaces = ref<any[]>([])
+const loading = ref(true)
 
-const statusMessage = computed(() => {
-  switch (backendStatus.value) {
-    case 'online': return '後端服務正常運行'
-    case 'offline': return '無法連接後端服務'
-    default: return '正在檢查連線...'
-  }
-})
-
-const checkBackend = async () => {
+const fetchSpaces = async () => {
   try {
-    const response = await fetch('/health')
-    if (response.ok) backendStatus.value = 'online'
-    else backendStatus.value = 'offline'
-  } catch {
-    backendStatus.value = 'offline'
+    spaces.value = await api.get<any[]>('/api/spaces')
+  } catch (e) {
+    console.error('Failed to fetch spaces:', e)
+  } finally {
+    loading.value = false
   }
 }
 
-const handleLogout = () => {
-  logout()
-  router.push('/login')
-}
-
-onMounted(async () => {
+onMounted(() => {
   initAuth()
   if (!isAuthenticated.value) {
     router.push('/login')
     return
   }
-  checkBackend()
   fetchSpaces()
 })
 </script>
