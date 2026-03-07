@@ -2,57 +2,44 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: false },
-
-  // Modules
   modules: ['@nuxtjs/tailwindcss'],
+  
+  css: ['~/assets/css/main.css'],
 
-  // Disable SSR (SPA mode)
-  ssr: false,
-
-  // Runtime config for API base URL
-  runtimeConfig: {
-    public: {
-      apiBase: ''  // Empty for same-origin requests
-    }
+  postcss: {
+    plugins: {
+      tailwindcss: {},
+      autoprefixer: {},
+    },
   },
 
-  // Nitro server configuration
-  nitro: {
-    routeRules: {
-      '/api/**': {
-        proxy: 'http://backend:8080/api/**'
-      },
-      '/health': {
-        proxy: 'http://backend:8080/health'
-      }
-    }
-  },
-
-  // Development server settings
-  devServer: {
-    host: '0.0.0.0',
-    port: 3000
-  },
-
-  // Enable polling for Docker HMR
+  // Vite 效能優化
   vite: {
     server: {
       watch: {
+        // 在 Docker/Windows 環境下必須開啟輪詢才能即時偵測檔案變動
         usePolling: true,
-        interval: 1000
-      }
+        interval: 100,
+      },
+    },
+    // 預編譯常用套件，減少啟動時的二次編譯
+    optimizeDeps: {
+      include: ['@iconify/vue', 'vue', 'vue-router']
+    },
+    // 增加編譯快取
+    build: {
+      cacheDir: './node_modules/.vite'
     }
   },
 
-  // App configuration
-  app: {
-    head: {
-      title: 'LoveLion - Personal Bookkeeping & Travel Assistant',
-      meta: [
-        { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Personal bookkeeping and travel expense tracking application' }
-      ]
+  // Nuxt 效能優化
+  nitro: {
+    // 開啟快取以加速後續啟動
+    storage: {
+      cache: {
+        driver: 'fs',
+        base: './.nuxt/cache'
+      }
     }
   }
 })
