@@ -1,6 +1,6 @@
 <template>
   <nav class="fixed bottom-0 left-0 right-0 bg-neutral-900 border-t border-neutral-800 flex justify-around items-center px-4 py-3 z-50">
-    <!-- Navigation Items (Static Style) -->
+    <!-- Navigation Items (Standard Minimalist) -->
     <template v-if="!items">
       <NuxtLink 
         v-for="item in defaultNavItems" 
@@ -15,7 +15,7 @@
       </NuxtLink>
     </template>
 
-    <!-- Tab Selection Items (Space Local - Static Style) -->
+    <!-- Tab Selection Items (Space Local Context) -->
     <template v-else>
       <button 
         v-for="item in items" 
@@ -35,7 +35,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useSpace } from '~/composables/useSpace'
 
 interface NavItem {
   id?: string
@@ -44,21 +43,16 @@ interface NavItem {
   to?: string
 }
 
-const props = defineProps<{
+defineProps<{
   modelValue?: string
   items?: NavItem[]
 }>()
 
 defineEmits(['update:modelValue'])
 
-const { currentSpaceId } = useSpace()
-
 const defaultNavItems = computed(() => {
-  const base = currentSpaceId.value ? `/spaces/${currentSpaceId.value}` : '/'
   return [
     { label: '空間', icon: 'mdi:view-grid-outline', to: '/' },
-    { label: '活動', icon: 'mdi:wallet-outline', to: base },
-    { label: '數據', icon: 'mdi:chart-bar', to: '/spaces/stats' },
     { label: '設定', icon: 'mdi:cog-outline', to: '/settings' }
   ]
 })
