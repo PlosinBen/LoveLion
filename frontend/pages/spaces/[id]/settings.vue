@@ -46,13 +46,13 @@
           <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs text-neutral-500 uppercase tracking-wider mb-2 ml-1">空間類型</label>
-                <div class="bg-neutral-800 text-neutral-400 py-3 px-4 rounded-xl text-sm border border-neutral-700">
+                <div class="bg-neutral-800 text-neutral-400 py-3 px-4 rounded-xl text-sm border border-neutral-800">
                     {{ form.type === 'trip' ? '旅遊專案' : '個人記帳' }}
                 </div>
               </div>
               <div>
                 <label class="block text-xs text-neutral-500 uppercase tracking-wider mb-2 ml-1">本位幣別</label>
-                <div class="bg-neutral-800 text-neutral-400 py-3 px-4 rounded-xl text-sm border border-neutral-700 uppercase">
+                <div class="bg-neutral-800 text-neutral-400 py-3 px-4 rounded-xl text-sm border border-neutral-800 uppercase">
                     {{ form.base_currency }}
                 </div>
               </div>
@@ -84,7 +84,7 @@
               <div class="flex flex-col">
                 <div class="flex items-center gap-2">
                   <span class="font-bold text-neutral-100">{{ member.alias || member.user?.display_name }}</span>
-                  <span v-if="member.role === 'owner'" class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-bold uppercase border border-indigo-500/20">建立者</span>
+                  <span v-if="member.role === 'owner'" class="text-xs px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-bold uppercase border border-indigo-500/20">建立者</span>
                 </div>
                 <span class="text-xs text-neutral-500">@{{ member.user?.username }}</span>
               </div>
@@ -363,7 +363,7 @@ const copyInviteLink = (token: string) => {
 const handleRevokeInvite = async (invite_id: string) => {
   if (!confirm('確定要撤銷此邀請連結嗎？')) return
   try {
-    await api.delete(`/api/spaces/${spaceId}/invites/${invite_id}`)
+    await api.delete(`/api/spaces/${invite_id}`)
     await fetchData()
   } catch (e: any) {
     alert('撤銷失敗')

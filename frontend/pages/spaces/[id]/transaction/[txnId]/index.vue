@@ -6,10 +6,10 @@
     >
       <template #right>
         <div class="flex gap-1">
-          <button @click="router.push(`/spaces/${route.params.id}/transaction/${route.params.txnId}/edit`)" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-indigo-400 border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
+          <button @click="router.push(`/spaces/${route.params.id}/transaction/${route.params.txnId}/edit`)" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-indigo-400 border-0 cursor-pointer hover:bg-neutral-800 transition-colors active:scale-95">
             <Icon icon="mdi:pencil-outline" class="text-xl" />
           </button>
-          <button @click="handleDelete" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-red-500 border-0 cursor-pointer hover:bg-neutral-800 transition-colors">
+          <button @click="handleDelete" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-red-500 border-0 cursor-pointer hover:bg-neutral-800 transition-colors active:scale-95">
             <Icon icon="mdi:trash-can-outline" class="text-xl" />
           </button>
         </div>
@@ -25,7 +25,7 @@
             <Icon :icon="getCategoryIcon(transaction.category)" class="text-xl text-indigo-500" />
             <span class="font-bold text-sm">{{ transaction.category || '未分類' }}</span>
           </div>
-          <div class="text-4xl font-black mb-2 tracking-tighter">
+          <div class="text-4xl font-bold mb-2 tracking-tight">
             <span class="text-neutral-500 text-lg mr-1 font-bold">{{ transaction.currency }}</span>
             {{ formatAmount(transaction.total_amount) }}
           </div>
@@ -49,24 +49,24 @@
         </div>
 
         <div class="mb-6">
-          <h2 class="text-xs font-black text-neutral-500 uppercase tracking-widest mb-3 px-1">項目明細</h2>
+          <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3 px-1">項目明細</h2>
           <div class="flex flex-col gap-2">
-            <div v-for="item in transaction.items" :key="item.id" class="flex justify-between items-center p-4 bg-neutral-900 rounded-2xl border border-neutral-800/60">
+            <div v-for="item in transaction.items" :key="item.id" class="flex justify-between items-center p-4 bg-neutral-900 rounded-xl border border-neutral-800/60">
               <div class="flex flex-col gap-0.5">
                 <span class="font-bold text-neutral-100">{{ item.name }}</span>
-                <span class="text-neutral-500 text-xs font-medium">單價 {{ transaction.currency }} {{ formatAmount(item.unit_price) }} × {{ item.quantity }}</span>
+                <span class="text-xs text-neutral-500 font-medium">單價 {{ transaction.currency }} {{ formatAmount(item.unit_price) }} × {{ item.quantity }}</span>
               </div>
-              <div class="font-black text-white">{{ transaction.currency }} {{ formatAmount(item.amount) }}</div>
+              <div class="font-bold text-white">{{ transaction.currency }} {{ formatAmount(item.amount) }}</div>
             </div>
           </div>
         </div>
 
         <div v-if="transaction.note" class="mb-6">
-          <h2 class="text-xs font-black text-neutral-500 uppercase tracking-widest mb-3 px-1">備註</h2>
-          <div class="p-4 bg-neutral-900 rounded-2xl border border-neutral-800/60 text-neutral-400 text-sm leading-relaxed">{{ transaction.note }}</div>
+          <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3 px-1">備註</h2>
+          <div class="p-4 bg-neutral-900 rounded-xl border border-neutral-800/60 text-neutral-400 text-sm leading-relaxed">{{ transaction.note }}</div>
         </div>
 
-        <div class="px-1 text-neutral-600 text-[10px] font-medium space-y-1">
+        <div class="px-1 text-neutral-600 text-xs font-medium space-y-1">
           <p>建立於 {{ formatDateTime(transaction.created_at) }}</p>
           <p class="font-mono">TXN: {{ transaction.id }}</p>
         </div>
@@ -144,7 +144,7 @@ const handleDelete = async () => {
   if (!confirm('確定要刪除這筆交易嗎？')) return
 
   try {
-    await api.del(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`)
+    await api.delete(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`)
     router.push(`/spaces/${route.params.id}`)
   } catch (e: any) {
     alert(e.message || '刪除失敗')

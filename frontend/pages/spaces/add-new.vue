@@ -34,7 +34,7 @@
         <button 
           type="submit" 
           :disabled="submitting"
-          class="w-full py-4 rounded-xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-[0.98] disabled:opacity-50 mt-4 shadow-lg shadow-indigo-500/20 border-0 cursor-pointer"
+          class="w-full py-4 rounded-xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 mt-4 shadow-lg border-0 cursor-pointer"
         >
           {{ submitting ? '建立中...' : '建立空間' }}
         </button>

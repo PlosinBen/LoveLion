@@ -1,5 +1,5 @@
 <template>
-  <div class="image-preview fixed inset-0 bg-black flex flex-col h-screen z-[100]">
+  <div class="image-preview fixed inset-0 bg-black flex flex-col h-screen z-50">
     <!-- Header / Close -->
     <header class="absolute top-0 left-0 right-0 p-4 pt-6 transition-opacity duration-300 pointer-events-none bg-gradient-to-b from-black/60 to-transparent flex justify-start items-center z-10" :class="showControls ? 'opacity-100' : 'opacity-0'">
        <!-- Progress Bar -->
@@ -65,7 +65,7 @@
 
     <!-- Filmstrip -->
     <div v-if="images.length > 1"
-         class="absolute bottom-10 left-0 right-0 h-16 flex justify-center gap-2 overflow-x-auto px-4 py-1 z-10 transition-opacity duration-300 scrollbar-hide"
+         class="absolute bottom-10 left-0 right-0 h-16 flex justify-center gap-2 overflow-x-auto px-4 py-1 z-10 transition-opacity duration-300"
          :class="showControls ? 'opacity-100' : 'opacity-0'">
          <div v-for="(img, idx) in images" :key="idx"
               class="h-full aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-pointer bg-neutral-900 shrink-0"

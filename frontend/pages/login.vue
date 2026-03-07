@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col justify-center py-6 min-h-[80vh]">
+  <div class="flex flex-col justify-center py-6">
     <div class="text-center mb-8">
       <p class="text-neutral-400 font-medium">個人記帳 & 旅遊專案助手</p>
     </div>
@@ -31,7 +31,7 @@
 
         <button 
           @click="handleLogin" 
-          class="w-full mt-8 py-4 rounded-xl font-bold bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-[0.98] disabled:opacity-50 border-0 cursor-pointer shadow-lg shadow-indigo-500/20" 
+          class="w-full mt-8 py-4 rounded-xl font-bold bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 border-0 cursor-pointer shadow-lg" 
           :disabled="loading"
         >
           {{ loading ? '登入中...' : '登入' }}
@@ -75,7 +75,7 @@
 
         <button 
           @click="handleRegister" 
-          class="w-full mt-8 py-4 rounded-xl font-bold bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-[0.98] disabled:opacity-50 border-0 cursor-pointer shadow-lg shadow-indigo-500/20" 
+          class="w-full mt-8 py-4 rounded-xl font-bold bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 border-0 cursor-pointer shadow-lg" 
           :disabled="loading"
         >
           {{ loading ? '註冊中...' : '註冊帳號' }}

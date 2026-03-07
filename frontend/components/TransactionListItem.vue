@@ -13,7 +13,7 @@
     </div>
 
     <div class="text-right">
-      <div class="text-[10px] text-neutral-500 uppercase font-bold leading-none mb-1">
+      <div class="text-xs text-neutral-500 uppercase font-bold leading-none mb-1">
         {{ isBaseCurrency ? (baseCurrency || 'TWD') : transaction.currency }}
       </div>
       <div class="text-lg font-bold text-indigo-500">
