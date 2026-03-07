@@ -3,7 +3,6 @@
     <SpaceHeader 
       title="個人設定" 
       :show-back="true"
-      class="px-2"
     />
 
     <div class="flex flex-col gap-6">

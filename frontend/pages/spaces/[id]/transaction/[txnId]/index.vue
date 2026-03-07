@@ -2,7 +2,6 @@
   <div class="transaction-detail">
     <SpaceHeader 
       title="交易詳情" 
-      class="px-2"
     >
       <template #right>
         <div class="flex gap-1">

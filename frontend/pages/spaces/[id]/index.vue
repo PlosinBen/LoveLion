@@ -3,7 +3,6 @@
     <SpaceHeader 
       :title="space.name" 
       :show-back="true"
-      class="px-2"
     />
 
     <div class="flex flex-col gap-6">
