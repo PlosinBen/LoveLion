@@ -72,15 +72,16 @@ func main() {
 		{
 			ID:            "txn_p_01",
 			LedgerID:      personalSpace.ID,
-			Title:         "星巴克拿鐵",
+			Title:         "星巴克",
 			Payer:         "Antigravity",
 			Date:          now.Add(-2 * time.Hour),
 			Currency:      "TWD",
 			ExchangeRate:  decimal.NewFromInt(1),
-			TotalAmount:   decimal.NewFromInt(155),
-			BillingAmount: decimal.NewFromInt(155),
+			TotalAmount:   decimal.NewFromInt(310),
+			BillingAmount: decimal.NewFromInt(310),
 			Category:      "餐飲",
 			PaymentMethod: "信用卡",
+			Note:          "跟同事下午茶",
 		},
 		{
 			ID:            "txn_p_02",
@@ -99,7 +100,17 @@ func main() {
 	for _, txn := range transactions {
 		db.Create(&txn)
 	}
-	fmt.Println("✓ Created sample transactions for personal space")
+
+	// 4.1 Add items to personal transactions
+	db.Create(&models.TransactionItem{
+		ID:            uuid.New(),
+		TransactionID: "txn_p_01",
+		Name:          "特大杯拿鐵",
+		UnitPrice:     decimal.NewFromInt(155),
+		Quantity:      decimal.NewFromInt(2),
+		Amount:        decimal.NewFromInt(310),
+	})
+	fmt.Println("✓ Created sample transactions and items for personal space")
 
 	// 5. Create a sample space (unified Ledger + Trip)
 	sampleSpace := &models.Ledger{
@@ -163,17 +174,56 @@ func main() {
 	txnSample := models.Transaction{
 		ID:            txnSampleID,
 		LedgerID:      sampleSpace.ID,
-		Title:         "成田機場利木津巴士",
+		Title:         "利木津巴士",
 		Payer:         "Antigravity",
 		Date:          now.AddDate(0, 1, 0),
 		Currency:      "JPY",
 		TotalAmount:   decimal.NewFromInt(9000),
-		BillingAmount: decimal.NewFromInt(1950),
 		ExchangeRate:  decimal.NewFromFloat(0.216),
+		BillingAmount: decimal.NewFromFloat(1944),
+		HandlingFee:   decimal.NewFromFloat(29.16), // 1.5% fee
 		Category:      "交通",
 		PaymentMethod: "信用卡",
 	}
 	db.Create(&txnSample)
+
+	// Add items to trip transaction
+	db.Create(&models.TransactionItem{
+		ID:            uuid.New(),
+		TransactionID: txnSampleID,
+		Name:          "成人票",
+		UnitPrice:     decimal.NewFromInt(3000),
+		Quantity:      decimal.NewFromInt(3),
+		Amount:        decimal.NewFromInt(9000),
+	})
+
+	// Add another complex transaction with items
+	txnComplexID := "txn_s_02"
+	txnComplex := models.Transaction{
+		ID:            txnComplexID,
+		LedgerID:      sampleSpace.ID,
+		Title:         "一蘭拉麵",
+		Payer:         "Antigravity",
+		Date:          now.AddDate(0, 1, 1),
+		Currency:      "JPY",
+		TotalAmount:   decimal.NewFromInt(5800),
+		ExchangeRate:  decimal.NewFromFloat(0.216),
+		BillingAmount: decimal.NewFromFloat(1253),
+		HandlingFee:   decimal.NewFromInt(0), // Cash payment
+		Category:      "飲食",
+		PaymentMethod: "現金",
+	}
+	db.Create(&txnComplex)
+
+	items := []models.TransactionItem{
+		{ID: uuid.New(), TransactionID: txnComplexID, Name: "天然豚骨拉麵", UnitPrice: decimal.NewFromInt(980), Quantity: decimal.NewFromInt(3), Amount: decimal.NewFromInt(2940)},
+		{ID: uuid.New(), TransactionID: txnComplexID, Name: "加麵", UnitPrice: decimal.NewFromInt(210), Quantity: decimal.NewFromInt(2), Amount: decimal.NewFromInt(420)},
+		{ID: uuid.New(), TransactionID: txnComplexID, Name: "生啤酒", UnitPrice: decimal.NewFromInt(580), Quantity: decimal.NewFromInt(3), Amount: decimal.NewFromInt(1740)},
+		{ID: uuid.New(), TransactionID: txnComplexID, Name: "半熟鹽味蛋", UnitPrice: decimal.NewFromInt(140), Quantity: decimal.NewFromInt(5), Amount: decimal.NewFromInt(700)},
+	}
+	for _, item := range items {
+		db.Create(&item)
+	}
 
 	// Splits: Antigravity paid for everyone, split 3 ways
 	splits := []models.TransactionSplit{
