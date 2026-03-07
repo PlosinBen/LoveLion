@@ -4,7 +4,7 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   modules: ['@nuxtjs/tailwindcss'],
   
-  css: ['~/assets/css/main.css'],
+  // css: ['~/assets/css/main.css'],
 
   postcss: {
     plugins: {
@@ -40,6 +40,18 @@ export default defineNuxtConfig({
         driver: 'fs',
         base: './.nuxt/cache'
       }
+    }
+  },
+
+  routeRules: {
+    '/api/**': {
+      proxy: 'http://backend:8080/api/**'
+    }
+  },
+
+  runtimeConfig: {
+    public: {
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || ''
     }
   }
 })

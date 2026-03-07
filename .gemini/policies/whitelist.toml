@@ -1,0 +1,17 @@
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = "git (status|add|log|diff)"
+decision = "allow"
+priority = 100
+
+[[rule]]
+toolName = "run_shell_command"
+commandPrefix = "ls"
+decision = "allow"
+priority = 100
+
+[[rule]]
+toolName = "run_shell_command"
+commandPrefix = "docker compose"
+decision = "allow"
+priority = 100

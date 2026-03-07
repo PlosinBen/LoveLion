@@ -16,7 +16,8 @@
     "@vuepic/vue-datepicker": "^12.1.0",
     "blurhash": "^2.0.5",
     "browser-image-compression": "^2.0.2",
-    "nuxt": "^4.2.2"
+    "nuxt": "^4.2.2",
+    "serialize-javascript": "^7.0.4"
   },
   "devDependencies": {
     "@nuxtjs/tailwindcss": "^6.14.0",

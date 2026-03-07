@@ -3,6 +3,8 @@
 export function useApi() {
     const loading = ref(false)
     const error = ref<string | null>(null)
+    const config = useRuntimeConfig()
+    const apiBase = config.public.apiBase || ''
 
     const getToken = () => {
         if (typeof window !== 'undefined') {
@@ -27,6 +29,9 @@ export function useApi() {
         loading.value = true
         error.value = null
 
+        // If apiBase is not provided, use relative paths to trigger the proxy
+        const url = (apiBase && endpoint.startsWith('/')) ? `${apiBase}${endpoint}` : endpoint
+
         const token = getToken()
         const headers: HeadersInit = {
             ...options.headers,
@@ -41,7 +46,7 @@ export function useApi() {
         }
 
         try {
-            const response = await fetch(endpoint, {
+            const response = await fetch(url, {
                 ...options,
                 headers,
             })
