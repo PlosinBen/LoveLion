@@ -1,12 +1,6 @@
 <template>
-  <div class="space-settings-page pb-24">
-    <!-- Header -->
-    <div class="px-2 pb-8 flex items-center gap-3">
-      <button @click="router.back()" class="w-10 h-10 rounded-full bg-neutral-800 text-white flex items-center justify-center hover:bg-neutral-700 transition-colors border-0 cursor-pointer shrink-0">
-          <Icon icon="mdi:arrow-left" class="text-xl" />
-      </button>
-      <h1 class="text-xl font-bold text-white tracking-tight">空間設定</h1>
-    </div>
+  <div class="space-settings-page">
+    <SpaceHeader title="空間設定" />
 
     <div v-if="loading" class="text-center py-10 text-neutral-500">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
@@ -204,12 +198,9 @@ import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useImages } from '~/composables/useImages'
+import SpaceHeader from '~/components/SpaceHeader.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseModal from '~/components/BaseModal.vue'
-
-definePageMeta({
-  hideGlobalNav: true
-})
 
 const route = useRoute()
 const router = useRouter()

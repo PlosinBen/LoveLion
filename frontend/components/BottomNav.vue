@@ -1,10 +1,9 @@
 <template>
   <nav class="fixed bottom-0 left-0 right-0 bg-neutral-900 border-t border-neutral-800 flex justify-around items-center px-4 py-3 z-50">
-    <!-- Navigation Items (Standard Minimalist) -->
-    <template v-if="!items">
+    <template v-for="item in navItems" :key="item.to || item.id">
+      <!-- Link Mode -->
       <NuxtLink 
-        v-for="item in defaultNavItems" 
-        :key="item.to"
+        v-if="item.to"
         :to="item.to"
         class="flex flex-col items-center gap-1 no-underline text-neutral-500 transition-transform active:scale-95"
       >
@@ -13,13 +12,10 @@
           {{ item.label }}
         </span>
       </NuxtLink>
-    </template>
 
-    <!-- Tab Selection Items (Space Local Context) -->
-    <template v-else>
+      <!-- Action Mode (Button) -->
       <button 
-        v-for="item in items" 
-        :key="item.id"
+        v-else
         @click="$emit('update:modelValue', item.id)"
         class="flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer text-neutral-500 transition-transform active:scale-95"
       >
@@ -43,14 +39,15 @@ interface NavItem {
   to?: string
 }
 
-defineProps<{
+const props = defineProps<{
   modelValue?: string
   items?: NavItem[]
 }>()
 
 defineEmits(['update:modelValue'])
 
-const defaultNavItems = computed(() => {
+const navItems = computed(() => {
+  if (props.items) return props.items
   return [
     { label: '空間', icon: 'mdi:view-grid-outline', to: '/' },
     { label: '設定', icon: 'mdi:cog-outline', to: '/settings' }

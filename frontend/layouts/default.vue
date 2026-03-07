@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <BaseLayout>
     <template #header>
       <Header class="px-4" />
@@ -7,9 +7,8 @@
     <slot />
 
     <template #footer>
-      <!-- Priority: 1. Slot from page, 2. Global BottomNav (if not hidden) -->
       <slot name="footer">
-        <BottomNav v-if="shouldShowGlobalNav" />
+        <BottomNav v-if="shouldShowGlobalNav" :items="spaceNavItems" />
       </slot>
     </template>
   </BaseLayout>
@@ -30,9 +29,20 @@ onMounted(() => {
 })
 
 const shouldShowGlobalNav = computed(() => {
-  // Hide if not authenticated or if page meta explicitly says so
   if (!isAuthenticated.value) return false
   if (route.meta.hideGlobalNav) return false
   return true
+})
+
+const spaceNavItems = computed(() => {
+  const spaceId = route.params.id
+  if (!spaceId || typeof spaceId !== 'string') return undefined
+
+  // Inside space: only show space-related tools
+  return [
+    { label: '記帳', icon: 'mdi:wallet-outline', to: `/spaces/${spaceId}` },
+    { label: '比價', icon: 'mdi:scale-balance', to: `/spaces/${spaceId}/stores` },
+    { label: '設定', icon: 'mdi:cog-outline', to: `/spaces/${spaceId}/settings` }
+  ]
 })
 </script>
