@@ -3,10 +3,10 @@
     <SpaceHeader 
       title="建立新空間" 
       :show-back="true"
-      class="pt-0 px-2"
+      class="px-2"
     />
 
-    <div class="pt-0">
+    <div>
       <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
         <div class="flex flex-col gap-2">
           <label class="text-xs font-bold text-neutral-500 uppercase tracking-widest px-1">基本資訊</label>

@@ -3,10 +3,10 @@
     <SpaceHeader 
       title="新增交易" 
       :show-back="true"
-      class="pt-0 px-2"
+      class="px-2"
     />
 
-    <div class="pt-0">
+    <div>
       <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
         <!-- Date & Time -->
         <div class="flex flex-col gap-2">

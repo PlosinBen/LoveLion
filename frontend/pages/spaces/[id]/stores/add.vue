@@ -3,10 +3,10 @@
     <SpaceHeader 
       title="新增店家" 
       :show-back="true"
-      class="pt-0 px-2"
+      class="px-2"
     />
 
-    <div class="pt-0">
+    <div>
       <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
         <div class="flex flex-col gap-2">
           <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">店家資訊</label>

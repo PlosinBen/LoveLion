@@ -6,7 +6,7 @@
       :title="space.name"
       :show-back="true"
       :show-switcher="false"
-      class="pt-0 px-2"
+      class="px-2"
     >
       <template #right>
         <button 

@@ -1,37 +1,42 @@
 <template>
-  <div class="flex flex-col h-screen bg-black relative">
-    <!-- Header / Close Button -->
-    <div class="absolute top-0 left-0 right-0 p-4 pt-8 flex justify-between items-center z-20 bg-gradient-to-b from-black/80 to-transparent">
-       <button @click="router.back()" class="w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md border border-white/10 cursor-pointer">
-          <Icon icon="mdi:close" class="text-2xl" />
-       </button>
-       <div class="flex gap-4">
-           <a v-if="imageUrl" :href="imageUrl" download target="_blank" class="w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md border border-white/10 cursor-pointer no-underline">
-               <Icon icon="mdi:download" class="text-xl" />
-           </a>
-       </div>
+  <div class="media-view-page bg-black fixed inset-0 flex flex-col items-center justify-center">
+    <div class="absolute top-6 left-6 z-10">
+      <button @click="router.back()" class="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-colors border-0 cursor-pointer backdrop-blur-md">
+        <Icon icon="mdi:close" class="text-xl" />
+      </button>
     </div>
 
-    <!-- Main Image Display -->
-    <div class="flex-1 flex items-center justify-center p-4 overflow-hidden">
-        <img v-if="imageUrl" :src="imageUrl" class="max-w-full max-h-full object-contain shadow-2xl" />
-        <div v-else class="text-neutral-600 font-bold">
-            找不到媒體資源
-        </div>
+    <div v-if="loading" class="text-neutral-500 flex flex-col items-center gap-3">
+        <Icon icon="mdi:loading" class="text-4xl animate-spin" />
+        <span class="text-xs font-bold uppercase tracking-widest">載入相片...</span>
+    </div>
+    <div v-else class="w-full h-full flex items-center justify-center">
+      <img :src="imageUrl" class="max-w-full max-h-full object-contain shadow-2xl" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
+import { useImages } from '~/composables/useImages'
 
 definePageMeta({
   layout: 'empty'
 })
 
-const router = useRouter()
 const route = useRoute()
+const router = useRouter()
+const { getImageUrl } = useImages()
 
-const imageUrl = computed(() => route.query.src as string)
+const imageUrl = ref('')
+const loading = ref(true)
+
+onMounted(() => {
+  const path = route.query.path as string
+  if (path) {
+    imageUrl.value = getImageUrl(path)
+  }
+  loading.value = false
+})
 </script>

@@ -3,14 +3,14 @@
     <SpaceHeader 
       title="編輯交易" 
       :show-back="true"
-      class="pt-0 px-2"
+      class="px-2"
     />
 
     <div v-if="loading" class="p-20 flex justify-center items-center text-neutral-500">
         <Icon icon="mdi:loading" class="text-4xl animate-spin" />
     </div>
 
-    <div v-else class="pt-0">
+    <div v-else>
       <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
         <!-- Date & Time -->
         <div class="flex flex-col gap-2">

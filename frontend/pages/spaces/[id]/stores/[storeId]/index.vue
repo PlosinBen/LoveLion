@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-6 pb-24">
     <!-- Compact Header -->
-    <div class="px-2 pt-0 pb-2 flex items-center gap-3">
+    <div class="px-2 pb-2 flex items-center gap-3">
       <button @click="router.back()" class="w-10 h-10 rounded-full bg-neutral-800 text-white flex items-center justify-center hover:bg-neutral-700 transition-colors border-0 cursor-pointer shrink-0">
           <Icon icon="mdi:arrow-left" class="text-xl" />
       </button>

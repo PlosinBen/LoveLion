@@ -3,14 +3,14 @@
     <SpaceHeader
       title="統計分析"
       :show-back="false"
-      class="pt-0 px-2"
+      class="px-2"
     />
 
     <div v-if="loading" class="flex justify-center items-center py-20 text-neutral-400">
         <Icon icon="mdi:loading" class="text-4xl animate-spin" />
     </div>
 
-    <div v-else class="flex flex-col gap-8 pt-0 animate-in fade-in duration-500">
+    <div v-else class="flex flex-col gap-8 animate-in fade-in duration-500">
         
         <!-- Summary Header -->
         <div class="bg-neutral-900 rounded-2xl border border-neutral-800/60 p-8 flex flex-col items-center justify-center relative overflow-hidden shadow-sm">

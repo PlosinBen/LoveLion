@@ -2,7 +2,7 @@
   <div class="transaction-detail">
     <SpaceHeader 
       title="交易詳情" 
-      class="pt-0 px-2"
+      class="px-2"
     >
       <template #right>
         <div class="flex gap-1">
@@ -16,7 +16,7 @@
       </template>
     </SpaceHeader>
 
-    <div class="pt-0">
+    <div class="content-wrapper">
       <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
 
       <div v-else-if="transaction" class="content">
