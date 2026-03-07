@@ -1,5 +1,8 @@
 <template>
-  <div class="flex justify-between items-center p-4 rounded-2xl border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 transition-colors cursor-pointer group active:scale-95 shadow-sm">
+  <div 
+    @click="router.push(`/spaces/${spaceId}/transaction/${transaction.id}`)"
+    class="flex justify-between items-center p-4 rounded-2xl border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 transition-colors cursor-pointer group active:scale-95 shadow-sm"
+  >
     <div class="flex items-center gap-3">
       <!-- Category Icon -->
       <div class="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center text-indigo-500 border border-neutral-700">
@@ -26,17 +29,22 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   transaction: {
+    id: string | number
     category?: string
     date: string
     currency: string
     total_amount: number | string
     billing_amount?: number | string
   },
+  spaceId: string | number,
   baseCurrency?: string
 }>()
+
+const router = useRouter()
 
 const isBaseCurrency = computed(() => {
   return props.transaction.billing_amount && Number(props.transaction.billing_amount) > 0
