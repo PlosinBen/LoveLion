@@ -6,7 +6,7 @@
     <div class="flex items-center gap-4">
       <!-- Icon Container -->
       <div 
-        class="w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-colors" 
+        class="w-12 h-12 rounded-xl flex items-center justify-center text-xl transition-colors border border-neutral-800" 
         :class="typeStyles.bg"
       >
         <Icon :icon="typeStyles.icon" :class="typeStyles.color" />
@@ -59,14 +59,14 @@ const typeStyles = computed(() => {
   if (props.space.type === 'trip' || props.space.type === 'project') {
     return {
       icon: 'mdi:airplane',
-      bg: 'bg-indigo-500/10',
+      bg: 'bg-neutral-800',
       color: 'text-indigo-400',
       label: '旅行專案'
     }
   }
   return {
     icon: 'mdi:wallet-outline',
-    bg: 'bg-green-500/10',
+    bg: 'bg-neutral-800',
     color: 'text-green-400',
     label: '個人空間'
   }

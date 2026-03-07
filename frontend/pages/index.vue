@@ -26,6 +26,7 @@
         v-for="space in spaces" 
         :key="space.id" 
         :space="space" 
+        @click="router.push(`/spaces/${space.id}`)"
       />
     </div>
   </div>
