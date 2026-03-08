@@ -16,8 +16,15 @@
     </div>
 
     <!-- Right Actions -->
-    <div class="shrink-0">
+    <div class="shrink-0 flex items-center gap-1">
       <slot name="right" />
+      <NuxtLink
+        v-if="settingsTo"
+        :to="settingsTo"
+        class="w-10 h-10 rounded-full bg-neutral-800 text-neutral-400 flex items-center justify-center hover:bg-neutral-700 hover:text-white transition-colors no-underline"
+      >
+        <Icon icon="mdi:cog-outline" class="text-xl" />
+      </NuxtLink>
     </div>
   </div>
 </template>
@@ -40,6 +47,10 @@ const props = defineProps({
     default: false
   },
   backTo: {
+    type: String,
+    default: ''
+  },
+  settingsTo: {
     type: String,
     default: ''
   }

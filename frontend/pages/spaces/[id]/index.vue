@@ -3,6 +3,7 @@
     <SpaceHeader
       :title="store.space.name"
       :show-back="true"
+      :settings-to="`/spaces/${store.space.id}/settings`"
     />
 
     <div class="flex flex-col gap-6">

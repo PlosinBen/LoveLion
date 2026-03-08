@@ -1,6 +1,10 @@
 <template>
   <div class="stores-page">
-    <SpaceHeader title="比價清單" />
+    <SpaceHeader
+      :title="detailStore.space?.name || '比價清單'"
+      :show-back="true"
+      :settings-to="`/spaces/${route.params.id}/settings`"
+    />
 
     <div v-if="detailStore.loading.stores" class="flex justify-center items-center py-20 text-neutral-500">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
@@ -65,6 +69,6 @@ onMounted(async () => {
     return
   }
   detailStore.setSpaceId(route.params.id as string)
-  await detailStore.fetchStores()
+  await Promise.all([detailStore.fetchSpace(), detailStore.fetchStores()])
 })
 </script>

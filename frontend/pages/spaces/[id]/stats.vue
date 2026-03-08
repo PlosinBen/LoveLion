@@ -1,6 +1,10 @@
 <template>
   <div class="space-stats-page">
-    <SpaceHeader title="統計" />
+    <SpaceHeader
+      :title="store.space?.name || '統計'"
+      :show-back="true"
+      :settings-to="`/spaces/${route.params.id}/settings`"
+    />
 
     <div v-if="store.loading.space || store.loading.transactions" class="text-center py-10 text-neutral-500">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
