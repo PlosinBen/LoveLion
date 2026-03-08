@@ -1,23 +1,20 @@
 <template>
-  <BaseButton
+  <button
     @click="$emit('click')"
-    variant="primary"
-    size="icon"
-    class="fixed right-6 bottom-24 z-20 !rounded-full !w-14 !h-14"
+    class="fixed right-6 bottom-28 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg rounded-full flex items-center justify-center text-white transition-transform active:scale-95 z-20 cursor-pointer border-0"
   >
     <Icon :icon="icon" class="text-3xl" />
-  </BaseButton>
+  </button>
 </template>
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import BaseButton from '~/components/BaseButton.vue'
 
 interface Props {
   icon?: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   icon: 'mdi:plus',
 })
 

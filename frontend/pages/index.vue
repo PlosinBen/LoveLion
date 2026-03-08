@@ -18,7 +18,7 @@
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
     </div>
 
-    <div v-else-if="spaces.length === 0" class="flex flex-col items-center justify-center py-20 bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed text-neutral-500">
+    <div v-else-if="allSpaces.length === 0" class="flex flex-col items-center justify-center py-20 bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed text-neutral-500">
       <Icon icon="mdi:view-grid-plus-outline" class="text-5xl mb-4 opacity-20" />
       <p class="text-sm">尚未建立任何管理空間</p>
       <BaseButton @click="router.push('/spaces/add-new')" class="mt-6">立即建立</BaseButton>
@@ -26,7 +26,7 @@
 
     <div v-else class="flex flex-col gap-4">
       <SpaceListItem
-        v-for="space in spaces"
+        v-for="space in sortedSpaces"
         :key="space.id"
         :space="space"
         @click="router.push(`/spaces/${space.id}/ledger`)"
@@ -37,9 +37,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useSpace } from '~/composables/useSpace'
 import SpaceListItem from '~/components/SpaceListItem.vue'
@@ -47,39 +46,33 @@ import PageTitle from '~/components/PageTitle.vue'
 import BaseButton from '~/components/BaseButton.vue'
 
 const router = useRouter()
-const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
-const { togglePin } = useSpace()
+const { allSpaces, loading, fetchSpaces, togglePin } = useSpace()
 
-const spaces = ref<any[]>([])
-const loading = ref(true)
-
-const fetchSpaces = async () => {
-  try {
-    spaces.value = await api.get<any[]>('/api/spaces')
-  } catch (e) {
-    console.error('Failed to fetch spaces:', e)
-  } finally {
-    loading.value = false
-  }
-}
+const sortedSpaces = computed(() => {
+  return [...allSpaces.value].sort((a, b) => {
+    // Pinned first
+    if (a.is_pinned && !b.is_pinned) return -1
+    if (!a.is_pinned && b.is_pinned) return 1
+    // Then by name
+    return a.name.localeCompare(b.name)
+  })
+})
 
 const handleTogglePin = async (id: string) => {
     try {
         await togglePin(id)
-        // Refresh the list to show new order
-        await fetchSpaces()
     } catch (e) {
         console.error('Pin failed', e)
     }
 }
 
-onMounted(() => {
+onMounted(async () => {
   initAuth()
   if (!isAuthenticated.value) {
     router.push('/login')
     return
   }
-  fetchSpaces()
+  await fetchSpaces(true)
 })
 </script>

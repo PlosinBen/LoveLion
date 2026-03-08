@@ -2,7 +2,7 @@
   <button
     :type="type"
     :disabled="disabled || loading"
-    @click="$emit('click', $event)"
+    @click.stop="$emit('click', $event)"
     class="flex justify-center items-center transition-all active:scale-95 disabled:opacity-50 border-0 cursor-pointer font-bold shrink-0"
     :class="[
       variantClasses,
