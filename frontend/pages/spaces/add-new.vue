@@ -3,7 +3,6 @@
     <SpaceHeader 
       title="建立新空間" 
       :show-back="true"
-      class="px-2"
     />
 
     <div>

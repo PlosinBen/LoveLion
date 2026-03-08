@@ -36,6 +36,17 @@
             placeholder="請輸入空間名稱"
           />
 
+          <!-- Description -->
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs text-neutral-400 px-1">空間描述</label>
+            <textarea
+              v-model="form.description"
+              placeholder="簡短描述此空間的用途"
+              rows="3"
+              class="w-full bg-neutral-800 border border-neutral-700 text-white py-1.5 px-2 rounded outline-none focus:border-indigo-500 transition-colors placeholder-neutral-500 text-base resize-none"
+            />
+          </div>
+
           <!-- Type & Currency (Readonly) -->
           <div class="grid grid-cols-2 gap-4">
               <div>
@@ -52,6 +63,29 @@
               </div>
           </div>
 
+          <!-- Date Range -->
+          <div class="grid grid-cols-2 gap-4">
+            <BaseInput
+              v-model="form.start_date"
+              type="date"
+              label="開始日期"
+            />
+            <BaseInput
+              v-model="form.end_date"
+              type="date"
+              label="結束日期"
+            />
+          </div>
+
+          <!-- Is Pinned -->
+          <label class="flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-colors" :class="form.is_pinned ? 'border-indigo-500 bg-indigo-500/5' : 'border-neutral-700 bg-neutral-800'">
+            <div class="flex flex-col">
+              <span class="font-bold text-sm text-white">置頂空間</span>
+              <span class="text-xs text-neutral-500 mt-0.5">將此空間釘選在列表最上方</span>
+            </div>
+            <input type="checkbox" v-model="form.is_pinned" class="w-5 h-5 rounded border-neutral-700 bg-neutral-800 text-indigo-500" />
+          </label>
+
           <button
             @click="handleUpdateSpace"
             :disabled="updating"
@@ -62,7 +96,43 @@
         </div>
       </section>
 
-      <!-- 2. Members Section -->
+      <!-- 2. Lists Section -->
+      <section>
+        <div class="flex items-center gap-2 mb-4 px-1">
+          <Icon icon="mdi:format-list-bulleted" class="text-indigo-500 text-xl" />
+          <h2 class="text-lg font-bold">分類與選項</h2>
+        </div>
+
+        <div class="bg-neutral-900 rounded-2xl border border-neutral-800 p-6 flex flex-col gap-6">
+          <ListEditor
+            v-model="form.currencies"
+            label="可用幣別"
+            placeholder="輸入幣別代碼，如 USD、JPY"
+          />
+
+          <ListEditor
+            v-model="form.categories"
+            label="交易分類"
+            placeholder="輸入分類名稱，如 餐飲、交通"
+          />
+
+          <ListEditor
+            v-model="form.payment_methods"
+            label="付款方式"
+            placeholder="輸入付款方式，如 現金、信用卡"
+          />
+
+          <button
+            @click="handleUpdateLists"
+            :disabled="updating"
+            class="w-full py-4 rounded-xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 border-0 cursor-pointer mt-2 shadow-lg"
+          >
+            {{ updating ? '儲存中...' : '儲存分類設定' }}
+          </button>
+        </div>
+      </section>
+
+      <!-- 3. Members Section -->
       <section>
         <div class="flex items-center gap-2 mb-4 px-1">
           <Icon icon="mdi:account-group-outline" class="text-indigo-500 text-xl" />
@@ -202,6 +272,7 @@ import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import SpaceHeader from '~/components/SpaceHeader.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseModal from '~/components/BaseModal.vue'
+import ListEditor from '~/components/ListEditor.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -221,7 +292,11 @@ const form = ref({
   base_currency: '',
   start_date: null as string | null,
   end_date: null as string | null,
-  cover_image: ''
+  cover_image: '',
+  is_pinned: false,
+  currencies: [] as string[],
+  categories: [] as string[],
+  payment_methods: [] as string[]
 })
 
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -241,7 +316,29 @@ const fetchData = async () => {
       detailStore.fetchMembers(true),
       detailStore.fetchInvites(true)
     ])
-    form.value = { ...detailStore.space }
+    const s = detailStore.space
+    const parseJSON = (v: any): string[] => {
+      if (Array.isArray(v)) return v
+      if (typeof v === 'string') { try { return JSON.parse(v) } catch { return [] } }
+      return []
+    }
+    const formatDate = (d: any): string | null => {
+      if (!d) return null
+      return new Date(d).toISOString().split('T')[0]
+    }
+    form.value = {
+      name: s.name || '',
+      description: s.description || '',
+      type: s.type || '',
+      base_currency: s.base_currency || '',
+      start_date: formatDate(s.start_date),
+      end_date: formatDate(s.end_date),
+      cover_image: s.cover_image || '',
+      is_pinned: s.is_pinned || false,
+      currencies: parseJSON(s.currencies),
+      categories: parseJSON(s.categories),
+      payment_methods: parseJSON(s.payment_methods)
+    }
   } catch (e) {
     console.error('Failed to fetch data:', e)
     router.push('/')
@@ -256,13 +353,31 @@ const handleUpdateSpace = async () => {
     await api.patch(`/api/spaces/${spaceId}`, {
       name: form.value.name,
       description: form.value.description,
-      start_date: form.value.start_date,
-      end_date: form.value.end_date,
-      cover_image: form.value.cover_image
+      start_date: form.value.start_date ? new Date(form.value.start_date) : null,
+      end_date: form.value.end_date ? new Date(form.value.end_date) : null,
+      cover_image: form.value.cover_image,
+      is_pinned: form.value.is_pinned
     })
     // Refresh store so other pages see updated data
     await detailStore.fetchSpace(true)
     alert('設定已儲存')
+  } catch (e: any) {
+    alert(e.message || '儲存失敗')
+  } finally {
+    updating.value = false
+  }
+}
+
+const handleUpdateLists = async () => {
+  updating.value = true
+  try {
+    await api.patch(`/api/spaces/${spaceId}`, {
+      currencies: form.value.currencies,
+      categories: form.value.categories,
+      payment_methods: form.value.payment_methods
+    })
+    await detailStore.fetchSpace(true)
+    alert('分類設定已儲存')
   } catch (e: any) {
     alert(e.message || '儲存失敗')
   } finally {

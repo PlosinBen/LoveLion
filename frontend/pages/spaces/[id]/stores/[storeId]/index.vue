@@ -1,30 +1,30 @@
 <template>
   <div class="flex flex-col gap-6 pb-24">
-    <!-- Compact Header -->
-    <div class="px-2 pb-2 flex items-center gap-3">
-      <button @click="router.push(`/spaces/${route.params.id}/stores`)" class="w-10 h-10 rounded-full bg-neutral-800 text-white flex items-center justify-center hover:bg-neutral-700 transition-colors border-0 cursor-pointer shrink-0">
-          <Icon icon="mdi:arrow-left" class="text-xl" />
-      </button>
+    <SpaceHeader
+      :title="store?.name || '載入中...'"
+      :show-back="true"
+      :back-to="`/spaces/${route.params.id}/stores`"
+    >
+      <template #subtitle>
+        <div class="flex items-center gap-1.5 text-neutral-500 text-xs font-medium mt-0.5">
+          <Icon icon="mdi:package-variant-closed" class="text-indigo-500" />
+          <span>{{ store?.products?.length || 0 }} 個商品</span>
+          <span v-if="store?.products?.length > 0" class="text-neutral-700">|</span>
+          <span v-if="store?.products?.length > 0" class="text-indigo-400">{{ getPriceRange(store.products) }}</span>
+        </div>
+      </template>
 
-      <div class="flex-1 min-w-0">
-         <h1 class="text-xl font-bold text-white tracking-tight truncate">{{ store?.name || '載入中...' }}</h1>
-         <div class="flex items-center gap-1.5 text-neutral-500 text-xs font-medium mt-0.5">
-            <Icon icon="mdi:package-variant-closed" class="text-indigo-500" />
-            <span>{{ store?.products?.length || 0 }} 個商品</span>
-            <span v-if="store?.products?.length > 0" class="text-neutral-700">|</span>
-            <span v-if="store?.products?.length > 0" class="text-indigo-400">{{ getPriceRange(store.products) }}</span>
-         </div>
-      </div>
-      
-      <div class="flex gap-2">
-          <button v-if="store?.google_map_url" @click="windowOpen(store.google_map_url)" class="w-10 h-10 rounded-full bg-neutral-800 text-green-500 flex items-center justify-center hover:bg-neutral-700 transition-colors border-0 cursor-pointer shrink-0">
-              <Icon icon="mdi:google-maps" class="text-xl" />
+      <template #right>
+        <div class="flex gap-2">
+          <button v-if="store?.google_map_url" @click="windowOpen(store.google_map_url)" class="w-10 h-10 rounded-xl bg-neutral-900 text-green-500 flex items-center justify-center hover:bg-neutral-800 transition-colors border-0 cursor-pointer shrink-0">
+            <Icon icon="mdi:google-maps" class="text-xl" />
           </button>
-          <button @click="router.push(`/spaces/${route.params.id}/stores/${route.params.storeId}/edit`)" class="w-10 h-10 rounded-full bg-neutral-800 text-white flex items-center justify-center hover:bg-neutral-700 transition-colors border-0 cursor-pointer shrink-0">
-              <Icon icon="mdi:pencil-outline" class="text-xl" />
+          <button @click="router.push(`/spaces/${route.params.id}/stores/${route.params.storeId}/edit`)" class="w-10 h-10 rounded-xl bg-neutral-900 text-white flex items-center justify-center hover:bg-neutral-800 transition-colors border-0 cursor-pointer shrink-0">
+            <Icon icon="mdi:pencil-outline" class="text-xl" />
           </button>
-      </div>
-    </div>
+        </div>
+      </template>
+    </SpaceHeader>
 
     <div v-if="loading" class="flex justify-center items-center text-neutral-400 py-20">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />

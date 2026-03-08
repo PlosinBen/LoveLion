@@ -3,7 +3,6 @@
     <SpaceHeader
       title="新增交易"
       :back-to="`/spaces/${route.params.id}`"
-      class="px-2"
     />
 
     <div>

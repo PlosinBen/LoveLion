@@ -3,7 +3,6 @@
     <SpaceHeader
       title="編輯交易"
       :back-to="`/spaces/${route.params.id}/transaction/${route.params.txnId}`"
-      class="px-2"
     />
 
     <div v-if="loading" class="p-20 flex justify-center items-center text-neutral-500">
