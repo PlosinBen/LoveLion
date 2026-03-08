@@ -58,26 +58,31 @@ const navItems = computed(() => {
   ]
 })
 
-const isActive = (item: NavItem) => {
+const isActive = (item: NavItem & { alternateTo?: string }) => {
   if (!item.to) return item.id === props.modelValue
   
   if (item.to === '/') return route.path === '/'
   
-  const isExact = route.path === item.to
-  const isSubpath = route.path.startsWith(item.to + '/')
-  
-  if (isExact) return true
-  
-  if (isSubpath) {
-    // Check if there is another nav item that is a better match (longer)
-    const betterMatch = navItems.value.some(other => {
-      if (!other.to || other.to === item.to) return false
-      // If other.to is longer and also matches, it's a better match
-      return (route.path === other.to || route.path.startsWith(other.to + '/')) && other.to.length > item.to.length
-    })
-    return !betterMatch
+  const checkMatch = (path: string) => {
+    const isExact = route.path === path
+    const isSubpath = route.path.startsWith(path + '/')
+    
+    if (isExact) return true
+    
+    if (isSubpath) {
+      // Check if there is another nav item that is a better match (longer)
+      const betterMatch = navItems.value.some(other => {
+        if (!other.to || other.to === path) return false
+        return (route.path === other.to || route.path.startsWith(other.to + '/')) && other.to.length > path.length
+      })
+      return !betterMatch
+    }
+    return false
   }
+
+  const primaryMatch = checkMatch(item.to)
+  const alternateMatch = item.alternateTo ? checkMatch(item.alternateTo) : false
   
-  return false
+  return primaryMatch || alternateMatch
 }
 </script>

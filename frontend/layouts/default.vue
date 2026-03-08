@@ -42,7 +42,7 @@ const spaceNavItems = computed(() => {
   return [
     { label: '統計', icon: 'mdi:chart-bar', to: `/spaces/${spaceId}/stats` },
     { label: '記帳', icon: 'mdi:wallet-outline', to: `/spaces/${spaceId}` },
-    { label: '比價', icon: 'mdi:scale-balance', to: `/spaces/${spaceId}/stores` }
+    { label: '比價', icon: 'mdi:scale-balance', to: `/spaces/${spaceId}/stores`, alternateTo: `/spaces/${spaceId}/products` }
   ]
 })
 </script>

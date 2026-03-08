@@ -3,7 +3,7 @@
     <SpaceHeader
       :title="productName"
       :show-back="true"
-      :back-to="`/spaces/${route.params.id}/stores`"
+      :back-to="`/spaces/${route.params.id}/products`"
     />
 
     <div v-if="detailStore.loading.products" class="flex justify-center items-center py-20 text-neutral-500">
@@ -74,7 +74,10 @@ const router = useRouter()
 const { isAuthenticated, initAuth } = useAuth()
 const detailStore = useSpaceDetailStore()
 
-const productName = computed(() => route.query.name as string || '商品詳情')
+const productName = computed(() => {
+  const name = route.params.name
+  return typeof name === 'string' ? decodeURIComponent(name) : '商品詳情'
+})
 
 const matchingProducts = computed(() => {
   return detailStore.products.filter(p => p.name === productName.value)
@@ -96,8 +99,6 @@ onMounted(async () => {
     return
   }
   detailStore.setSpaceId(route.params.id as string)
-  if (detailStore.products.length === 0) {
-    await detailStore.fetchProducts()
-  }
+  await detailStore.fetchProducts()
 })
 </script>
