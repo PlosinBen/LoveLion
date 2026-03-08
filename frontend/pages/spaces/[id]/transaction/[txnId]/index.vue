@@ -83,12 +83,14 @@ import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import SpaceHeader from '~/components/SpaceHeader.vue'
 
 const router = useRouter()
 const route = useRoute()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
+const detailStore = useSpaceDetailStore()
 
 const transaction = ref<any>(null)
 const loading = ref(true)
@@ -145,6 +147,7 @@ const handleDelete = async () => {
 
   try {
     await api.delete(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`)
+    detailStore.invalidate('transactions')
     router.push(`/spaces/${route.params.id}`)
   } catch (e: any) {
     alert(e.message || '刪除失敗')

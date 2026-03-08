@@ -2,21 +2,21 @@
   <div class="stores-page">
     <SpaceHeader title="比價清單" />
 
-    <div v-if="loading" class="flex justify-center items-center py-20 text-neutral-500">
+    <div v-if="detailStore.loading.stores" class="flex justify-center items-center py-20 text-neutral-500">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
     </div>
 
-    <div v-else-if="stores.length === 0" class="flex flex-col items-center justify-center py-20 bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed text-neutral-500">
+    <div v-else-if="detailStore.stores.length === 0" class="flex flex-col items-center justify-center py-20 bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed text-neutral-500">
       <Icon icon="mdi:store-plus-outline" class="text-5xl mb-4 opacity-20" />
       <p class="text-sm">尚未建立任何商店紀錄</p>
       <button @click="router.push(`/spaces/${route.params.id}/stores/add`)" class="mt-6 px-6 py-2 bg-indigo-500 text-white rounded-full font-bold text-sm border-0 cursor-pointer">立即新增</button>
     </div>
 
     <div v-else class="flex flex-col gap-4">
-      <div 
-        v-for="store in stores" 
-        :key="store.id" 
-        @click="router.push(`/spaces/${route.params.id}/stores/${store.id}`)"
+      <div
+        v-for="s in detailStore.stores"
+        :key="s.id"
+        @click="router.push(`/spaces/${route.params.id}/stores/${s.id}`)"
         class="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl flex items-center justify-between cursor-pointer"
       >
         <div class="flex items-center gap-4">
@@ -24,8 +24,8 @@
               <Icon icon="mdi:store-outline" class="text-2xl" />
            </div>
            <div class="flex flex-col">
-              <span class="font-bold text-white">{{ store.name }}</span>
-              <span class="text-xs text-neutral-500 font-medium mt-0.5">{{ store.products?.length || 0 }} 個商品</span>
+              <span class="font-bold text-white">{{ s.name }}</span>
+              <span class="text-xs text-neutral-500 font-medium mt-0.5">{{ s.products?.length || 0 }} 個商品</span>
            </div>
         </div>
         <Icon icon="mdi:chevron-right" class="text-neutral-700 text-xl" />
@@ -33,7 +33,7 @@
     </div>
 
     <!-- FAB for adding store -->
-    <button 
+    <button
       @click="router.push(`/spaces/${route.params.id}/stores/add`)"
       class="fixed bottom-32 right-6 w-14 h-14 bg-indigo-500 shadow-lg rounded-full flex items-center justify-center text-white z-20 cursor-pointer border-0"
     >
@@ -43,10 +43,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import SpaceHeader from '~/components/SpaceHeader.vue'
 
 definePageMeta({
@@ -55,28 +55,16 @@ definePageMeta({
 
 const route = useRoute()
 const router = useRouter()
-const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
+const detailStore = useSpaceDetailStore()
 
-const stores = ref<any[]>([])
-const loading = ref(true)
-
-const fetchStores = async () => {
-  try {
-    stores.value = await api.get<any[]>(`/api/spaces/${route.params.id}/stores`)
-  } catch (e) {
-    console.error('Failed to fetch stores:', e)
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => {
+onMounted(async () => {
   initAuth()
   if (!isAuthenticated.value) {
     router.push('/login')
     return
   }
-  fetchStores()
+  detailStore.setSpaceId(route.params.id as string)
+  await detailStore.fetchStores()
 })
 </script>

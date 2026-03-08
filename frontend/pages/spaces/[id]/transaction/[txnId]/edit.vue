@@ -212,6 +212,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import SpaceHeader from '~/components/SpaceHeader.vue'
@@ -225,6 +226,7 @@ const router = useRouter()
 const route = useRoute()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
+const detailStore = useSpaceDetailStore()
 
 const categories = ref<{label: string, value: string}[]>([])
 const availableCurrencies = ref<{label: string, value: string}[]>([])
@@ -356,6 +358,7 @@ const handleSubmit = async () => {
     }
 
     await api.put(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`, payload)
+    detailStore.invalidate('transactions')
     router.push(`/spaces/${route.params.id}/transaction/${route.params.txnId}`)
   } catch (e: any) {
     alert(e.message || '更新失敗')
@@ -369,6 +372,7 @@ const handleDelete = async () => {
   
   try {
     await api.delete(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`)
+    detailStore.invalidate('transactions')
     router.push(`/spaces/${route.params.id}`)
   } catch (e: any) {
     alert(e.message || '刪除失敗')

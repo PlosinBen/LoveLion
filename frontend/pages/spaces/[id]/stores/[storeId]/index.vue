@@ -118,6 +118,7 @@ import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useImages } from '~/composables/useImages'
+import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import ImageManager from '~/components/ImageManager.vue'
 
 const router = useRouter()
@@ -128,6 +129,7 @@ const route = useRoute()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
 const { getImageUrl } = useImages()
+const detailStore = useSpaceDetailStore()
 
 const store = ref<any>(null)
 const loading = ref(true)
@@ -191,6 +193,7 @@ const deleteProduct = async (productId: string) => {
   if (!confirm('確定要刪除此商品紀錄嗎？')) return
   try {
     await api.delete(`/api/spaces/${route.params.id}/stores/${route.params.storeId}/products/${productId}`)
+    detailStore.invalidate('stores')
     fetchStore()
   } catch (e: any) {
     alert(e.message || '刪除失敗')

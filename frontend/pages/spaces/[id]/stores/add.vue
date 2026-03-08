@@ -41,6 +41,7 @@
 import { ref, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import SpaceHeader from '~/components/SpaceHeader.vue'
 
 definePageMeta({
@@ -52,6 +53,7 @@ const router = useRouter()
 const route = useRoute()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
+const detailStore = useSpaceDetailStore()
 
 const submitting = ref(false)
 const form = ref({
@@ -64,6 +66,7 @@ const handleSubmit = async () => {
   submitting.value = true
   try {
     await api.post(`/api/spaces/${route.params.id}/stores`, form.value)
+    detailStore.invalidate('stores')
     router.push(`/spaces/${route.params.id}/stores`)
   } catch (e: any) {
     alert(e.message || '建立失敗')

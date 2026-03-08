@@ -1,7 +1,7 @@
 <template>
-  <div v-if="space" class="space-detail-page">
-    <SpaceHeader 
-      :title="space.name" 
+  <div v-if="store.space" class="space-detail-page">
+    <SpaceHeader
+      :title="store.space.name"
       :show-back="true"
     />
 
@@ -13,24 +13,24 @@
              {{ showAll ? '收起' : '查看全部' }}
           </button>
         </div>
-        
-        <div v-if="transactions.length === 0" class="bg-neutral-900/50 rounded-2xl border border-neutral-800 border-dashed p-10 flex flex-col items-center justify-center text-neutral-500 text-sm italic">
+
+        <div v-if="store.transactions.length === 0" class="bg-neutral-900/50 rounded-2xl border border-neutral-800 border-dashed p-10 flex flex-col items-center justify-center text-neutral-500 text-sm italic">
           目前還沒有交易紀錄
         </div>
         <div v-else class="flex flex-col gap-2">
-          <TransactionListItem 
+          <TransactionListItem
             v-for="txn in displayedTransactions"
-            :key="txn.id" 
-            :transaction="txn" 
-            :space-id="space.id"
+            :key="txn.id"
+            :transaction="txn"
+            :space-id="store.space.id"
           />
         </div>
       </section>
     </div>
 
     <!-- FAB for adding transaction -->
-    <button 
-      @click="router.push(`/spaces/${space.id}/transaction/add`)"
+    <button
+      @click="router.push(`/spaces/${store.space.id}/transaction/add`)"
       class="fixed bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg rounded-full flex items-center justify-center text-white transition-transform active:scale-95 z-20 cursor-pointer border-0"
     >
       <Icon icon="mdi:plus" class="text-3xl" />
@@ -41,44 +41,33 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import SpaceHeader from '~/components/SpaceHeader.vue'
 import TransactionListItem from '~/components/TransactionListItem.vue'
 
 const route = useRoute()
 const router = useRouter()
-const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
+const store = useSpaceDetailStore()
 
-const space = ref<any>(null)
-const transactions = ref<any[]>([])
 const showAll = ref(false)
 
 const displayedTransactions = computed(() => {
-  return showAll.value ? transactions.value : transactions.value.slice(0, 5)
+  return showAll.value ? store.transactions : store.transactions.slice(0, 5)
 })
 
-const fetchData = async () => {
-  try {
-    const spaceId = route.params.id
-    // Fetch space with members
-    space.value = await api.get<any>(`/api/spaces/${spaceId}`)
-    // Fetch transactions
-    const txnData = await api.get<any>(`/api/spaces/${spaceId}/transactions`)
-    transactions.value = txnData || []
-  } catch (e) {
-    console.error('Failed to fetch space data:', e)
-    router.push('/')
-  }
-}
-
-onMounted(() => {
+onMounted(async () => {
   initAuth()
   if (!isAuthenticated.value) {
     router.push('/login')
     return
   }
-  fetchData()
+  store.setSpaceId(route.params.id as string)
+  try {
+    await Promise.all([store.fetchSpace(), store.fetchTransactions()])
+  } catch (e) {
+    router.push('/')
+  }
 })
 </script>

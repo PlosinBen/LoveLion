@@ -13,7 +13,7 @@
           <Icon icon="mdi:cog-outline" class="text-indigo-500 text-xl" />
           <h2 class="text-lg font-bold">基本設定</h2>
         </div>
-        
+
         <div class="bg-neutral-900 rounded-2xl border border-neutral-800 p-6 flex flex-col gap-6">
           <!-- Cover Image -->
           <div>
@@ -30,10 +30,10 @@
           </div>
 
           <!-- Name -->
-          <BaseInput 
-            v-model="form.name" 
-            label="空間名稱" 
-            placeholder="請輸入空間名稱" 
+          <BaseInput
+            v-model="form.name"
+            label="空間名稱"
+            placeholder="請輸入空間名稱"
           />
 
           <!-- Type & Currency (Readonly) -->
@@ -70,7 +70,7 @@
         </div>
 
         <div class="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden shadow-sm">
-          <div v-for="member in members" :key="member.user_id" class="p-5 border-b border-neutral-800 last:border-0 flex items-center justify-between hover:bg-neutral-800 transition-colors">
+          <div v-for="member in detailStore.members" :key="member.user_id" class="p-5 border-b border-neutral-800 last:border-0 flex items-center justify-between hover:bg-neutral-800 transition-colors">
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 rounded-xl bg-neutral-800 flex items-center justify-center text-indigo-400 font-bold text-lg border border-neutral-700">
                 {{ (member.alias || member.user?.display_name || '?')[0].toUpperCase() }}
@@ -108,12 +108,12 @@
           </button>
         </div>
 
-        <div v-if="invites.length === 0" class="p-12 text-center bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed">
+        <div v-if="detailStore.invites.length === 0" class="p-12 text-center bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed">
           <p class="text-neutral-500 text-sm italic">目前還沒有有效的邀請連結</p>
         </div>
 
         <div v-else class="flex flex-col gap-3">
-          <div v-for="invite in invites" :key="invite.id" class="p-5 bg-neutral-900 rounded-2xl border border-neutral-800 flex items-center justify-between hover:bg-neutral-800 transition-colors">
+          <div v-for="invite in detailStore.invites" :key="invite.id" class="p-5 bg-neutral-900 rounded-2xl border border-neutral-800 flex items-center justify-between hover:bg-neutral-800 transition-colors">
             <div class="flex flex-col gap-1">
               <div class="flex items-center gap-2">
                 <span class="text-xs px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400 font-bold uppercase border border-neutral-700">
@@ -127,10 +127,10 @@
             </div>
 
             <div class="flex items-center gap-2">
-              <button @click="copyInviteLink(invite.token)" class="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 transition-colors border-0 cursor-pointer">   
+              <button @click="copyInviteLink(invite.token)" class="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 transition-colors border-0 cursor-pointer">
                 <Icon icon="mdi:content-copy" class="text-xl" />
               </button>
-              <button @click="handleRevokeInvite(invite.id)" class="p-2.5 rounded-xl bg-neutral-800 text-neutral-500 hover:text-red-500 transition-colors border-0 cursor-pointer">       
+              <button @click="handleRevokeInvite(invite.id)" class="p-2.5 rounded-xl bg-neutral-800 text-neutral-500 hover:text-red-500 transition-colors border-0 cursor-pointer">
                 <Icon icon="mdi:trash-can-outline" class="text-xl" />
               </button>
             </div>
@@ -174,8 +174,8 @@
 
     <BaseModal v-model="showAliasModal" title="修改成員別名">
         <div class="p-6 flex flex-col gap-6">
-            <BaseInput 
-                v-model="aliasValue" 
+            <BaseInput
+                v-model="aliasValue"
                 :label="`成員: ${selectedMember?.user?.display_name}`"
                 placeholder="請輸入成員別名"
             />
@@ -193,11 +193,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useImages } from '~/composables/useImages'
+import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import SpaceHeader from '~/components/SpaceHeader.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseModal from '~/components/BaseModal.vue'
@@ -207,6 +208,7 @@ const router = useRouter()
 const api = useApi()
 const { initAuth } = useAuth()
 const { getImageUrl, uploadImage } = useImages()
+const detailStore = useSpaceDetailStore()
 
 const loading = ref(true)
 const updating = ref(false)
@@ -222,8 +224,6 @@ const form = ref({
   cover_image: ''
 })
 
-const members = ref<any[]>([])
-const invites = ref<any[]>([])
 const fileInput = ref<HTMLInputElement | null>(null)
 
 // Modal States
@@ -235,14 +235,13 @@ const aliasValue = ref('')
 
 const fetchData = async () => {
   try {
-    const [spaceData, membersData, invitesData] = await Promise.all([
-      api.get<any>(`/api/spaces/${spaceId}`),
-      api.get<any[]>(`/api/spaces/${spaceId}/members`),
-      api.get<any[]>(`/api/spaces/${spaceId}/invites`)
+    detailStore.setSpaceId(spaceId)
+    await Promise.all([
+      detailStore.fetchSpace(true),
+      detailStore.fetchMembers(true),
+      detailStore.fetchInvites(true)
     ])
-    form.value = { ...spaceData }
-    members.value = membersData
-    invites.value = invitesData
+    form.value = { ...detailStore.space }
   } catch (e) {
     console.error('Failed to fetch data:', e)
     router.push('/')
@@ -261,6 +260,8 @@ const handleUpdateSpace = async () => {
       end_date: form.value.end_date,
       cover_image: form.value.cover_image
     })
+    // Refresh store so other pages see updated data
+    await detailStore.fetchSpace(true)
     alert('設定已儲存')
   } catch (e: any) {
     alert(e.message || '儲存失敗')
@@ -298,7 +299,7 @@ const handleUpdateAlias = async () => {
             alias: aliasValue.value
         })
         showAliasModal.value = false
-        await fetchData()
+        await detailStore.fetchMembers(true)
     } catch (e: any) {
         alert(e.message || '更新失敗')
     } finally {
@@ -313,7 +314,7 @@ const handleCreateInvite = async () => {
             is_one_time: inviteForm.value.is_one_time
         })
         showInviteModal.value = false
-        await fetchData()
+        await detailStore.fetchInvites(true)
     } catch (e: any) {
         alert(e.message || '建立失敗')
     } finally {
@@ -325,7 +326,7 @@ const handleRemoveMember = async (member: any) => {
   if (!confirm(`確定要移除成員 ${member.alias || member.user?.display_name} 嗎？`)) return
   try {
     await api.delete(`/api/spaces/${spaceId}/members/${member.user_id}`)
-    await fetchData()
+    await detailStore.fetchMembers(true)
   } catch (e: any) {
     alert(e.message || '移除失敗')
   }
@@ -355,7 +356,7 @@ const handleRevokeInvite = async (invite_id: string) => {
   if (!confirm('確定要撤銷此邀請連結嗎？')) return
   try {
     await api.delete(`/api/spaces/${invite_id}`)
-    await fetchData()
+    await detailStore.fetchInvites(true)
   } catch (e: any) {
     alert('撤銷失敗')
   }

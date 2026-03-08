@@ -61,6 +61,7 @@
 import { ref, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import SpaceHeader from '~/components/SpaceHeader.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
@@ -74,6 +75,7 @@ const router = useRouter()
 const route = useRoute()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
+const detailStore = useSpaceDetailStore()
 
 const spaceId = route.params.id as string
 const storeId = route.params.storeId as string
@@ -93,6 +95,7 @@ const handleSubmit = async () => {
   submitting.value = true
   try {
     await api.post(`/api/spaces/${spaceId}/stores/${storeId}/products`, form.value)
+    detailStore.invalidate('stores')
     router.push(`/spaces/${spaceId}/stores/${storeId}`)
   } catch (e: any) {
     alert(e.message || '新增失敗')
