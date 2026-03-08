@@ -7,7 +7,7 @@
         @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
         :required="required"
         :disabled="disabled"
-        class="w-full bg-neutral-800 border border-neutral-700 text-white py-3 px-4 pr-10 rounded-xl outline-none focus:border-indigo-500 transition-colors appearance-none disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base cursor-pointer"
+        class="w-full bg-neutral-800 border border-neutral-700 text-white py-1.5 px-2 rounded outline-none focus:border-indigo-500 transition-colors appearance-none disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base cursor-pointer"
         :class="selectClass"
         v-bind="$attrs"
       >

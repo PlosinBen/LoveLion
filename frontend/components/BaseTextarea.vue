@@ -8,7 +8,7 @@
       :required="required"
       :disabled="disabled"
       :rows="rows"
-      class="w-full bg-neutral-800 border border-neutral-700 text-white py-3 px-4 rounded-xl outline-none focus:border-indigo-500 transition-colors placeholder-neutral-500 resize-none font-medium text-base"
+      class="w-full bg-neutral-800 border border-neutral-700 text-white py-1.5 px-2 rounded outline-none focus:border-indigo-500 transition-colors placeholder-neutral-500 resize-none font-medium text-base"
       :class="textareaClass"
       v-bind="$attrs"
     />

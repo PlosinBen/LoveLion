@@ -21,7 +21,7 @@
       <NuxtLink
         v-if="settingsTo"
         :to="settingsTo"
-        class="w-10 h-10 rounded-full bg-neutral-800 text-neutral-400 flex items-center justify-center hover:bg-neutral-700 hover:text-white transition-colors no-underline"
+        class="w-10 h-10 text-neutral-400 flex items-center justify-center hover:bg-neutral-700 hover:text-white transition-colors no-underline"
       >
         <Icon icon="mdi:cog-outline" class="text-xl" />
       </NuxtLink>
