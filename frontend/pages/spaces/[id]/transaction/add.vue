@@ -1,8 +1,9 @@
 <template>
   <div class="add-transaction-page">
-    <SpaceHeader
+    <PageTitle
       title="新增交易"
       :back-to="`/spaces/${route.params.id}`"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}` }]"
     />
 
     <div>
@@ -202,7 +203,7 @@ import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-import SpaceHeader from '~/components/SpaceHeader.vue'
+import PageTitle from '~/components/PageTitle.vue'
 
 definePageMeta({
   layout: 'default'
@@ -311,6 +312,9 @@ onMounted(async () => {
     return
   }
   
+  detailStore.setSpaceId(route.params.id as string)
+  detailStore.fetchSpace()
+
   try {
     const space = await api.get<any>(`/api/spaces/${route.params.id}`)
     baseCurrency.value = space.base_currency || 'TWD'

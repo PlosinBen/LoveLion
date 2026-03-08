@@ -1,9 +1,10 @@
 <template>
   <div class="edit-product-page">
-    <SpaceHeader
+    <PageTitle
       title="編輯商品"
       :back-to="`/spaces/${spaceId}/stores/${storeId}`"
       class="px-2"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${spaceId}` }, { label: '比價', to: `/spaces/${spaceId}/stores` }, { label: storeName || '店家', to: `/spaces/${spaceId}/stores/${storeId}` }]"
     />
 
     <div v-if="loading" class="flex justify-center items-center py-20 text-neutral-500">
@@ -76,7 +77,7 @@ import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
-import SpaceHeader from '~/components/SpaceHeader.vue'
+import PageTitle from '~/components/PageTitle.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
 
@@ -94,6 +95,7 @@ const spaceId = route.params.id as string
 const storeId = route.params.storeId as string
 const productId = route.params.productId as string
 
+const storeName = ref('')
 const loading = ref(true)
 const submitting = ref(false)
 const form = ref({
@@ -149,12 +151,18 @@ const handleDelete = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   initAuth()
   if (!isAuthenticated.value) {
     router.push('/login')
     return
   }
+  detailStore.setSpaceId(spaceId)
+  detailStore.fetchSpace()
+  try {
+    const store = await api.get<any>(`/api/spaces/${spaceId}/stores/${storeId}`)
+    storeName.value = store.name || ''
+  } catch {}
   fetchProduct()
 })
 </script>

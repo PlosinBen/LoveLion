@@ -1,6 +1,6 @@
 <template>
   <div class="store-edit-page">
-    <SpaceHeader title="編輯商店" :back-to="`/spaces/${spaceId}/stores/${storeId}`" />
+    <PageTitle title="編輯商店" :back-to="`/spaces/${spaceId}/stores/${storeId}`" :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${spaceId}` }, { label: '比價', to: `/spaces/${spaceId}/stores` }, { label: storeName || '店家', to: `/spaces/${spaceId}/stores/${storeId}` }]" />
 
     <div v-if="loading" class="flex justify-center items-center py-20 text-neutral-500">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
@@ -54,7 +54,8 @@ import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
-import SpaceHeader from '~/components/SpaceHeader.vue'
+import { useSpaceDetailStore } from '~/stores/spaceDetail'
+import PageTitle from '~/components/PageTitle.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
 
@@ -66,8 +67,10 @@ const route = useRoute()
 const router = useRouter()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
+const detailStore = useSpaceDetailStore()
 
 const loading = ref(true)
+const storeName = ref('')
 const updating = ref(false)
 const spaceId = route.params.id as string
 const storeId = route.params.storeId as string
@@ -81,6 +84,7 @@ const form = ref({
 const fetchData = async () => {
   try {
     const data = await api.get<any>(`/api/spaces/${spaceId}/stores/${storeId}`)
+    storeName.value = data.name || ''
     form.value = {
       name: data.name,
       description: data.description || '',
@@ -112,6 +116,8 @@ onMounted(() => {
     router.push('/login')
     return
   }
+  detailStore.setSpaceId(spaceId)
+  detailStore.fetchSpace()
   fetchData()
 })
 </script>

@@ -1,8 +1,9 @@
 <template>
   <div class="add-space-page">
-    <SpaceHeader 
-      title="建立新空間" 
+    <PageTitle
+      title="建立新空間"
       :show-back="true"
+      :breadcrumbs="[{ label: '空間列表', to: '/' }]"
     />
 
     <div>
@@ -46,7 +47,7 @@
 import { ref, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
-import SpaceHeader from '~/components/SpaceHeader.vue'
+import PageTitle from '~/components/PageTitle.vue'
 
 definePageMeta({
   layout: 'default',

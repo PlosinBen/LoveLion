@@ -1,9 +1,10 @@
 <template>
   <div class="product-view-page">
-    <SpaceHeader
+    <PageTitle
       :title="productName"
       :show-back="true"
       :back-to="`/spaces/${route.params.id}/products`"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}` }, { label: '商品比價', to: `/spaces/${route.params.id}/products` }]"
     />
 
     <div v-if="detailStore.loading.products" class="flex justify-center items-center py-20 text-neutral-500">
@@ -67,7 +68,7 @@ import { computed, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
-import SpaceHeader from '~/components/SpaceHeader.vue'
+import PageTitle from '~/components/PageTitle.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -99,6 +100,7 @@ onMounted(async () => {
     return
   }
   detailStore.setSpaceId(route.params.id as string)
+  detailStore.fetchSpace()
   await detailStore.fetchProducts()
 })
 </script>

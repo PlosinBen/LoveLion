@@ -1,9 +1,10 @@
 <template>
   <div class="flex flex-col gap-6 pb-24">
-    <SpaceHeader
+    <PageTitle
       :title="store?.name || '載入中...'"
       :show-back="true"
       :back-to="`/spaces/${route.params.id}/stores`"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}` }, { label: '比價', to: `/spaces/${route.params.id}/stores` }]"
     >
       <template #subtitle>
         <div class="flex items-center gap-1.5 text-neutral-500 text-xs font-medium mt-0.5">
@@ -24,7 +25,7 @@
           </button>
         </div>
       </template>
-    </SpaceHeader>
+    </PageTitle>
 
     <div v-if="loading" class="flex justify-center items-center text-neutral-400 py-20">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
@@ -206,6 +207,8 @@ onMounted(() => {
     router.push('/login')
     return
   }
+  detailStore.setSpaceId(route.params.id as string)
+  detailStore.fetchSpace()
   fetchStore()
 })
 </script>

@@ -1,8 +1,9 @@
 <template>
   <div class="transaction-detail">
-    <SpaceHeader
+    <PageTitle
       title="交易詳情"
       :back-to="`/spaces/${route.params.id}`"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}` }]"
     >
       <template #right>
         <div class="flex gap-1">
@@ -14,7 +15,7 @@
           </button>
         </div>
       </template>
-    </SpaceHeader>
+    </PageTitle>
 
     <div class="content-wrapper">
       <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
@@ -84,7 +85,7 @@ import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
-import SpaceHeader from '~/components/SpaceHeader.vue'
+import PageTitle from '~/components/PageTitle.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -160,6 +161,8 @@ onMounted(() => {
     router.push('/login')
     return
   }
+  detailStore.setSpaceId(route.params.id as string)
+  detailStore.fetchSpace()
   fetchData()
 })
 </script>

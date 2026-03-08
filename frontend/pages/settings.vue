@@ -1,8 +1,9 @@
 <template>
   <div class="settings-page">
-    <SpaceHeader 
-      title="個人設定" 
+    <PageTitle
+      title="個人設定"
       :show-back="true"
+      :breadcrumbs="[{ label: '空間列表', to: '/' }]"
     />
 
     <div class="flex flex-col gap-6">
@@ -51,7 +52,7 @@
 import { onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useAuth } from '~/composables/useAuth'
-import SpaceHeader from '~/components/SpaceHeader.vue'
+import PageTitle from '~/components/PageTitle.vue'
 
 definePageMeta({
   layout: 'default'

@@ -1,6 +1,6 @@
 <template>
   <div class="space-settings-page">
-    <SpaceHeader title="空間設定" />
+    <PageTitle title="空間設定" :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${spaceId}` }]" />
 
     <div v-if="loading" class="text-center py-10 text-neutral-500">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
@@ -269,7 +269,7 @@ import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useImages } from '~/composables/useImages'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
-import SpaceHeader from '~/components/SpaceHeader.vue'
+import PageTitle from '~/components/PageTitle.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseModal from '~/components/BaseModal.vue'
 import ListEditor from '~/components/ListEditor.vue'

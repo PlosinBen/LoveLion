@@ -1,9 +1,10 @@
 <template>
   <div class="add-product-page">
-    <SpaceHeader
+    <PageTitle
       title="新增商品"
       :back-to="`/spaces/${spaceId}/stores/${storeId}`"
       class="px-2"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${spaceId}` }, { label: '比價', to: `/spaces/${spaceId}/stores` }, { label: storeName || '店家', to: `/spaces/${spaceId}/stores/${storeId}` }]"
     />
 
     <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
@@ -62,7 +63,7 @@ import { ref, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
-import SpaceHeader from '~/components/SpaceHeader.vue'
+import PageTitle from '~/components/PageTitle.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
 
@@ -79,6 +80,7 @@ const detailStore = useSpaceDetailStore()
 const spaceId = route.params.id as string
 const storeId = route.params.storeId as string
 
+const storeName = ref('')
 const submitting = ref(false)
 const form = ref({
   name: '',
@@ -103,10 +105,17 @@ const handleSubmit = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   initAuth()
   if (!isAuthenticated.value) {
     router.push('/login')
+    return
   }
+  detailStore.setSpaceId(spaceId)
+  detailStore.fetchSpace()
+  try {
+    const store = await api.get<any>(`/api/spaces/${spaceId}/stores/${storeId}`)
+    storeName.value = store.name || ''
+  } catch {}
 })
 </script>

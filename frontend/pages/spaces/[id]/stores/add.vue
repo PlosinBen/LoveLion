@@ -1,9 +1,10 @@
 <template>
   <div class="add-store-page">
-    <SpaceHeader
+    <PageTitle
       title="新增店家"
       :back-to="`/spaces/${route.params.id}/stores`"
       class="px-2"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}` }, { label: '比價', to: `/spaces/${route.params.id}/stores` }]"
     />
 
     <div>
@@ -42,7 +43,7 @@ import { ref, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
-import SpaceHeader from '~/components/SpaceHeader.vue'
+import PageTitle from '~/components/PageTitle.vue'
 
 definePageMeta({
   layout: 'default'
@@ -78,6 +79,9 @@ onMounted(() => {
   initAuth()
   if (!isAuthenticated.value) {
     router.push('/login')
+    return
   }
+  detailStore.setSpaceId(route.params.id as string)
+  detailStore.fetchSpace()
 })
 </script>

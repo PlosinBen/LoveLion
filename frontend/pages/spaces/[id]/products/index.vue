@@ -1,6 +1,6 @@
 <template>
   <div class="products-index-page">
-    <SpaceHeader
+    <PageTitle
       :title="detailStore.space?.name || '商品比價'"
       :show-back="true"
       :settings-to="`/spaces/${route.params.id}/settings`"
@@ -60,7 +60,7 @@ import { onMounted, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
-import SpaceHeader from '~/components/SpaceHeader.vue'
+import PageTitle from '~/components/PageTitle.vue'
 
 definePageMeta({
   layout: 'default'

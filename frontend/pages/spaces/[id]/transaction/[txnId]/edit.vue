@@ -1,8 +1,9 @@
 <template>
   <div class="edit-transaction-page">
-    <SpaceHeader
+    <PageTitle
       title="編輯交易"
       :back-to="`/spaces/${route.params.id}/transaction/${route.params.txnId}`"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}` }, { label: '交易詳情', to: `/spaces/${route.params.id}/transaction/${route.params.txnId}` }]"
     />
 
     <div v-if="loading" class="p-20 flex justify-center items-center text-neutral-500">
@@ -214,7 +215,7 @@ import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-import SpaceHeader from '~/components/SpaceHeader.vue'
+import PageTitle from '~/components/PageTitle.vue'
 
 definePageMeta({
   layout: 'default'
@@ -383,6 +384,8 @@ onMounted(() => {
     router.push('/login')
     return
   }
+  detailStore.setSpaceId(route.params.id as string)
+  detailStore.fetchSpace()
   fetchData()
 })
 </script>

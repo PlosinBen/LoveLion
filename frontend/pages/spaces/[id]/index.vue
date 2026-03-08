@@ -1,6 +1,6 @@
 <template>
   <div v-if="store.space" class="space-detail-page">
-    <SpaceHeader
+    <PageTitle
       :title="store.space.name"
       :show-back="true"
       :settings-to="`/spaces/${store.space.id}/settings`"
@@ -44,7 +44,7 @@ import { ref, computed, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
-import SpaceHeader from '~/components/SpaceHeader.vue'
+import PageTitle from '~/components/PageTitle.vue'
 import TransactionListItem from '~/components/TransactionListItem.vue'
 
 const route = useRoute()

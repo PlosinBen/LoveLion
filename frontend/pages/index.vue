@@ -1,15 +1,16 @@
 <template>
   <div class="space-list-page">
-    <div class="flex items-center justify-between mb-8 px-2">
-      <h1 class="text-3xl font-extrabold tracking-tighter text-white">我的空間</h1>
-      <button 
-        @click="router.push('/spaces/add-new')"
-        class="flex items-center gap-2 px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-xl text-indigo-400 font-bold text-sm hover:bg-neutral-800 transition-colors active:scale-95 cursor-pointer"
-      >
-        <Icon icon="mdi:plus" class="text-lg" />
-        <span>新增空間</span>
-      </button>
-    </div>
+    <PageTitle title="我的空間" :show-back="false">
+      <template #right>
+        <button
+          @click="router.push('/spaces/add-new')"
+          class="flex items-center gap-2 px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-xl text-indigo-400 font-bold text-sm hover:bg-neutral-800 transition-colors active:scale-95 cursor-pointer"
+        >
+          <Icon icon="mdi:plus" class="text-lg" />
+          <span>新增空間</span>
+        </button>
+      </template>
+    </PageTitle>
 
     <div v-if="loading" class="flex justify-center items-center py-20 text-neutral-500">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
@@ -40,6 +41,7 @@ import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useSpace } from '~/composables/useSpace'
 import SpaceListItem from '~/components/SpaceListItem.vue'
+import PageTitle from '~/components/PageTitle.vue'
 
 const router = useRouter()
 const api = useApi()

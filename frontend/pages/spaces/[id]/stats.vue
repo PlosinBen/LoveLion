@@ -1,6 +1,6 @@
 <template>
   <div class="space-stats-page">
-    <SpaceHeader
+    <PageTitle
       :title="store.space?.name || '統計'"
       :show-back="true"
       :settings-to="`/spaces/${route.params.id}/settings`"
@@ -28,7 +28,7 @@ import { onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
-import SpaceHeader from '~/components/SpaceHeader.vue'
+import PageTitle from '~/components/PageTitle.vue'
 import SpaceStats from '~/components/SpaceStats.vue'
 
 const route = useRoute()
