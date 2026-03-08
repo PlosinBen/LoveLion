@@ -6,19 +6,11 @@
     />
 
     <div class="flex flex-col gap-6">
-      <section v-if="transactions.length > 0">
-        <SpaceStats 
-          :transactions="transactions" 
-          :members="space.members || []" 
-          :base-currency="space.base_currency || 'TWD'"
-        />
-      </section>
-
       <section class="flex flex-col gap-3">
         <div class="flex items-center justify-between px-1">
           <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-widest">最近交易</h2>
-          <button @click="router.push(`/spaces/${space.id}/transaction/add`)" class="text-xs font-bold text-indigo-400 border-0 bg-transparent cursor-pointer hover:text-indigo-300">
-             查看全部
+          <button @click="showAll = !showAll" class="text-xs font-bold text-indigo-400 border-0 bg-transparent cursor-pointer hover:text-indigo-300">
+             {{ showAll ? '收起' : '查看全部' }}
           </button>
         </div>
         
@@ -27,7 +19,7 @@
         </div>
         <div v-else class="flex flex-col gap-2">
           <TransactionListItem 
-            v-for="txn in transactions.slice(0, 5)" 
+            v-for="txn in displayedTransactions"
             :key="txn.id" 
             :transaction="txn" 
             :space-id="space.id"
@@ -47,12 +39,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import SpaceHeader from '~/components/SpaceHeader.vue'
-import SpaceStats from '~/components/SpaceStats.vue'
 import TransactionListItem from '~/components/TransactionListItem.vue'
 
 const route = useRoute()
@@ -62,6 +53,11 @@ const { isAuthenticated, initAuth } = useAuth()
 
 const space = ref<any>(null)
 const transactions = ref<any[]>([])
+const showAll = ref(false)
+
+const displayedTransactions = computed(() => {
+  return showAll.value ? transactions.value : transactions.value.slice(0, 5)
+})
 
 const fetchData = async () => {
   try {

@@ -356,7 +356,7 @@ const handleSubmit = async () => {
     }
 
     await api.put(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`, payload)
-    router.push(`/spaces/${route.params.id}`)
+    router.push(`/spaces/${route.params.id}/transaction/${route.params.txnId}`)
   } catch (e: any) {
     alert(e.message || '更新失敗')
   } finally {

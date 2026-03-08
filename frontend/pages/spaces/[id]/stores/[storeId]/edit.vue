@@ -98,7 +98,7 @@ const handleUpdate = async () => {
   updating.value = true
   try {
     await api.patch(`/api/spaces/${spaceId}/stores/${storeId}`, form.value)
-    router.back()
+    router.push(`/spaces/${spaceId}/stores/${storeId}`)
   } catch (e: any) {
     alert(e.message || '儲存失敗')
   } finally {

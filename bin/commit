@@ -1,25 +1,47 @@
 #!/bin/bash
 
 # LoveLion AI Commit Helper
-# Usage: ./bin/commit "primary message" "secondary message (optional)"
+# Usage: ./bin/commit "primary message" ["secondary message"] [--author "Name"]
 
 if [ -z "$1" ]; then
     echo "Error: Primary commit message is required."
-    echo "Usage: $0 "primary message" ["secondary message"]"
+    echo "Usage: $0 \"primary message\" [\"secondary message\"] [--author \"Name\"]"
     exit 1
 fi
 
+# Parse arguments
+PRIMARY=""
+SECONDARY=""
+AUTHOR="Antigravity"
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --author)
+            AUTHOR="$2"
+            shift 2
+            ;;
+        *)
+            if [ -z "$PRIMARY" ]; then
+                PRIMARY="$1"
+            elif [ -z "$SECONDARY" ]; then
+                SECONDARY="$1"
+            fi
+            shift
+            ;;
+    esac
+done
+
 # Set AI Identity
-git config user.name "Antigravity"
+git config user.name "$AUTHOR"
 
 # Commit
-if [ -z "$2" ]; then
-    git commit -m "$1"
+if [ -z "$SECONDARY" ]; then
+    git commit -m "$PRIMARY"
 else
-    git commit -m "$1" -m "$2"
+    git commit -m "$PRIMARY" -m "$SECONDARY"
 fi
 
 # Cleanup
 git config --unset user.name
 
-echo "✅ Committed as Antigravity."
+echo "✅ Committed as $AUTHOR."

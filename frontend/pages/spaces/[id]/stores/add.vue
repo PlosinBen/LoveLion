@@ -64,10 +64,7 @@ const handleSubmit = async () => {
   submitting.value = true
   try {
     await api.post(`/api/spaces/${route.params.id}/stores`, form.value)
-    router.push({
-        path: `/spaces/${route.params.id}`,
-        query: { tab: 'comparison' }
-    })
+    router.push(`/spaces/${route.params.id}/stores`)
   } catch (e: any) {
     alert(e.message || '建立失敗')
   } finally {
