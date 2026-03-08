@@ -25,7 +25,10 @@
       <!-- Title or Switcher -->
       <div class="flex-1 min-w-0">
         <SpaceSwitcher v-if="showSwitcher" />
-        <h1 v-else class="text-xl font-bold text-white tracking-tight truncate">{{ title }}</h1>
+        <div v-else class="flex flex-col">
+          <h1 class="text-xl font-bold text-white tracking-tight truncate">{{ title }}</h1>
+          <slot name="subtitle" />
+        </div>
       </div>
 
       <!-- Right Actions -->

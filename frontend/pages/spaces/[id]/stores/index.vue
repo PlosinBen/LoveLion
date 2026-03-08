@@ -53,21 +53,17 @@
     </div>
 
     <!-- FAB for adding store -->
-    <button
-      @click="router.push(`/spaces/${route.params.id}/stores/add`)"
-      class="fixed bottom-32 right-6 w-14 h-14 bg-indigo-500 shadow-lg rounded-full flex items-center justify-center text-white z-20 cursor-pointer border-0 transition-transform active:scale-95"
-    >
-      <Icon icon="mdi:plus" class="text-3xl" />
-    </button>
-  </div>
-</template>
+    <BaseFab @click="router.push(`/spaces/${route.params.id}/stores/add`)" />
+    </div>
+    </template>
 
-<script setup lang="ts">
-import { onMounted } from 'vue'
-import { Icon } from '@iconify/vue'
-import { useAuth } from '~/composables/useAuth'
-import { useSpaceDetailStore } from '~/stores/spaceDetail'
-import PageTitle from '~/components/PageTitle.vue'
+    <script setup lang="ts">
+    import { onMounted } from 'vue'
+    import { Icon } from '@iconify/vue'
+    import { useAuth } from '~/composables/useAuth'
+    import { useSpaceDetailStore } from '~/stores/spaceDetail'
+    import PageTitle from '~/components/PageTitle.vue'
+    import BaseFab from '~/components/BaseFab.vue'
 
 definePageMeta({
   layout: 'default'

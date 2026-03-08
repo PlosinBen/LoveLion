@@ -30,22 +30,18 @@
     </div>
 
     <!-- FAB for adding transaction -->
-    <button
-      @click="router.push(`/spaces/${store.space.id}/transaction/add`)"
-      class="fixed bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg rounded-full flex items-center justify-center text-white transition-transform active:scale-95 z-20 cursor-pointer border-0"
-    >
-      <Icon icon="mdi:plus" class="text-3xl" />
-    </button>
-  </div>
-</template>
+    <BaseFab @click="router.push(`/spaces/${store.space.id}/transaction/add`)" />
+    </div>
+    </template>
 
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { Icon } from '@iconify/vue'
-import { useAuth } from '~/composables/useAuth'
-import { useSpaceDetailStore } from '~/stores/spaceDetail'
-import PageTitle from '~/components/PageTitle.vue'
-import TransactionListItem from '~/components/TransactionListItem.vue'
+    <script setup lang="ts">
+    import { ref, computed, onMounted } from 'vue'
+    import { Icon } from '@iconify/vue'
+    import { useAuth } from '~/composables/useAuth'
+    import { useSpaceDetailStore } from '~/stores/spaceDetail'
+    import PageTitle from '~/components/PageTitle.vue'
+    import TransactionListItem from '~/components/TransactionListItem.vue'
+    import BaseFab from '~/components/BaseFab.vue'
 
 const route = useRoute()
 const router = useRouter()

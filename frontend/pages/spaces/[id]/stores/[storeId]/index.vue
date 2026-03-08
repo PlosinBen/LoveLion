@@ -4,7 +4,6 @@
       :title="store?.name || '載入中...'"
       :show-back="true"
       :back-to="`/spaces/${route.params.id}/stores`"
-      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}` }, { label: '比價', to: `/spaces/${route.params.id}/stores` }]"
     >
       <template #subtitle>
         <div class="flex items-center gap-1.5 text-neutral-500 text-xs font-medium mt-0.5">
@@ -92,7 +91,7 @@
                             :instant-delete="false"
                         />
                         <div class="mt-4 flex justify-end">
-                            <button @click.stop="saveProductImages(product.id)" class="px-5 py-2 bg-neutral-800 text-white text-xs font-bold rounded-lg border border-neutral-700 cursor-pointer hover:bg-neutral-700 transition-colors active:scale-95">
+                            <button @click.stop="saveProductImages(product.id)" class="px-5 py-2 bg-neutral-800 text-white text-xs font-bold rounded-lg border border-neutral-700 cursor-pointer hover:bg-neutral-800 transition-colors active:scale-95">
                                 儲存變更
                             </button>
                         </div>
@@ -104,12 +103,7 @@
     </div>
 
     <!-- FAB -->
-    <button 
-        @click="router.push(`/spaces/${route.params.id}/stores/${route.params.storeId}/products/add`)" 
-        class="fixed bottom-24 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 shadow-lg rounded-full flex items-center justify-center text-white transition-transform active:scale-90 z-20 cursor-pointer border-0"
-    >
-        <Icon icon="mdi:plus" class="text-3xl" />
-    </button>
+    <BaseFab @click="router.push(`/spaces/${route.params.id}/stores/${route.params.storeId}/products/add`)" />
   </div>
 </template>
 
@@ -121,7 +115,8 @@ import { useAuth } from '~/composables/useAuth'
 import { useImages } from '~/composables/useImages'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import ImageManager from '~/components/ImageManager.vue'
-
+import PageTitle from '~/components/PageTitle.vue'
+import BaseFab from '~/components/BaseFab.vue'
 const router = useRouter()
 definePageMeta({
   layout: 'default'

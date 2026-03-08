@@ -52,15 +52,19 @@
         <Icon icon="mdi:chevron-right" class="text-neutral-700 text-xl" />
       </div>
     </div>
-  </div>
-</template>
 
-<script setup lang="ts">
-import { onMounted, computed } from 'vue'
-import { Icon } from '@iconify/vue'
-import { useAuth } from '~/composables/useAuth'
-import { useSpaceDetailStore } from '~/stores/spaceDetail'
-import PageTitle from '~/components/PageTitle.vue'
+    <!-- FAB for adding store -->
+    <BaseFab @click="router.push(`/spaces/${route.params.id}/stores/add`)" />
+    </div>
+    </template>
+
+    <script setup lang="ts">
+    import { onMounted, computed } from 'vue'
+    import { Icon } from '@iconify/vue'
+    import { useAuth } from '~/composables/useAuth'
+    import { useSpaceDetailStore } from '~/stores/spaceDetail'
+    import PageTitle from '~/components/PageTitle.vue'
+    import BaseFab from '~/components/BaseFab.vue'
 
 definePageMeta({
   layout: 'default'
