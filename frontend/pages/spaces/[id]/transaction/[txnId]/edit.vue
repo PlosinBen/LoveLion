@@ -59,8 +59,10 @@
                 placeholder="項目名稱"
                 input-class="font-bold"
               />
-              <div class="flex items-center gap-3">
-                <div class="flex-1 flex flex-col gap-1">
+              
+              <!-- Row 1: Price Factors (Unit Price - Discount) -->
+              <div class="grid grid-cols-2 gap-3">
+                <div class="flex flex-col gap-1">
                   <label class="text-[10px] font-bold text-neutral-500 uppercase px-1">單價</label>
                   <BaseInput
                     v-model.number="item.unit_price"
@@ -68,7 +70,19 @@
                     placeholder="單價"
                   />
                 </div>
-                <div class="w-20 flex flex-col gap-1">
+                <div class="flex flex-col gap-1">
+                  <label class="text-[10px] font-bold text-neutral-500 uppercase px-1">折扣</label>
+                  <BaseInput
+                    v-model.number="item.discount"
+                    type="number"
+                    placeholder="折扣"
+                  />
+                </div>
+              </div>
+              
+              <!-- Row 2: Result Factors (Quantity & Subtotal) -->
+              <div class="flex items-end gap-3">
+                <div class="w-24 flex flex-col gap-1">
                   <label class="text-[10px] font-bold text-neutral-500 uppercase px-1">數量</label>
                   <BaseInput
                     v-model.number="item.quantity"
@@ -77,30 +91,21 @@
                     min="1"
                   />
                 </div>
-              </div>
-              
-              <div class="flex items-end gap-3">
-                <div class="flex-1 flex flex-col gap-1">
-                  <label class="text-[10px] font-bold text-neutral-500 uppercase px-1">折扣</label>
-                  <BaseInput
-                    v-model.number="item.discount"
-                    type="number"
-                    placeholder="折扣"
-                  />
-                </div>
+                
                 <div class="flex-1 text-right pb-3">
-                  <div class="text-[10px] font-bold text-neutral-500 uppercase px-1 mb-1">小計</div>
-                  <div class="text-lg font-bold text-white">
+                  <div class="text-[10px] font-bold text-neutral-500 uppercase px-1 mb-1">項目小計</div>
+                  <div class="text-xl font-bold text-indigo-400">
                     {{ ((Number(item.unit_price) - Number(item.discount || 0)) * Number(item.quantity)).toLocaleString() }}
                   </div>
                 </div>
+
                 <button 
                   v-if="form.items.length > 1"
                   type="button" 
                   @click="removeItem(index)" 
-                  class="mb-2 w-10 h-10 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center border-0 cursor-pointer hover:bg-red-500/20 active:scale-95 transition-transform"
+                  class="mb-1 w-11 h-11 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center border-0 cursor-pointer hover:bg-red-500/20 active:scale-95 transition-transform"
                 >
-                  <Icon icon="mdi:close" />
+                  <Icon icon="mdi:close" class="text-xl" />
                 </button>
               </div>
             </div>
