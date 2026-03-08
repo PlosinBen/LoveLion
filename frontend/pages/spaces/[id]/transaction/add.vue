@@ -95,21 +95,23 @@
                   </div>
                 </div>
 
-                <button 
+                <BaseButton 
                   v-if="form.items.length > 1"
                   type="button" 
                   @click="removeItem(index)" 
-                  class="mb-1 w-11 h-11 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center border-0 cursor-pointer hover:bg-red-500/20 active:scale-95 transition-transform"
+                  variant="danger"
+                  size="icon"
+                  class="mb-1"
                 >
                   <Icon icon="mdi:close" class="text-xl" />
-                </button>
+                </BaseButton>
               </div>
             </div>
           </div>
           
-          <button type="button" @click="addItem" class="flex justify-center items-center gap-2 p-4 border border-dashed border-neutral-700 rounded-xl bg-transparent text-neutral-500 font-bold cursor-pointer hover:border-indigo-500/50 hover:text-indigo-400 transition-colors">
+          <BaseButton type="button" @click="addItem" variant="ghost" class="border border-dashed border-neutral-700 !text-neutral-500 hover:!text-indigo-400">
             <Icon icon="mdi:plus" class="text-xl" /> 新增項目
-          </button>
+          </BaseButton>
         </div>
 
         <!-- Foreign Currency Settlement (Conditional) -->
@@ -183,19 +185,22 @@
         </div>
 
         <!-- Submit -->
-        <button 
+        <BaseButton 
           type="submit" 
-          class="w-full mt-4 py-4 rounded-xl font-bold bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 border-0 cursor-pointer shadow-lg" 
-          :disabled="submitting"
+          variant="primary"
+          fullWidth
+          class="mt-4"
+          :loading="submitting"
         >
-          {{ submitting ? '儲存中...' : '儲存交易' }}
-        </button>
+          儲存交易
+        </BaseButton>
       </form>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import BaseButton from '~/components/BaseButton.vue'
 definePageMeta({
   path: '/spaces/:id/ledger/transaction/add',
   layout: 'default'
@@ -338,8 +343,11 @@ onMounted(async () => {
     }
     
     // Set default category
-    if (categories.value.length > 0 && !form.value.category) {
-      form.value.category = categories.value[0].value
+    if (categories.value && categories.value.length > 0 && !form.value.category) {
+      const firstCat = categories.value[0]
+      if (firstCat) {
+        form.value.category = firstCat.value
+      }
     }
   } catch (e) {
     console.error('Failed to fetch space data', e)

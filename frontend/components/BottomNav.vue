@@ -15,17 +15,18 @@
       </NuxtLink>
 
       <!-- Action Mode (Button) -->
-      <button
+      <BaseButton
         v-else
         @click="$emit('update:modelValue', item.id)"
-        class="flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer transition-transform active:scale-95"
-        :class="isActive(item) ? 'text-indigo-400' : 'text-neutral-500'"
+        variant="ghost"
+        class="!flex-col !gap-1 !h-auto !py-1 !px-2"
+        :class="isActive(item) ? '!text-indigo-400' : 'text-neutral-500'"
       >
         <Icon :icon="item.icon" class="text-2xl" />
         <span class="text-xs font-bold uppercase tracking-widest scale-90">
           {{ item.label }}
         </span>
-      </button>
+      </BaseButton>
     </template>
   </nav>
 </template>
@@ -33,6 +34,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
+import { useRoute } from 'vue-router'
+import BaseButton from '~/components/BaseButton.vue'
 
 interface NavItem {
   id?: string
@@ -64,7 +67,6 @@ const isActive = (item: NavItem & { alternateTo?: string }) => {
   if (item.to === '/') return route.path === '/'
   
   const checkMatch = (path: string) => {
-    // Check if path matches exactly or is a subpath (for details/edit pages)
     return route.path === path || route.path.startsWith(path + '/')
   }
 

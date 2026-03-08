@@ -27,9 +27,7 @@ export default defineNuxtConfig({
       include: ['@iconify/vue', 'vue', 'vue-router']
     },
     // 增加編譯快取
-    build: {
-      cacheDir: './node_modules/.vite'
-    }
+    // Removed invalid cacheDir
   },
 
   // Nuxt 效能優化

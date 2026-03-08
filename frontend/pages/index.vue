@@ -2,13 +2,15 @@
   <div class="space-list-page">
     <PageTitle title="我的空間" :show-back="false">
       <template #right>
-        <button
+        <BaseButton
           @click="router.push('/spaces/add-new')"
-          class="flex items-center gap-2 px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-xl text-indigo-400 font-bold text-sm hover:bg-neutral-800 transition-colors active:scale-95 cursor-pointer"
+          variant="secondary"
+          size="sm"
+          class="gap-2"
         >
           <Icon icon="mdi:plus" class="text-lg" />
           <span>新增空間</span>
-        </button>
+        </BaseButton>
       </template>
     </PageTitle>
 
@@ -19,14 +21,14 @@
     <div v-else-if="spaces.length === 0" class="flex flex-col items-center justify-center py-20 bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed text-neutral-500">
       <Icon icon="mdi:view-grid-plus-outline" class="text-5xl mb-4 opacity-20" />
       <p class="text-sm">尚未建立任何管理空間</p>
-      <button @click="router.push('/spaces/add-new')" class="mt-6 px-6 py-2 bg-indigo-500 text-white rounded-full font-bold text-sm border-0 cursor-pointer hover:bg-indigo-600 transition-colors active:scale-95">立即建立</button>
+      <BaseButton @click="router.push('/spaces/add-new')" class="mt-6">立即建立</BaseButton>
     </div>
 
     <div v-else class="flex flex-col gap-4">
-      <SpaceListItem 
-        v-for="space in spaces" 
-        :key="space.id" 
-        :space="space" 
+      <SpaceListItem
+        v-for="space in spaces"
+        :key="space.id"
+        :space="space"
         @click="router.push(`/spaces/${space.id}/ledger`)"
         @toggle-pin="handleTogglePin(space.id)"
       />
@@ -42,6 +44,7 @@ import { useAuth } from '~/composables/useAuth'
 import { useSpace } from '~/composables/useSpace'
 import SpaceListItem from '~/components/SpaceListItem.vue'
 import PageTitle from '~/components/PageTitle.vue'
+import BaseButton from '~/components/BaseButton.vue'
 
 const router = useRouter()
 const api = useApi()

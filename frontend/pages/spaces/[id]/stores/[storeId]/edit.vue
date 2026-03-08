@@ -29,20 +29,22 @@
         />
 
         <div class="mt-2 flex gap-3">
-          <button 
+          <BaseButton 
             type="button"
             @click="router.push(`/spaces/${spaceId}/stores/${storeId}`)"
-            class="flex-1 py-4 rounded-xl bg-neutral-800 text-white font-bold border-0 cursor-pointer"
+            variant="secondary"
+            class="flex-1"
           >
             取消
-          </button>
-          <button 
+          </BaseButton>
+          <BaseButton 
             type="submit"
-            :disabled="updating"
-            class="flex-[2] py-4 rounded-xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 border-0 cursor-pointer shadow-lg"
+            variant="primary"
+            class="flex-[2]"
+            :loading="updating"
           >
-            {{ updating ? '儲存中...' : '儲存變更' }}
-          </button>
+            儲存變更
+          </BaseButton>
         </div>
       </div>
     </form>
@@ -50,6 +52,7 @@
 </template>
 
 <script setup lang="ts">
+import BaseButton from '~/components/BaseButton.vue'
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'

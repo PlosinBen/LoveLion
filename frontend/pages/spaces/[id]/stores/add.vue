@@ -26,13 +26,14 @@
           建立店家後，您可以開始記錄該店家的商品價格，方便在不同店家間進行比價。
         </p>
 
-        <button 
+        <BaseButton 
           type="submit" 
-          :disabled="submitting"
-          class="w-full py-4 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 transition-all active:scale-95 border-0 cursor-pointer shadow-lg disabled:opacity-50"
+          :loading="submitting"
+          variant="primary"
+          full-width
         >
-          {{ submitting ? '建立中...' : '建立店家' }}
-        </button>
+          建立店家
+        </BaseButton>
       </form>
     </div>
   </div>
@@ -44,6 +45,7 @@ import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
+import BaseButton from '~/components/BaseButton.vue'
 
 definePageMeta({
   layout: 'default'

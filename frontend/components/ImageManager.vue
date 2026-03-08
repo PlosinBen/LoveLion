@@ -186,7 +186,7 @@ const move = async (index: number, direction: number) => {
 
     const newImages = [...images.value]
     const deleted = newImages.splice(index, 1)
-    if (deleted.length > 0) {
+    if (deleted.length > 0 && deleted[0]) {
         newImages.splice(index + direction, 0, deleted[0])
         images.value = newImages 
         

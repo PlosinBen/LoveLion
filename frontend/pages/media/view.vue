@@ -1,9 +1,9 @@
 <template>
   <div class="media-view-page bg-black fixed inset-0 flex flex-col items-center justify-center">
     <div class="absolute top-6 left-6 z-10">
-      <button @click="router.back()" class="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-colors border-0 cursor-pointer backdrop-blur-md">
+      <BaseButton @click="router.back()" size="icon" variant="ghost" class="rounded-full backdrop-blur-md">
         <Icon icon="mdi:close" class="text-xl" />
-      </button>
+      </BaseButton>
     </div>
 
     <div v-if="loading" class="text-neutral-500 flex flex-col items-center gap-3">
@@ -20,6 +20,7 @@
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useImages } from '~/composables/useImages'
+import BaseButton from '~/components/BaseButton.vue'
 
 definePageMeta({
   layout: 'empty'

@@ -7,19 +7,12 @@
     />
 
     <!-- View Toggle via URL -->
-    <div class="flex p-1 bg-neutral-800 rounded-xl mb-6">
-      <div 
-        class="flex-1 py-2 text-sm font-bold rounded-lg bg-indigo-500 text-white shadow-sm text-center"
-      >
-        按商店
-      </div>
-      <NuxtLink 
-        :to="`/spaces/${route.params.id}/products`"
-        class="flex-1 py-2 text-sm font-bold rounded-lg transition-all text-center no-underline text-neutral-500 hover:text-neutral-300"
-      >
-        按商品
-      </NuxtLink>
-    </div>
+    <BaseSegmentControl 
+      :options="[
+        { label: '按商店', to: `/spaces/${route.params.id}/stores` },
+        { label: '按商品', to: `/spaces/${route.params.id}/products` }
+      ]"
+    />
 
     <div v-if="detailStore.loading.stores" class="flex justify-center items-center py-20 text-neutral-500">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
@@ -29,7 +22,7 @@
     <div v-if="detailStore.stores.length === 0" class="flex flex-col items-center justify-center py-20 bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed text-neutral-500">
       <Icon icon="mdi:store-plus-outline" class="text-5xl mb-4 opacity-20" />
       <p class="text-sm">尚未建立任何商店紀錄</p>
-      <button @click="router.push(`/spaces/${route.params.id}/stores/add`)" class="mt-6 px-6 py-2 bg-indigo-500 text-white rounded-full font-bold text-sm border-0 cursor-pointer">立即新增</button>
+      <BaseButton @click="router.push(`/spaces/${route.params.id}/stores/add`)" variant="primary" class="mt-6">立即新增</BaseButton>
     </div>
 
     <div v-else class="flex flex-col gap-4">
@@ -58,6 +51,7 @@
     </template>
 
     <script setup lang="ts">
+    import BaseButton from '~/components/BaseButton.vue'
     import { onMounted } from 'vue'
     import { Icon } from '@iconify/vue'
     import { useAuth } from '~/composables/useAuth'

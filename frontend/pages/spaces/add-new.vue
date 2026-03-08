@@ -31,13 +31,14 @@
           建立空間後，您可以邀請成員共同記帳、上傳收據照片，或是進行商品比價與費用分攤。
         </p>
 
-        <button 
+        <BaseButton 
           type="submit" 
-          :disabled="submitting"
-          class="w-full py-4 rounded-xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 mt-4 shadow-lg border-0 cursor-pointer"
+          :loading="submitting"
+          fullWidth
+          class="mt-4"
         >
-          {{ submitting ? '建立中...' : '建立空間' }}
-        </button>
+          建立空間
+        </BaseButton>
       </form>
     </div>
   </div>
@@ -48,6 +49,7 @@ import { ref, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import PageTitle from '~/components/PageTitle.vue'
+import BaseButton from '~/components/BaseButton.vue'
 
 definePageMeta({
   layout: 'default',

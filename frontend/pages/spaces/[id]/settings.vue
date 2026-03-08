@@ -24,7 +24,7 @@
                     <Icon icon="mdi:image-outline" class="text-4xl" />
                 </div>
                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button @click="triggerImageUpload" class="px-4 py-2 bg-white text-black text-xs font-bold rounded-full border-0 cursor-pointer">更換相片</button>
+                    <BaseButton @click="triggerImageUpload" variant="white" size="sm" class="!rounded-full">更換相片</BaseButton>
                 </div>
             </div>
           </div>
@@ -36,103 +36,68 @@
             placeholder="請輸入空間名稱"
           />
 
-          <!-- Description -->
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs text-neutral-400 px-1">空間描述</label>
-            <textarea
-              v-model="form.description"
-              placeholder="簡短描述此空間的用途"
-              rows="3"
-              class="w-full bg-neutral-800 border border-neutral-700 text-white py-1.5 px-2 rounded outline-none focus:border-indigo-500 transition-colors placeholder-neutral-500 text-base resize-none"
-            />
+          <!-- Pinned Status -->
+          <div class="flex items-center justify-between p-4 bg-neutral-800/50 rounded-xl border border-neutral-800">
+            <div class="flex flex-col">
+              <span class="font-bold text-sm">置頂此空間</span>
+              <span class="text-xs text-neutral-500">將此空間固定在首頁頂端</span>
+            </div>
+            <input type="checkbox" v-model="form.is_pinned" class="w-6 h-6 rounded border-neutral-700 bg-neutral-800 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-neutral-900" />
           </div>
 
           <!-- Type & Currency (Readonly) -->
           <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs text-neutral-500 uppercase tracking-wider mb-2 ml-1">空間類型</label>
-                <div class="bg-neutral-800 text-neutral-400 py-1.5 px-2 rounded text-sm border border-neutral-800">
+                <div class="bg-neutral-800 text-neutral-400 py-3 px-4 rounded-xl text-sm border border-neutral-800">
                     {{ form.type === 'trip' ? '旅遊專案' : '個人記帳' }}
                 </div>
               </div>
               <div>
                 <label class="block text-xs text-neutral-500 uppercase tracking-wider mb-2 ml-1">本位幣別</label>
-                <div class="bg-neutral-800 text-neutral-400 py-1.5 px-2 rounded text-sm border border-neutral-800 uppercase">
+                <div class="bg-neutral-800 text-neutral-400 py-3 px-4 rounded-xl text-sm border border-neutral-800 uppercase">
                     {{ form.base_currency }}
                 </div>
               </div>
           </div>
 
-          <!-- Date Range -->
-          <div class="grid grid-cols-2 gap-4">
-            <BaseInput
-              v-model="form.start_date"
-              type="date"
-              label="開始日期"
-            />
-            <BaseInput
-              v-model="form.end_date"
-              type="date"
-              label="結束日期"
-            />
-          </div>
-
-          <!-- Is Pinned -->
-          <label class="flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-colors" :class="form.is_pinned ? 'border-indigo-500 bg-indigo-500/5' : 'border-neutral-700 bg-neutral-800'">
-            <div class="flex flex-col">
-              <span class="font-bold text-sm text-white">置頂空間</span>
-              <span class="text-xs text-neutral-500 mt-0.5">將此空間釘選在列表最上方</span>
-            </div>
-            <input type="checkbox" v-model="form.is_pinned" class="w-5 h-5 rounded border-neutral-700 bg-neutral-800 text-indigo-500" />
-          </label>
-
-          <button
+          <BaseButton
             @click="handleUpdateSpace"
-            :disabled="updating"
-            class="w-full py-4 rounded-xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 border-0 cursor-pointer mt-2 shadow-lg"
+            :loading="updating"
+            variant="primary"
+            full-width
+            class="mt-2 shadow-lg"
           >
-            {{ updating ? '儲存中...' : '儲存基本設定' }}
-          </button>
+            儲存基本設定
+          </BaseButton>
         </div>
       </section>
 
-      <!-- 2. Lists Section -->
+      <!-- List Configurations -->
       <section>
         <div class="flex items-center gap-2 mb-4 px-1">
           <Icon icon="mdi:format-list-bulleted" class="text-indigo-500 text-xl" />
           <h2 class="text-lg font-bold">分類與選項</h2>
         </div>
 
-        <div class="bg-neutral-900 rounded-2xl border border-neutral-800 p-6 flex flex-col gap-6">
-          <ListEditor
-            v-model="form.currencies"
-            label="可用幣別"
-            placeholder="輸入幣別代碼，如 USD、JPY"
-          />
+        <div class="bg-neutral-900 rounded-2xl border border-neutral-800 p-6 flex flex-col gap-8">
+          <ListEditor v-model="form.categories" label="交易分類" placeholder="新增分類..." />
+          <ListEditor v-model="form.currencies" label="支援幣別" placeholder="例如: JPY, USD..." />
+          <ListEditor v-model="form.payment_methods" label="付款方式" placeholder="例如: 現金, 信用卡..." />
 
-          <ListEditor
-            v-model="form.categories"
-            label="交易分類"
-            placeholder="輸入分類名稱，如 餐飲、交通"
-          />
-
-          <ListEditor
-            v-model="form.payment_methods"
-            label="付款方式"
-            placeholder="輸入付款方式，如 現金、信用卡"
-          />
-
-          <button
+          <BaseButton
             @click="handleUpdateLists"
-            :disabled="updating"
-            class="w-full py-4 rounded-xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 border-0 cursor-pointer mt-2 shadow-lg"
+            :loading="updating"
+            variant="primary"
+            full-width
+            class="shadow-lg"
           >
-            {{ updating ? '儲存中...' : '儲存分類設定' }}
-          </button>
+            儲存分類設定
+          </BaseButton>
         </div>
       </section>
 
-      <!-- 3. Members Section -->
+      <!-- 2. Members Section -->
       <section>
         <div class="flex items-center gap-2 mb-4 px-1">
           <Icon icon="mdi:account-group-outline" class="text-indigo-500 text-xl" />
@@ -155,12 +120,12 @@
             </div>
 
             <div class="flex items-center gap-1">
-              <button @click="openAliasModal(member)" class="p-2.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white transition-colors border-0 cursor-pointer">
+              <BaseButton @click="openAliasModal(member)" variant="secondary" size="icon">
                 <Icon icon="mdi:pencil-outline" class="text-lg" />
-              </button>
-              <button v-if="member.role !== 'owner'" @click="handleRemoveMember(member)" class="p-2.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors border-0 cursor-pointer ml-1">
+              </BaseButton>
+              <BaseButton v-if="member.role !== 'owner'" @click="handleRemoveMember(member)" variant="danger" size="icon" class="ml-1">
                 <Icon icon="mdi:account-remove-outline" class="text-lg" />
-              </button>
+              </BaseButton>
             </div>
           </div>
         </div>
@@ -173,9 +138,9 @@
             <Icon icon="mdi:link-variant" class="text-indigo-500 text-xl" />
             <h2 class="text-lg font-bold">邀請連結</h2>
           </div>
-          <button @click="showInviteModal = true" class="text-sm font-bold text-indigo-400 hover:text-indigo-300 transition-colors bg-transparent border-0 cursor-pointer">
+          <BaseButton @click="showInviteModal = true" variant="ghost" size="sm" class="!font-bold !text-indigo-400">
             + 建立邀請
-          </button>
+          </BaseButton>
         </div>
 
         <div v-if="detailStore.invites.length === 0" class="p-12 text-center bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed">
@@ -197,12 +162,12 @@
             </div>
 
             <div class="flex items-center gap-2">
-              <button @click="copyInviteLink(invite.token)" class="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 transition-colors border-0 cursor-pointer">
+              <BaseButton @click="copyInviteLink(invite.token)" variant="ghost" size="icon" class="!text-indigo-400 !bg-indigo-500/10">
                 <Icon icon="mdi:content-copy" class="text-xl" />
-              </button>
-              <button @click="handleRevokeInvite(invite.id)" class="p-2.5 rounded-xl bg-neutral-800 text-neutral-500 hover:text-red-500 transition-colors border-0 cursor-pointer">
+              </BaseButton>
+              <BaseButton @click="handleRevokeInvite(invite.id)" variant="secondary" size="icon">
                 <Icon icon="mdi:trash-can-outline" class="text-xl" />
-              </button>
+              </BaseButton>
             </div>
           </div>
         </div>
@@ -210,9 +175,9 @@
 
       <!-- Danger Zone -->
       <section class="mt-4 pt-8 border-t border-neutral-800">
-          <button @click="handleDeleteSpace" class="w-full py-4 rounded-xl bg-red-500/10 text-red-500 font-bold hover:bg-red-500 hover:text-white transition-all border border-red-500/20 cursor-pointer">
+          <BaseButton @click="handleDeleteSpace" variant="danger" full-width>
               刪除此空間
-          </button>
+          </BaseButton>
       </section>
     </div>
 
@@ -232,13 +197,15 @@
                 </label>
             </div>
 
-            <button
+            <BaseButton
                 @click="handleCreateInvite"
-                :disabled="updating"
-                class="w-full py-4 rounded-xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 mt-2 border-0 cursor-pointer"
+                :loading="updating"
+                variant="primary"
+                full-width
+                class="mt-2"
             >
                 建立連結
-            </button>
+            </BaseButton>
         </div>
     </BaseModal>
 
@@ -250,13 +217,15 @@
                 placeholder="請輸入成員別名"
             />
 
-            <button
+            <BaseButton
                 @click="handleUpdateAlias"
-                :disabled="updating"
-                class="w-full py-4 rounded-xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 mt-2 border-0 cursor-pointer"
+                :loading="updating"
+                variant="primary"
+                full-width
+                class="mt-2"
             >
                 更新別名
-            </button>
+            </BaseButton>
         </div>
     </BaseModal>
   </div>
@@ -273,6 +242,7 @@ import PageTitle from '~/components/PageTitle.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseModal from '~/components/BaseModal.vue'
 import ListEditor from '~/components/ListEditor.vue'
+import BaseButton from '~/components/BaseButton.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -317,15 +287,25 @@ const fetchData = async () => {
       detailStore.fetchInvites(true)
     ])
     const s = detailStore.space
+    
     const parseJSON = (v: any): string[] => {
       if (Array.isArray(v)) return v
       if (typeof v === 'string') { try { return JSON.parse(v) } catch { return [] } }
       return []
     }
+
     const formatDate = (d: any): string | null => {
       if (!d) return null
-      return new Date(d).toISOString().split('T')[0]
+      try {
+        const date = new Date(d)
+        if (isNaN(date.getTime())) return null
+        const iso = date.toISOString()
+        return iso ? (iso.split('T')[0] || null) : null
+      } catch {
+        return null
+      }
     }
+
     form.value = {
       name: s.name || '',
       description: s.description || '',
@@ -440,7 +420,7 @@ const handleCreateInvite = async () => {
 const handleRemoveMember = async (member: any) => {
   if (!confirm(`確定要移除成員 ${member.alias || member.user?.display_name} 嗎？`)) return
   try {
-    await api.delete(`/api/spaces/${spaceId}/members/${member.user_id}`)
+    await api.del(`/api/spaces/${spaceId}/members/${member.user_id}`)
     await detailStore.fetchMembers(true)
   } catch (e: any) {
     alert(e.message || '移除失敗')
@@ -450,7 +430,7 @@ const handleRemoveMember = async (member: any) => {
 const handleDeleteSpace = async () => {
     if (!confirm('警告：確定要刪除此空間嗎？這將會永久刪除所有交易、比價資料與成員關聯，且無法復原。')) return
     try {
-        await api.delete(`/api/spaces/${spaceId}`)
+        await api.del(`/api/spaces/${spaceId}`)
         router.push('/')
     } catch (e: any) {
         alert(e.message || '刪除失敗')
@@ -470,7 +450,7 @@ const copyInviteLink = (token: string) => {
 const handleRevokeInvite = async (invite_id: string) => {
   if (!confirm('確定要撤銷此邀請連結嗎？')) return
   try {
-    await api.delete(`/api/spaces/${invite_id}`)
+    await api.del(`/api/spaces/${invite_id}`)
     await detailStore.fetchInvites(true)
   } catch (e: any) {
     alert('撤銷失敗')

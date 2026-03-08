@@ -1,9 +1,11 @@
 <template>
   <div class="flex flex-col bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden transition-all duration-300">
     <!-- Header -->
-    <button 
+    <BaseButton 
       type="button"
-      class="flex items-center justify-between p-4 w-full bg-transparent border-0 cursor-pointer hover:bg-neutral-800 transition-colors group"
+      variant="ghost"
+      full-width
+      class="justify-between p-4"
       @click="toggle"
     >
       <slot name="header" :open="isOpen" :toggle="toggle">
@@ -41,6 +43,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { Icon } from '@iconify/vue'
+import BaseButton from '~/components/BaseButton.vue'
 
 const props = defineProps({
   modelValue: {

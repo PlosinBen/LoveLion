@@ -99,21 +99,23 @@
                   </div>
                 </div>
 
-                <button 
+                <BaseButton 
                   v-if="form.items.length > 1"
                   type="button" 
                   @click="removeItem(index)" 
-                  class="mb-1 w-11 h-11 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center border-0 cursor-pointer hover:bg-red-500/20 active:scale-95 transition-transform"
+                  variant="danger"
+                  size="icon"
+                  class="mb-1"
                 >
                   <Icon icon="mdi:close" class="text-xl" />
-                </button>
+                </BaseButton>
               </div>
             </div>
           </div>
           
-          <button type="button" @click="addItem" class="flex justify-center items-center gap-2 p-4 border-2 border-dashed border-neutral-700 rounded-xl bg-transparent text-neutral-500 font-bold cursor-pointer hover:border-indigo-500/50 hover:text-indigo-400 transition-colors">
+          <BaseButton type="button" @click="addItem" variant="ghost" fullWidth class="border-2 border-dashed border-neutral-700 hover:border-indigo-500/50 gap-2">
             <Icon icon="mdi:plus" class="text-xl" /> 新增項目
-          </button>
+          </BaseButton>
         </div>
 
         <!-- Foreign Currency Settlement (Conditional) -->
@@ -186,21 +188,22 @@
 
         <!-- Actions -->
         <div class="flex flex-col gap-3 mt-4">
-          <button 
+          <BaseButton 
             type="submit" 
-            class="w-full py-4 rounded-xl font-bold bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 border-0 cursor-pointer shadow-lg" 
-            :disabled="submitting"
+            fullWidth
+            :loading="submitting"
           >
-            {{ submitting ? '儲存中...' : '儲存變更' }}
-          </button>
+            儲存變更
+          </BaseButton>
           
-          <button 
+          <BaseButton 
             type="button"
             @click="handleDelete"
-            class="w-full py-4 rounded-xl font-bold bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all active:scale-95 border-0 cursor-pointer"
+            variant="danger"
+            fullWidth
           >
             刪除此筆交易
-          </button>
+          </BaseButton>
         </div>
       </form>
     </div>
@@ -213,6 +216,7 @@ definePageMeta({
   layout: 'default'
 })
 import { ref, computed, onMounted, watch } from 'vue'
+import BaseButton from '~/components/BaseButton.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -360,10 +364,10 @@ const handleSubmit = async () => {
 }
 
 const handleDelete = async () => {
-  if (!confirm('確定要刪除這筆交易嗎？')) return
-  
+  if (!confirm('確定要刪除此交易嗎？')) return
+
   try {
-    await api.delete(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`)
+    await api.del(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`)
     detailStore.invalidate('transactions')
     router.push(`/spaces/${route.params.id}/ledger`)
   } catch (e: any) {

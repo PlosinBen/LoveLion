@@ -20,9 +20,9 @@
               <span class="text-xs text-neutral-500 font-medium">@{{ user?.username }}</span>
             </div>
           </div>
-          <button @click="handleLogout" class="px-4 py-2 rounded-lg bg-red-500/10 text-red-500 text-xs font-bold border-0 cursor-pointer hover:bg-red-500/20 transition-colors">
+          <BaseButton @click="handleLogout" variant="danger" size="sm">
             登出
-          </button>
+          </BaseButton>
         </div>
       </section>
 
@@ -53,6 +53,7 @@ import { onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useAuth } from '~/composables/useAuth'
 import PageTitle from '~/components/PageTitle.vue'
+import BaseButton from '~/components/BaseButton.vue'
 
 definePageMeta({
   layout: 'default'

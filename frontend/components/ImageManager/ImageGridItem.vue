@@ -8,22 +8,23 @@
     
     <!-- Overlay Actions -->
     <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-       <button 
+       <BaseButton 
          type="button"
          @click.stop="$emit('delete', index)"
-         class="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 focus:outline-none"
+         variant="danger"
+         size="sm"
          title="Delete"
        >
          <Icon icon="mdi:trash-can-outline" class="h-4 w-4" />
-       </button>
+       </BaseButton>
        
        <div v-if="allowReorder" class="flex gap-1">
-         <button type="button" v-if="!isFirst" @click.stop="$emit('move', index, -1)" class="p-1 bg-white text-gray-800 rounded shadow hover:bg-gray-100">
+         <BaseButton type="button" v-if="!isFirst" @click.stop="$emit('move', index, -1)" variant="white" size="sm">
             <Icon icon="mdi:chevron-left" class="h-4 w-4" />
-         </button>
-         <button type="button" v-if="!isLast" @click.stop="$emit('move', index, 1)" class="p-1 bg-white text-gray-800 rounded shadow hover:bg-gray-100">
+         </BaseButton>
+         <BaseButton type="button" v-if="!isLast" @click.stop="$emit('move', index, 1)" variant="white" size="sm">
             <Icon icon="mdi:chevron-right" class="h-4 w-4" />
-         </button>
+         </BaseButton>
        </div>
     </div>
   </div>
@@ -31,6 +32,7 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
+import BaseButton from '~/components/BaseButton.vue'
 import { useImages } from '~/composables/useImages'
 
 const props = defineProps<{

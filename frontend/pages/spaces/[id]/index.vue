@@ -10,9 +10,9 @@
       <section class="flex flex-col gap-3">
         <div class="flex items-center justify-between px-1">
           <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-widest">最近交易</h2>
-          <button @click="showAll = !showAll" class="text-xs font-bold text-indigo-400 border-0 bg-transparent cursor-pointer hover:text-indigo-300">
+          <BaseButton @click="showAll = !showAll" variant="ghost" size="sm" class="!text-indigo-400 hover:!text-indigo-300">
              {{ showAll ? '收起' : '查看全部' }}
-          </button>
+          </BaseButton>
         </div>
 
         <div v-if="store.transactions.length === 0" class="bg-neutral-900/50 rounded-2xl border border-neutral-800 border-dashed p-10 flex flex-col items-center justify-center text-neutral-500 text-sm italic">
@@ -35,6 +35,7 @@
     </template>
 
     <script setup lang="ts">
+    import BaseButton from '~/components/BaseButton.vue'
     definePageMeta({
       path: '/spaces/:id/ledger'
     })

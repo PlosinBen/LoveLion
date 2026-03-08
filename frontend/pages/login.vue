@@ -29,16 +29,18 @@
           {{ error }}
         </div>
 
-        <button 
+        <BaseButton 
           @click="handleLogin" 
-          class="w-full mt-8 py-4 rounded-xl font-bold bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 border-0 cursor-pointer shadow-lg" 
-          :disabled="loading"
+          class="mt-8"
+          fullWidth
+          :loading="loading"
         >
-          {{ loading ? '登入中...' : '登入' }}
-        </button>
+          登入
+        </BaseButton>
 
-        <p class="text-center mt-6 text-neutral-500 text-sm font-medium">
-          還沒有帳號嗎？ <button @click="isRegister = true" class="text-indigo-400 bg-transparent border-0 cursor-pointer font-bold hover:underline p-0">立即註冊</button>
+        <p class="text-center mt-6 text-neutral-500 text-sm font-medium flex items-center justify-center gap-1">
+          還沒有帳號嗎？ 
+          <BaseButton @click="isRegister = true" variant="ghost" class="p-0 font-bold hover:underline h-auto inline-flex">立即註冊</BaseButton>
         </p>
       </div>
 
@@ -73,16 +75,18 @@
           {{ error }}
         </div>
 
-        <button 
+        <BaseButton 
           @click="handleRegister" 
-          class="w-full mt-8 py-4 rounded-xl font-bold bg-indigo-500 text-white hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 border-0 cursor-pointer shadow-lg" 
-          :disabled="loading"
+          class="mt-8"
+          fullWidth
+          :loading="loading"
         >
-          {{ loading ? '註冊中...' : '註冊帳號' }}
-        </button>
+          註冊帳號
+        </BaseButton>
 
-        <p class="text-center mt-6 text-neutral-500 text-sm font-medium">
-          已經有帳號了？ <button @click="isRegister = false" class="text-indigo-400 bg-transparent border-0 cursor-pointer font-bold hover:underline p-0">點此登入</button>
+        <p class="text-center mt-6 text-neutral-500 text-sm font-medium flex items-center justify-center gap-1">
+          已經有帳號了？ 
+          <BaseButton @click="isRegister = false" variant="ghost" class="p-0 font-bold hover:underline h-auto inline-flex">點此登入</BaseButton>
         </p>
       </div>
     </div>
@@ -92,6 +96,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useAuth } from '~/composables/useAuth'
+import BaseButton from '~/components/BaseButton.vue'
 
 definePageMeta({
   layout: 'default',

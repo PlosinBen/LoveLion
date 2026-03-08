@@ -10,9 +10,9 @@
       </div>
       <h1 class="text-xl font-bold mb-2">邀請無效</h1>
       <p class="text-neutral-400 mb-8 leading-relaxed">{{ error }}</p>
-      <button @click="router.push('/')" class="w-full py-4 rounded-xl bg-neutral-800 text-white font-bold hover:bg-neutral-700 transition-colors border-0 cursor-pointer">
+      <BaseButton @click="router.push('/')" variant="secondary" full-width>
         回到首頁
-      </button>
+      </BaseButton>
     </div>
 
     <div v-else-if="inviteInfo" class="bg-neutral-900 p-8 rounded-2xl border border-neutral-800 text-center max-w-sm w-full shadow-2xl">
@@ -30,17 +30,19 @@
         <div class="text-xl font-bold text-indigo-400">{{ inviteInfo.space_name }}</div>
       </div>
 
-      <button 
+      <BaseButton 
         @click="handleJoin" 
-        :disabled="joining"
-        class="w-full py-4 rounded-xl bg-indigo-500 text-white font-bold hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 shadow-lg border-0 cursor-pointer"
+        :loading="joining"
+        variant="primary"
+        full-width
+        class="shadow-lg"
       >
-        {{ joining ? '加入中...' : '接受邀請並加入' }}
-      </button>
+        接受邀請並加入
+      </BaseButton>
 
-      <button @click="router.push('/')" class="mt-6 text-sm text-neutral-500 font-bold hover:text-neutral-300 transition-colors bg-transparent border-0 cursor-pointer">
+      <BaseButton @click="router.push('/')" variant="ghost" class="mt-6 text-sm">
         暫時不要
-      </button>
+      </BaseButton>
     </div>
   </div>
 </template>
@@ -50,6 +52,7 @@ import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import BaseButton from '~/components/BaseButton.vue'
 
 definePageMeta({
   layout: 'empty'

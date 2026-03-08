@@ -34,6 +34,7 @@ import { useRouter } from 'vue-router'
 const props = defineProps<{
   transaction: {
     id: string | number
+    title?: string
     category?: string
     date: string
     currency: string

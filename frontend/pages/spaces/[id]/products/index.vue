@@ -7,19 +7,12 @@
     />
 
     <!-- View Toggle via URL -->
-    <div class="flex p-1 bg-neutral-800 rounded-xl mb-6">
-      <NuxtLink 
-        :to="`/spaces/${route.params.id}/stores`"
-        class="flex-1 py-2 text-sm font-bold rounded-lg transition-all text-center no-underline text-neutral-500 hover:text-neutral-300"
-      >
-        按商店
-      </NuxtLink>
-      <div 
-        class="flex-1 py-2 text-sm font-bold rounded-lg bg-indigo-500 text-white shadow-sm text-center"
-      >
-        按商品
-      </div>
-    </div>
+    <BaseSegmentControl 
+      :options="[
+        { label: '按商店', to: `/spaces/${route.params.id}/stores` },
+        { label: '按商品', to: `/spaces/${route.params.id}/products` }
+      ]"
+    />
 
     <div v-if="detailStore.loading.products" class="flex justify-center items-center py-20 text-neutral-500">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
@@ -55,16 +48,17 @@
 
     <!-- FAB for adding store -->
     <BaseFab @click="router.push(`/spaces/${route.params.id}/stores/add`)" />
-    </div>
-    </template>
+  </div>
+</template>
 
-    <script setup lang="ts">
-    import { onMounted, computed } from 'vue'
-    import { Icon } from '@iconify/vue'
-    import { useAuth } from '~/composables/useAuth'
-    import { useSpaceDetailStore } from '~/stores/spaceDetail'
-    import PageTitle from '~/components/PageTitle.vue'
-    import BaseFab from '~/components/BaseFab.vue'
+<script setup lang="ts">
+import { onMounted, computed } from 'vue'
+import { Icon } from '@iconify/vue'
+import { useAuth } from '~/composables/useAuth'
+import { useSpaceDetailStore } from '~/stores/spaceDetail'
+import PageTitle from '~/components/PageTitle.vue'
+import BaseFab from '~/components/BaseFab.vue'
+import BaseSegmentControl from '~/components/BaseSegmentControl.vue'
 
 definePageMeta({
   layout: 'default'
@@ -80,31 +74,48 @@ const formatPrice = (price: number | string) => {
   return num.toLocaleString('zh-TW', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
-const groupedProducts = computed(() => {
-  const groups: Record<string, any[]> = {}
+interface GroupedProduct {
+  name: string
+  count: number
+  priceRange: string
+}
+
+const groupedProducts = computed<GroupedProduct[]>(() => {
+  const groups = new Map<string, any[]>()
+  
   detailStore.products.forEach(p => {
-    if (!groups[p.name]) groups[p.name] = []
-    groups[p.name].push(p)
+    if (!p.name) return
+    if (!groups.has(p.name)) {
+      groups.set(p.name, [])
+    }
+    groups.get(p.name)?.push(p)
   })
 
-  return Object.keys(groups).map(name => {
-    const prods = groups[name]
-    const prices = prods.map(p => parseFloat(p.price))
+  const result: GroupedProduct[] = []
+  
+  groups.forEach((prods, name) => {
+    if (!prods || prods.length === 0) return
+    
+    const prices = prods.map(p => parseFloat(p.price)).filter(p => !isNaN(p))
+    if (prices.length === 0) return
+
     const min = Math.min(...prices)
     const max = Math.max(...prices)
-    const currency = prods[0].currency
+    const currency = prods[0].currency || ''
 
     let priceRange = `${currency} ${formatPrice(min)}`
     if (min !== max) {
       priceRange += ` ~ ${formatPrice(max)}`
     }
 
-    return {
+    result.push({
       name,
       count: prods.length,
       priceRange
-    }
-  }).sort((a, b) => a.name.localeCompare(b.name))
+    })
+  })
+
+  return result.sort((a, b) => a.name.localeCompare(b.name))
 })
 
 onMounted(async () => {

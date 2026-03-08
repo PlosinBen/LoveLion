@@ -144,10 +144,10 @@ const fetchData = async () => {
 }
 
 const handleDelete = async () => {
-  if (!confirm('確定要刪除這筆交易嗎？')) return
+  if (!confirm('確定要刪除此交易嗎？')) return
 
   try {
-    await api.delete(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`)
+    await api.del(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`)
     detailStore.invalidate('transactions')
     router.push(`/spaces/${route.params.id}/ledger`)
   } catch (e: any) {

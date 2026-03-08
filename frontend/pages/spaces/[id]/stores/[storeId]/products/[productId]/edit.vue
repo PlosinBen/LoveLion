@@ -51,27 +51,30 @@
       </div>
 
       <div class="flex flex-col gap-3">
-        <button
+        <BaseButton
           type="submit"
-          :disabled="submitting"
-          class="w-full py-4 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 transition-all active:scale-95 border-0 cursor-pointer shadow-lg disabled:opacity-50"
+          variant="primary"
+          fullWidth
+          :loading="submitting"
         >
-          {{ submitting ? '儲存中...' : '儲存變更' }}
-        </button>
+          儲存變更
+        </BaseButton>
 
-        <button
+        <BaseButton
           type="button"
           @click="handleDelete"
-          class="w-full py-4 rounded-xl font-bold bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all active:scale-95 border-0 cursor-pointer"
+          variant="danger"
+          fullWidth
         >
           刪除此商品
-        </button>
+        </BaseButton>
       </div>
     </form>
   </div>
 </template>
 
 <script setup lang="ts">
+import BaseButton from '~/components/BaseButton.vue'
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
@@ -143,7 +146,7 @@ const handleDelete = async () => {
   if (!confirm('確定要刪除此商品嗎？')) return
 
   try {
-    await api.delete(`/api/spaces/${spaceId}/stores/${storeId}/products/${productId}`)
+    await api.del(`/api/spaces/${spaceId}/stores/${storeId}/products/${productId}`)
     detailStore.invalidate('stores')
     router.push(`/spaces/${spaceId}/stores/${storeId}`)
   } catch (e: any) {

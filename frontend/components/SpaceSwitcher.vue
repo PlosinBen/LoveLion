@@ -31,13 +31,15 @@
             </div>
 
             <div class="flex items-center gap-2 shrink-0 ml-3">
-              <button 
+              <BaseButton 
                 v-if="space.user_id === user?.id"
                 @click.stop="router.push(`/spaces/${space.id}/settings`); showSwitcher = false"
-                class="w-8 h-8 rounded-full flex items-center justify-center text-neutral-500 hover:bg-neutral-700 hover:text-white transition-colors border-0 cursor-pointer bg-transparent"
+                variant="ghost"
+                size="icon"
+                class="!w-8 !h-8"
               >
                 <Icon icon="mdi:cog-outline" class="text-lg" />
-              </button>
+              </BaseButton>
               
               <Icon v-if="space.id === currentSpace?.id" icon="mdi:check" class="text-lg shrink-0" />
             </div>
@@ -58,6 +60,7 @@ import { ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useSpace } from '~/composables/useSpace'
 import { useAuth } from '~/composables/useAuth'
+import BaseButton from '~/components/BaseButton.vue'
 
 const router = useRouter()
 const { user } = useAuth()

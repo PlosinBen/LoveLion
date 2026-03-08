@@ -47,18 +47,20 @@
         />
       </div>
 
-      <button
+      <BaseButton
         type="submit"
-        :disabled="submitting"
-        class="w-full py-4 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 transition-all active:scale-95 border-0 cursor-pointer shadow-lg disabled:opacity-50"
+        variant="primary"
+        fullWidth
+        :loading="submitting"
       >
-        {{ submitting ? '新增中...' : '新增商品' }}
-      </button>
+        新增商品
+      </BaseButton>
     </form>
   </div>
 </template>
 
 <script setup lang="ts">
+import BaseButton from '~/components/BaseButton.vue'
 import { ref, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
