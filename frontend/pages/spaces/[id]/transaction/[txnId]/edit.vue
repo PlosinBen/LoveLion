@@ -60,25 +60,45 @@
                 input-class="font-bold"
               />
               <div class="flex items-center gap-3">
-                <BaseInput
-                  v-model.number="item.unit_price"
-                  type="number"
-                  placeholder="單價"
-                  class="flex-1"
-                />
-                <span class="text-neutral-600 font-bold">×</span>
-                <BaseInput
-                  v-model.number="item.quantity"
-                  type="number"
-                  placeholder="數量"
-                  min="1"
-                  class="w-20"
-                />
+                <div class="flex-1 flex flex-col gap-1">
+                  <label class="text-[10px] font-bold text-neutral-500 uppercase px-1">單價</label>
+                  <BaseInput
+                    v-model.number="item.unit_price"
+                    type="number"
+                    placeholder="單價"
+                  />
+                </div>
+                <div class="w-20 flex flex-col gap-1">
+                  <label class="text-[10px] font-bold text-neutral-500 uppercase px-1">數量</label>
+                  <BaseInput
+                    v-model.number="item.quantity"
+                    type="number"
+                    placeholder="數量"
+                    min="1"
+                  />
+                </div>
+              </div>
+              
+              <div class="flex items-end gap-3">
+                <div class="flex-1 flex flex-col gap-1">
+                  <label class="text-[10px] font-bold text-neutral-500 uppercase px-1">折扣</label>
+                  <BaseInput
+                    v-model.number="item.discount"
+                    type="number"
+                    placeholder="折扣"
+                  />
+                </div>
+                <div class="flex-1 text-right pb-3">
+                  <div class="text-[10px] font-bold text-neutral-500 uppercase px-1 mb-1">小計</div>
+                  <div class="text-lg font-bold text-white">
+                    {{ ((Number(item.unit_price) - Number(item.discount || 0)) * Number(item.quantity)).toLocaleString() }}
+                  </div>
+                </div>
                 <button 
                   v-if="form.items.length > 1"
                   type="button" 
                   @click="removeItem(index)" 
-                  class="w-10 h-10 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center border-0 cursor-pointer hover:bg-red-500/20 active:scale-95 transition-transform"
+                  class="mb-2 w-10 h-10 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center border-0 cursor-pointer hover:bg-red-500/20 active:scale-95 transition-transform"
                 >
                   <Icon icon="mdi:close" />
                 </button>
@@ -225,7 +245,7 @@ const form = ref({
   date: new Date(),
   category: '',
   note: '',
-  items: [{ name: '', unit_price: 0, quantity: 1 }],
+  items: [{ name: '', unit_price: 0, quantity: 1, discount: 0 }],
   currency: 'TWD',
   manual_rate: true, 
   exchange_rate: 0,
@@ -235,7 +255,8 @@ const form = ref({
 
 const totalAmount = computed(() => {
   return form.value.items.reduce((sum, item) => {
-    return sum + (Number(item.unit_price) * Number(item.quantity))
+    const subtotal = (Number(item.unit_price) - Number(item.discount || 0)) * Number(item.quantity)
+    return sum + subtotal
   }, 0)
 })
 
@@ -262,7 +283,7 @@ watch(calculatedExchangeRate, (newVal) => {
 })
 
 const addItem = () => {
-  form.value.items.push({ name: '', unit_price: 0, quantity: 1 })
+  form.value.items.push({ name: '', unit_price: 0, quantity: 1, discount: 0 })
 }
 
 const removeItem = (index: number) => {
@@ -284,7 +305,7 @@ const fetchData = async () => {
       date: new Date(txn.date),
       category: txn.category,
       note: txn.note,
-      items: itemsData.length > 0 ? itemsData : [{ name: '', unit_price: 0, quantity: 1 }],
+      items: itemsData.length > 0 ? itemsData : [{ name: '', unit_price: 0, quantity: 1, discount: 0 }],
       currency: txn.currency,
       manual_rate: txn.handling_fee === 0 || !txn.handling_fee,
       exchange_rate: txn.exchange_rate,
@@ -306,7 +327,12 @@ const handleSubmit = async () => {
       category: form.value.category,
       note: form.value.note,
       currency: form.value.currency,
-      items: form.value.items.filter(item => item.name && Number(item.unit_price) > 0),
+      items: form.value.items
+        .filter(item => item.name && Number(item.unit_price) > 0)
+        .map(item => ({
+          ...item,
+          amount: (Number(item.unit_price) - Number(item.discount || 0)) * Number(item.quantity)
+        })),
       exchange_rate: form.value.currency === baseCurrency.value ? 1 : form.value.exchange_rate,
       billing_amount: form.value.currency === baseCurrency.value ? totalAmount.value : form.value.billing_amount,
       handling_fee: form.value.currency === baseCurrency.value ? 0 : form.value.handling_fee,
