@@ -35,6 +35,9 @@
     </template>
 
     <script setup lang="ts">
+    definePageMeta({
+      path: '/spaces/:id/ledger'
+    })
     import { ref, computed, onMounted } from 'vue'
     import { Icon } from '@iconify/vue'
     import { useAuth } from '~/composables/useAuth'

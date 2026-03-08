@@ -2,8 +2,8 @@
   <div class="add-transaction-page">
     <PageTitle
       title="新增交易"
-      :back-to="`/spaces/${route.params.id}`"
-      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}` }]"
+      :back-to="`/spaces/${route.params.id}/ledger`"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/ledger` }]"
     />
 
     <div>
@@ -196,18 +196,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { Icon } from '@iconify/vue'
-import { useApi } from '~/composables/useApi'
-import { useAuth } from '~/composables/useAuth'
-import { useSpaceDetailStore } from '~/stores/spaceDetail'
-import { VueDatePicker } from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
-import PageTitle from '~/components/PageTitle.vue'
-
 definePageMeta({
+  path: '/spaces/:id/ledger/transaction/add',
   layout: 'default'
 })
+import { ref, computed, onMounted, watch } from 'vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -297,7 +290,7 @@ const handleSubmit = async () => {
 
     await api.post(`/api/spaces/${route.params.id}/transactions`, payload)
     detailStore.invalidate('transactions')
-    router.push(`/spaces/${route.params.id}`)
+    router.push(`/spaces/${route.params.id}/ledger`)
   } catch (e: any) {
     alert(e.message || '儲存失敗')
   } finally {

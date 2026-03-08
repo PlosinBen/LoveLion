@@ -1,6 +1,6 @@
 <template>
   <div 
-    @click="router.push(`/spaces/${spaceId}/transaction/${transaction.id}`)"
+    @click="router.push(`/spaces/${spaceId}/ledger/transaction/${transaction.id}`)"
     class="flex justify-between items-center p-4 rounded-2xl border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 transition-colors cursor-pointer group active:scale-95 shadow-sm"
   >
     <div class="flex items-center gap-3">

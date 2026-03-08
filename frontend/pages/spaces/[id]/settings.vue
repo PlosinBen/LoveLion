@@ -1,6 +1,6 @@
 <template>
   <div class="space-settings-page">
-    <PageTitle title="空間設定" :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${spaceId}` }]" />
+    <PageTitle title="空間設定" :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${spaceId}/ledger` }]" />
 
     <div v-if="loading" class="text-center py-10 text-neutral-500">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
@@ -51,13 +51,13 @@
           <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs text-neutral-500 uppercase tracking-wider mb-2 ml-1">空間類型</label>
-                <div class="bg-neutral-800 text-neutral-400 py-3 px-4 rounded-xl text-sm border border-neutral-800">
+                <div class="bg-neutral-800 text-neutral-400 py-1.5 px-2 rounded text-sm border border-neutral-800">
                     {{ form.type === 'trip' ? '旅遊專案' : '個人記帳' }}
                 </div>
               </div>
               <div>
                 <label class="block text-xs text-neutral-500 uppercase tracking-wider mb-2 ml-1">本位幣別</label>
-                <div class="bg-neutral-800 text-neutral-400 py-3 px-4 rounded-xl text-sm border border-neutral-800 uppercase">
+                <div class="bg-neutral-800 text-neutral-400 py-1.5 px-2 rounded text-sm border border-neutral-800 uppercase">
                     {{ form.base_currency }}
                 </div>
               </div>

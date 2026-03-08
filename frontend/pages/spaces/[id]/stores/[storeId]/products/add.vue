@@ -4,7 +4,7 @@
       title="新增商品"
       :back-to="`/spaces/${spaceId}/stores/${storeId}`"
       class="px-2"
-      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${spaceId}` }, { label: '比價', to: `/spaces/${spaceId}/stores` }, { label: storeName || '店家', to: `/spaces/${spaceId}/stores/${storeId}` }]"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${spaceId}/ledger` }, { label: '比價', to: `/spaces/${spaceId}/stores` }, { label: storeName || '店家', to: `/spaces/${spaceId}/stores/${storeId}` }]"
     />
 
     <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">

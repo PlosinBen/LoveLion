@@ -27,7 +27,7 @@
         v-for="space in spaces" 
         :key="space.id" 
         :space="space" 
-        @click="router.push(`/spaces/${space.id}`)"
+        @click="router.push(`/spaces/${space.id}/ledger`)"
         @toggle-pin="handleTogglePin(space.id)"
       />
     </div>

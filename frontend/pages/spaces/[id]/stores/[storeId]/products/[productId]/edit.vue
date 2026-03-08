@@ -3,8 +3,8 @@
     <PageTitle
       title="編輯商品"
       :back-to="`/spaces/${spaceId}/stores/${storeId}`"
-      class="px-2"
-      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${spaceId}` }, { label: '比價', to: `/spaces/${spaceId}/stores` }, { label: storeName || '店家', to: `/spaces/${spaceId}/stores/${storeId}` }]"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${spaceId}/ledger` }, { label: '比價', to: `/spaces/${spaceId}/stores` }, { label: storeName || '店家', to: `/spaces/${spaceId}/stores/${storeId}` }]"
+    />
     />
 
     <div v-if="loading" class="flex justify-center items-center py-20 text-neutral-500">

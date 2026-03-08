@@ -4,7 +4,7 @@
       :title="productName"
       :show-back="true"
       :back-to="`/spaces/${route.params.id}/products`"
-      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}` }, { label: '商品比價', to: `/spaces/${route.params.id}/products` }]"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/ledger` }, { label: '商品比價', to: `/spaces/${route.params.id}/products` }]"
     />
 
     <div v-if="detailStore.loading.products" class="flex justify-center items-center py-20 text-neutral-500">

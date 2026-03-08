@@ -4,7 +4,7 @@
       title="新增店家"
       :back-to="`/spaces/${route.params.id}/stores`"
       class="px-2"
-      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}` }, { label: '比價', to: `/spaces/${route.params.id}/stores` }]"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/ledger` }, { label: '比價', to: `/spaces/${route.params.id}/stores` }]"
     />
 
     <div>

@@ -3,7 +3,7 @@
     <PageTitle
       title="編輯交易"
       :back-to="`/spaces/${route.params.id}/transaction/${route.params.txnId}`"
-      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}` }, { label: '交易詳情', to: `/spaces/${route.params.id}/transaction/${route.params.txnId}` }]"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/ledger` }, { label: '交易詳情', to: `/spaces/${route.params.id}/transaction/${route.params.txnId}` }]"
     />
 
     <div v-if="loading" class="p-20 flex justify-center items-center text-neutral-500">
@@ -208,18 +208,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { Icon } from '@iconify/vue'
-import { useApi } from '~/composables/useApi'
-import { useAuth } from '~/composables/useAuth'
-import { useSpaceDetailStore } from '~/stores/spaceDetail'
-import { VueDatePicker } from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
-import PageTitle from '~/components/PageTitle.vue'
-
 definePageMeta({
+  path: '/spaces/:id/ledger/transaction/:txnId/edit',
   layout: 'default'
 })
+import { ref, computed, onMounted, watch } from 'vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -372,7 +365,7 @@ const handleDelete = async () => {
   try {
     await api.delete(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`)
     detailStore.invalidate('transactions')
-    router.push(`/spaces/${route.params.id}`)
+    router.push(`/spaces/${route.params.id}/ledger`)
   } catch (e: any) {
     alert(e.message || '刪除失敗')
   }

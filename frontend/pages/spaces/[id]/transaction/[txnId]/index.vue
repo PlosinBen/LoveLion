@@ -2,12 +2,12 @@
   <div class="transaction-detail">
     <PageTitle
       title="交易詳情"
-      :back-to="`/spaces/${route.params.id}`"
-      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}` }]"
+      :back-to="`/spaces/${route.params.id}/ledger`"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/ledger` }]"
     >
       <template #right>
         <div class="flex gap-1">
-          <button @click="router.push(`/spaces/${route.params.id}/transaction/${route.params.txnId}/edit`)" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-indigo-400 border-0 cursor-pointer hover:bg-neutral-800 transition-colors active:scale-95">
+          <button @click="router.push(`/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}/edit`)" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-indigo-400 border-0 cursor-pointer hover:bg-neutral-800 transition-colors active:scale-95">
             <Icon icon="mdi:pencil-outline" class="text-xl" />
           </button>
           <button @click="handleDelete" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-red-500 border-0 cursor-pointer hover:bg-neutral-800 transition-colors active:scale-95">
@@ -78,7 +78,7 @@
 
 <script setup lang="ts">
 definePageMeta({
-  // BottomNav will be shown by default layout since it's a space page
+  path: '/spaces/:id/ledger/transaction/:txnId'
 })
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
@@ -137,7 +137,7 @@ const fetchData = async () => {
     )
   } catch (e) {
     console.error('Failed to fetch transaction:', e)
-    router.push(`/spaces/${route.params.id}`)
+    router.push(`/spaces/${route.params.id}/ledger`)
   } finally {
     loading.value = false
   }
@@ -149,7 +149,7 @@ const handleDelete = async () => {
   try {
     await api.delete(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`)
     detailStore.invalidate('transactions')
-    router.push(`/spaces/${route.params.id}`)
+    router.push(`/spaces/${route.params.id}/ledger`)
   } catch (e: any) {
     alert(e.message || '刪除失敗')
   }

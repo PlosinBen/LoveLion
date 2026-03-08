@@ -64,20 +64,8 @@ const isActive = (item: NavItem & { alternateTo?: string }) => {
   if (item.to === '/') return route.path === '/'
   
   const checkMatch = (path: string) => {
-    const isExact = route.path === path
-    const isSubpath = route.path.startsWith(path + '/')
-    
-    if (isExact) return true
-    
-    if (isSubpath) {
-      // Check if there is another nav item that is a better match (longer)
-      const betterMatch = navItems.value.some(other => {
-        if (!other.to || other.to === path) return false
-        return (route.path === other.to || route.path.startsWith(other.to + '/')) && other.to.length > path.length
-      })
-      return !betterMatch
-    }
-    return false
+    // Check if path matches exactly or is a subpath (for details/edit pages)
+    return route.path === path || route.path.startsWith(path + '/')
   }
 
   const primaryMatch = checkMatch(item.to)
