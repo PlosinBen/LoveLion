@@ -2,10 +2,11 @@
   <nav class="fixed bottom-0 left-0 right-0 bg-neutral-900 border-t border-neutral-800 flex justify-around items-center px-4 py-3 z-50">
     <template v-for="item in navItems" :key="item.to || item.id">
       <!-- Link Mode -->
-      <NuxtLink 
+      <NuxtLink
         v-if="item.to"
         :to="item.to"
-        class="flex flex-col items-center gap-1 no-underline text-neutral-500 transition-transform active:scale-95"
+        class="flex flex-col items-center gap-1 no-underline transition-transform active:scale-95"
+        :class="isActive(item) ? 'text-indigo-400' : 'text-neutral-500'"
       >
         <Icon :icon="item.icon" class="text-2xl" />
         <span class="text-xs font-bold uppercase tracking-widest scale-90">
@@ -14,10 +15,11 @@
       </NuxtLink>
 
       <!-- Action Mode (Button) -->
-      <button 
+      <button
         v-else
         @click="$emit('update:modelValue', item.id)"
-        class="flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer text-neutral-500 transition-transform active:scale-95"
+        class="flex flex-col items-center gap-1 bg-transparent border-0 cursor-pointer transition-transform active:scale-95"
+        :class="isActive(item) ? 'text-indigo-400' : 'text-neutral-500'"
       >
         <Icon :icon="item.icon" class="text-2xl" />
         <span class="text-xs font-bold uppercase tracking-widest scale-90">
@@ -46,6 +48,8 @@ const props = defineProps<{
 
 defineEmits(['update:modelValue'])
 
+const route = useRoute()
+
 const navItems = computed(() => {
   if (props.items) return props.items
   return [
@@ -53,4 +57,9 @@ const navItems = computed(() => {
     { label: '設定', icon: 'mdi:cog-outline', to: '/settings' }
   ]
 })
+
+const isActive = (item: NavItem) => {
+  if (!item.to) return item.id === props.modelValue
+  return route.path === item.to
+}
 </script>
