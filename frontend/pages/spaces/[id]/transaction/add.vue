@@ -214,21 +214,8 @@ const route = useRoute()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
 
-const categories = [
-  { label: '餐飲', value: '餐飲' },
-  { label: '交通', value: '交通' },
-  { label: '購物', value: '購物' },
-  { label: '娛樂', value: '娛樂' },
-  { label: '生活', value: '生活' },
-  { label: '其他', value: '其他' }
-]
-
-const availableCurrencies = [
-  { label: 'TWD', value: 'TWD' },
-  { label: 'JPY', value: 'JPY' },
-  { label: 'USD', value: 'USD' },
-  { label: 'EUR', value: 'EUR' }
-]
+const categories = ref<{label: string, value: string}[]>([])
+const availableCurrencies = ref<{label: string, value: string}[]>([])
 
 const baseCurrency = ref('TWD')
 const submitting = ref(false)
@@ -327,8 +314,37 @@ onMounted(async () => {
     const space = await api.get<any>(`/api/spaces/${route.params.id}`)
     baseCurrency.value = space.base_currency || 'TWD'
     form.value.currency = baseCurrency.value
+
+    // Load dynamic options from space
+    if (space.categories) {
+      categories.value = space.categories.map((c: string) => ({ label: c, value: c }))
+    } else {
+      categories.value = [
+        { label: '餐飲', value: '餐飲' },
+        { label: '交通', value: '交通' },
+        { label: '購物', value: '購物' },
+        { label: '娛樂', value: '娛樂' },
+        { label: '生活', value: '生活' },
+        { label: '其他', value: '其他' }
+      ]
+    }
+
+    if (space.currencies) {
+      availableCurrencies.value = space.currencies.map((c: string) => ({ label: c, value: c }))
+    } else {
+      availableCurrencies.value = [
+        { label: 'TWD', value: 'TWD' },
+        { label: 'JPY', value: 'JPY' },
+        { label: 'USD', value: 'USD' }
+      ]
+    }
+    
+    // Set default category
+    if (categories.value.length > 0 && !form.value.category) {
+      form.value.category = categories.value[0].value
+    }
   } catch (e) {
-    console.error('Failed to fetch space currency', e)
+    console.error('Failed to fetch space data', e)
   }
 })
 </script>
