@@ -45,8 +45,7 @@ import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import SpaceHeader from '~/components/SpaceHeader.vue'
 
 definePageMeta({
-  layout: 'default',
-  hideGlobalNav: true
+  layout: 'default'
 })
 
 const router = useRouter()

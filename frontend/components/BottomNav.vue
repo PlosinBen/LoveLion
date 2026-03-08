@@ -60,6 +60,24 @@ const navItems = computed(() => {
 
 const isActive = (item: NavItem) => {
   if (!item.to) return item.id === props.modelValue
-  return route.path === item.to
+  
+  if (item.to === '/') return route.path === '/'
+  
+  const isExact = route.path === item.to
+  const isSubpath = route.path.startsWith(item.to + '/')
+  
+  if (isExact) return true
+  
+  if (isSubpath) {
+    // Check if there is another nav item that is a better match (longer)
+    const betterMatch = navItems.value.some(other => {
+      if (!other.to || other.to === item.to) return false
+      // If other.to is longer and also matches, it's a better match
+      return (route.path === other.to || route.path.startsWith(other.to + '/')) && other.to.length > item.to.length
+    })
+    return !betterMatch
+  }
+  
+  return false
 }
 </script>

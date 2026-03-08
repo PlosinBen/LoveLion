@@ -67,8 +67,7 @@ import BaseInput from '~/components/BaseInput.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
 
 definePageMeta({
-  layout: 'default',
-  hideGlobalNav: true
+  layout: 'default'
 })
 
 const router = useRouter()

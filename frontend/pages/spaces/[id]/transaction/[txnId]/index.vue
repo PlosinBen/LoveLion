@@ -77,7 +77,7 @@
 
 <script setup lang="ts">
 definePageMeta({
-  hideGlobalNav: true
+  // BottomNav will be shown by default layout since it's a space page
 })
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'

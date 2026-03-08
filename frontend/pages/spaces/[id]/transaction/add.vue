@@ -206,8 +206,7 @@ import '@vuepic/vue-datepicker/dist/main.css'
 import SpaceHeader from '~/components/SpaceHeader.vue'
 
 definePageMeta({
-  layout: 'default',
-  hideGlobalNav: true
+  layout: 'default'
 })
 
 const router = useRouter()

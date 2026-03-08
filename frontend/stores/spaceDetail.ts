@@ -9,6 +9,7 @@ export const useSpaceDetailStore = defineStore('spaceDetail', () => {
   const space = ref<any>(null)
   const transactions = ref<any[]>([])
   const stores = ref<any[]>([])
+  const products = ref<any[]>([])
   const members = ref<any[]>([])
   const invites = ref<any[]>([])
 
@@ -16,6 +17,7 @@ export const useSpaceDetailStore = defineStore('spaceDetail', () => {
     space: false,
     transactions: false,
     stores: false,
+    products: false,
     members: false,
     invites: false
   })
@@ -25,6 +27,7 @@ export const useSpaceDetailStore = defineStore('spaceDetail', () => {
     space: false,
     transactions: false,
     stores: false,
+    products: false,
     members: false,
     invites: false
   })
@@ -36,9 +39,17 @@ export const useSpaceDetailStore = defineStore('spaceDetail', () => {
     space.value = null
     transactions.value = []
     stores.value = []
+    products.value = []
     members.value = []
     invites.value = []
-    fetched.value = { space: false, transactions: false, stores: false, members: false, invites: false }
+    fetched.value = { 
+      space: false, 
+      transactions: false, 
+      stores: false, 
+      products: false,
+      members: false, 
+      invites: false 
+    }
   }
 
   // Fetch helpers — skip if already loaded unless force=true
@@ -88,6 +99,21 @@ export const useSpaceDetailStore = defineStore('spaceDetail', () => {
     }
   }
 
+  const fetchProducts = async (force = false) => {
+    if (!spaceId.value) return
+    if (fetched.value.products && !force) return
+    loading.value.products = true
+    try {
+      products.value = await api.get<any[]>(`/api/spaces/${spaceId.value}/products`) || []
+      fetched.value.products = true
+    } catch (e) {
+      console.error('Failed to fetch products:', e)
+      throw e
+    } finally {
+      loading.value.products = false
+    }
+  }
+
   const fetchMembers = async (force = false) => {
     if (!spaceId.value) return
     if (fetched.value.members && !force) return
@@ -119,7 +145,7 @@ export const useSpaceDetailStore = defineStore('spaceDetail', () => {
   }
 
   // Mark specific data as stale so next fetch will reload
-  const invalidate = (...keys: Array<'space' | 'transactions' | 'stores' | 'members' | 'invites'>) => {
+  const invalidate = (...keys: Array<'space' | 'transactions' | 'stores' | 'products' | 'members' | 'invites'>) => {
     for (const key of keys) {
       fetched.value[key] = false
     }
@@ -130,6 +156,7 @@ export const useSpaceDetailStore = defineStore('spaceDetail', () => {
     space,
     transactions,
     stores,
+    products,
     members,
     invites,
     loading,
@@ -138,6 +165,7 @@ export const useSpaceDetailStore = defineStore('spaceDetail', () => {
     fetchSpace,
     fetchTransactions,
     fetchStores,
+    fetchProducts,
     fetchMembers,
     fetchInvites,
     invalidate
