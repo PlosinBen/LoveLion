@@ -1,8 +1,8 @@
 <template>
   <div class="add-transaction-page">
-    <SpaceHeader 
-      title="新增交易" 
-      :show-back="true"
+    <SpaceHeader
+      title="新增交易"
+      :back-to="`/spaces/${route.params.id}`"
       class="px-2"
     />
 

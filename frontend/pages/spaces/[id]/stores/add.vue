@@ -1,8 +1,8 @@
 <template>
   <div class="add-store-page">
-    <SpaceHeader 
-      title="新增店家" 
-      :show-back="true"
+    <SpaceHeader
+      title="新增店家"
+      :back-to="`/spaces/${route.params.id}/stores`"
       class="px-2"
     />
 

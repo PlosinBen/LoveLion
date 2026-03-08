@@ -1,7 +1,8 @@
 <template>
   <div class="transaction-detail">
-    <SpaceHeader 
-      title="交易詳情" 
+    <SpaceHeader
+      title="交易詳情"
+      :back-to="`/spaces/${route.params.id}`"
     >
       <template #right>
         <div class="flex gap-1">

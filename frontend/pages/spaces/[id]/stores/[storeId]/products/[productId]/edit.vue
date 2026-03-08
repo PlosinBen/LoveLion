@@ -2,7 +2,7 @@
   <div class="edit-product-page">
     <SpaceHeader
       title="編輯商品"
-      :show-back="true"
+      :back-to="`/spaces/${spaceId}/stores/${storeId}`"
       class="px-2"
     />
 

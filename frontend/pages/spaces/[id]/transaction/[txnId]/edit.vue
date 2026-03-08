@@ -1,8 +1,8 @@
 <template>
   <div class="edit-transaction-page">
-    <SpaceHeader 
-      title="編輯交易" 
-      :show-back="true"
+    <SpaceHeader
+      title="編輯交易"
+      :back-to="`/spaces/${route.params.id}/transaction/${route.params.txnId}`"
       class="px-2"
     />
 

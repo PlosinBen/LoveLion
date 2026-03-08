@@ -1,6 +1,6 @@
 <template>
   <div class="store-edit-page">
-    <SpaceHeader title="編輯商店" />
+    <SpaceHeader title="編輯商店" :back-to="`/spaces/${spaceId}/stores/${storeId}`" />
 
     <div v-if="loading" class="flex justify-center items-center py-20 text-neutral-500">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
@@ -31,7 +31,7 @@
         <div class="mt-2 flex gap-3">
           <button 
             type="button"
-            @click="router.back()"
+            @click="router.push(`/spaces/${spaceId}/stores/${storeId}`)"
             class="flex-1 py-4 rounded-xl bg-neutral-800 text-white font-bold border-0 cursor-pointer"
           >
             取消

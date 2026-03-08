@@ -2,7 +2,7 @@
   <div class="add-product-page">
     <SpaceHeader
       title="新增商品"
-      :show-back="true"
+      :back-to="`/spaces/${spaceId}/stores/${storeId}`"
       class="px-2"
     />
 

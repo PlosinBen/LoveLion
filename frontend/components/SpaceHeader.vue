@@ -1,9 +1,9 @@
 <template>
   <div class="pb-4 flex items-center gap-3">
     <!-- Back Button -->
-    <button 
-      v-if="showBack" 
-      @click="router.back()" 
+    <button
+      v-if="showBack"
+      @click="handleBack"
       class="w-10 h-10 rounded-full bg-neutral-800 text-white flex items-center justify-center hover:bg-neutral-700 transition-colors border-0 cursor-pointer shrink-0"
     >
       <Icon icon="mdi:arrow-left" class="text-xl" />
@@ -26,7 +26,7 @@
 import { Icon } from '@iconify/vue'
 import SpaceSwitcher from './SpaceSwitcher.vue'
 
-defineProps({
+const props = defineProps({
   title: {
     type: String,
     required: true
@@ -38,8 +38,20 @@ defineProps({
   showSwitcher: {
     type: Boolean,
     default: false
+  },
+  backTo: {
+    type: String,
+    default: ''
   }
 })
 
 const router = useRouter()
+
+const handleBack = () => {
+  if (props.backTo) {
+    router.push(props.backTo)
+  } else {
+    router.back()
+  }
+}
 </script>
