@@ -14,30 +14,32 @@
       </template>
     </PageTitle>
 
-    <div v-if="loading" class="flex justify-center items-center py-20 text-neutral-500">
+    <div v-if="localLoading" class="flex justify-center items-center py-20 text-neutral-500">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
     </div>
 
-    <div v-else-if="allSpaces.length === 0" class="flex flex-col items-center justify-center py-20 bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed text-neutral-500">
-      <Icon icon="mdi:view-grid-plus-outline" class="text-5xl mb-4 opacity-20" />
-      <p class="text-sm">尚未建立任何管理空間</p>
-      <BaseButton @click="router.push('/spaces/add-new')" class="mt-6">立即建立</BaseButton>
-    </div>
+    <template v-else>
+      <div v-if="allSpaces.length === 0" class="flex flex-col items-center justify-center py-20 bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed text-neutral-500">
+        <Icon icon="mdi:view-grid-plus-outline" class="text-5xl mb-4 opacity-20" />
+        <p class="text-sm">尚未建立任何管理空間</p>
+        <BaseButton @click="router.push('/spaces/add-new')" class="mt-6">立即建立</BaseButton>
+      </div>
 
-    <div v-else class="flex flex-col gap-4">
-      <SpaceListItem
-        v-for="space in sortedSpaces"
-        :key="space.id"
-        :space="space"
-        @click="router.push(`/spaces/${space.id}/ledger`)"
-        @toggle-pin="handleTogglePin(space.id)"
-      />
-    </div>
+      <div v-else class="flex flex-col gap-4">
+        <SpaceListItem
+          v-for="space in sortedSpaces"
+          :key="space.id"
+          :space="space"
+          @click="router.push(`/spaces/${space.id}/ledger`)"
+          @toggle-pin="handleTogglePin(space.id)"
+        />
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useAuth } from '~/composables/useAuth'
 import { useSpace } from '~/composables/useSpace'
@@ -47,7 +49,10 @@ import BaseButton from '~/components/BaseButton.vue'
 
 const router = useRouter()
 const { isAuthenticated, initAuth } = useAuth()
-const { allSpaces, loading, fetchSpaces, togglePin } = useSpace()
+const { allSpaces, fetchSpaces, togglePin } = useSpace()
+
+// Use local loading state to prevent hydration mismatch
+const localLoading = ref(true)
 
 const sortedSpaces = computed(() => {
   return [...allSpaces.value].sort((a, b) => {
@@ -73,6 +78,11 @@ onMounted(async () => {
     router.push('/login')
     return
   }
-  await fetchSpaces(true)
+  
+  try {
+    await fetchSpaces(true)
+  } finally {
+    localLoading.value = false
+  }
 })
 </script>

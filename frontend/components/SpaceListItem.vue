@@ -27,21 +27,19 @@
     </div>
     
     <!-- Pin Action -->
-    <BaseButton 
+    <button 
       @click.stop="$emit('toggle-pin')" 
-      variant="ghost"
-      size="icon"
-      :class="space.is_pinned ? 'text-indigo-500' : 'text-neutral-700'"
+      class="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border-0 cursor-pointer bg-transparent"
+      :class="space.is_pinned ? 'text-indigo-500' : 'text-neutral-700 hover:text-neutral-500'"
     >
       <Icon :icon="space.is_pinned ? 'mdi:pin' : 'mdi:pin-outline'" class="text-lg" />
-    </BaseButton>
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
-import BaseButton from '~/components/BaseButton.vue'
 
 const props = defineProps<{
   space: {
