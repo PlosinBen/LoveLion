@@ -30,11 +30,10 @@
           v-for="space in sortedSpaces"
           :key="space.id"
           :space="space"
-          @click="router.push(`/spaces/${space.id}/ledger`)"
+          @click="router.push(`/spaces/${space.id}`)"
           @toggle-pin="handleTogglePin(space.id)"
         />
-      </div>
-    </template>
+      </div>    </template>
   </div>
 </template>
 

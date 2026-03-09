@@ -41,8 +41,8 @@ const spaceNavItems = computed(() => {
   // Inside space: only show space-related tools
   return [
     { label: '統計', icon: 'mdi:chart-bar', to: `/spaces/${spaceId}/stats` },
-    { label: '記帳', icon: 'mdi:wallet-outline', to: `/spaces/${spaceId}/ledger` },
-    { label: '比價', icon: 'mdi:scale-balance', to: `/spaces/${spaceId}/stores`, alternateTo: `/spaces/${spaceId}/products` }
+    { label: '比價', icon: 'mdi:scale-balance', to: `/spaces/${spaceId}/stores`, alternateTo: `/spaces/${spaceId}/products` },
+    { label: '記帳', icon: 'mdi:wallet-outline', to: `/spaces/${spaceId}/ledger` }
   ]
 })
 </script>
