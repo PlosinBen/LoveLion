@@ -8,8 +8,8 @@
       <div v-if="thumbnail" class="w-10 h-10 rounded-xl overflow-hidden shrink-0">
         <img :src="thumbnail" class="w-full h-full object-cover" />
       </div>
-      <div v-else class="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center text-indigo-500 border border-neutral-700 shrink-0">
-        <Icon :icon="getCategoryIcon(transaction.category)" class="text-xl" />
+      <div v-else class="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center text-neutral-600 border border-neutral-700 shrink-0">
+        <Icon icon="mdi:image-off-outline" class="text-xl" />
       </div>
       
       <div class="flex flex-col">
@@ -78,15 +78,4 @@ const formatAmount = (amount: string | number | undefined) => {
   return num.toLocaleString('zh-TW')
 }
 
-const getCategoryIcon = (category?: string) => {
-  const icons: Record<string, string> = {
-    '餐飲': 'mdi:food',
-    '交通': 'mdi:train-car',
-    '購物': 'mdi:shopping',
-    '娛樂': 'mdi:movie',
-    '生活': 'mdi:home',
-    '其他': 'mdi:receipt'
-  }
-  return icons[category || ''] || 'mdi:receipt'
-}
 </script>

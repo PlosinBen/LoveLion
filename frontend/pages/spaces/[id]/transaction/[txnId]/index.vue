@@ -53,15 +53,14 @@
         <div v-if="transaction.images && transaction.images.length > 0" class="mb-6">
           <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3 px-1">收據 / 照片</h2>
           <div class="grid grid-cols-3 gap-2">
-            <a
-              v-for="image in transaction.images"
+            <div
+              v-for="(image, idx) in transaction.images"
               :key="image.id"
-              :href="image.file_path"
-              target="_blank"
-              class="aspect-square rounded-xl overflow-hidden bg-neutral-800 border border-neutral-700"
+              class="aspect-square rounded-xl overflow-hidden bg-neutral-800 border border-neutral-700 cursor-pointer"
+              @click="router.push(`/image-preview?id=${transaction.id}&type=transaction&index=${idx}`)"
             >
               <img :src="image.file_path" class="w-full h-full object-cover" />
-            </a>
+            </div>
           </div>
         </div>
 
