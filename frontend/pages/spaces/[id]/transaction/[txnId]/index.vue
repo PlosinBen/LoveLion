@@ -77,9 +77,6 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  path: '/spaces/:id/ledger/transaction/:txnId'
-})
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
@@ -87,6 +84,10 @@ import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseCard from '~/components/BaseCard.vue'
+
+definePageMeta({
+  path: '/spaces/:id/ledger/transaction/:txnId'
+})
 
 const router = useRouter()
 const route = useRoute()

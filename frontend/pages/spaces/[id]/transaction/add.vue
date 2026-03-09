@@ -200,12 +200,21 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted, watch } from 'vue'
+import { Icon } from '@iconify/vue'
+import { VueDatePicker } from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
 import BaseButton from '~/components/BaseButton.vue'
+import BaseInput from '~/components/BaseInput.vue'
+import BaseSelect from '~/components/BaseSelect.vue'
+import BaseTextarea from '~/components/BaseTextarea.vue'
+import PageTitle from '~/components/PageTitle.vue'
+import { useSpaceDetailStore } from '~/stores/spaceDetail'
+
 definePageMeta({
   path: '/spaces/:id/ledger/transaction/add',
   layout: 'default'
 })
-import { ref, computed, onMounted, watch } from 'vue'
 
 const router = useRouter()
 const route = useRoute()

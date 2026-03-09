@@ -30,7 +30,7 @@
     </div>
 
     <!-- FAB for adding transaction -->
-    <BaseFab @click="router.push(`/spaces/${store.space.id}/transaction/add`)" />
+    <BaseFab @click="router.push(`/spaces/${store.space.id}/ledger/transaction/add`)" />
     </div>
     </template>
 

@@ -2,8 +2,8 @@
   <div class="edit-transaction-page">
     <PageTitle
       title="編輯交易"
-      :back-to="`/spaces/${route.params.id}/transaction/${route.params.txnId}`"
-      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/ledger` }, { label: '交易詳情', to: `/spaces/${route.params.id}/transaction/${route.params.txnId}` }]"
+      :back-to="`/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}`"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/ledger` }, { label: '交易詳情', to: `/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}` }]"
     />
 
     <div v-if="loading" class="p-20 flex justify-center items-center text-neutral-500">
@@ -211,12 +211,21 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted, watch } from 'vue'
+import { Icon } from '@iconify/vue'
+import { VueDatePicker } from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
+import BaseButton from '~/components/BaseButton.vue'
+import BaseInput from '~/components/BaseInput.vue'
+import BaseSelect from '~/components/BaseSelect.vue'
+import BaseTextarea from '~/components/BaseTextarea.vue'
+import PageTitle from '~/components/PageTitle.vue'
+import { useSpaceDetailStore } from '~/stores/spaceDetail'
+
 definePageMeta({
   path: '/spaces/:id/ledger/transaction/:txnId/edit',
   layout: 'default'
 })
-import { ref, computed, onMounted, watch } from 'vue'
-import BaseButton from '~/components/BaseButton.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -355,7 +364,7 @@ const handleSubmit = async () => {
 
     await api.put(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`, payload)
     detailStore.invalidate('transactions')
-    router.push(`/spaces/${route.params.id}/transaction/${route.params.txnId}`)
+    router.push(`/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}`)
   } catch (e: any) {
     alert(e.message || '更新失敗')
   } finally {
