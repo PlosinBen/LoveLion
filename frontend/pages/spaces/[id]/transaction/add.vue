@@ -174,12 +174,24 @@
           </div>
         </div>
 
+        <!-- Images -->
+        <div class="flex flex-col gap-2">
+          <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">收據 / 照片</label>
+          <ImageManager
+            entity-id="pending"
+            entity-type="transaction"
+            :instant-upload="false"
+            :instant-delete="false"
+            ref="imageManagerRef"
+          />
+        </div>
+
         <!-- Note -->
         <div class="flex flex-col gap-2">
           <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">備註</label>
-          <BaseTextarea 
-            v-model="form.note" 
-            placeholder="選填" 
+          <BaseTextarea
+            v-model="form.note"
+            placeholder="選填"
             rows="3"
           />
         </div>
@@ -209,6 +221,7 @@ import BaseInput from '~/components/BaseInput.vue'
 import BaseSelect from '~/components/BaseSelect.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
 import PageTitle from '~/components/PageTitle.vue'
+import ImageManager from '~/components/ImageManager.vue'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 
 definePageMeta({
@@ -227,6 +240,7 @@ const availableCurrencies = ref<{label: string, value: string}[]>([])
 
 const baseCurrency = ref('TWD')
 const submitting = ref(false)
+const imageManagerRef = ref<InstanceType<typeof ImageManager> | null>(null)
 
 const form = ref({
   date: new Date(),
@@ -302,7 +316,10 @@ const handleSubmit = async () => {
       total_amount: totalAmount.value
     }
 
-    await api.post(`/api/spaces/${route.params.id}/transactions`, payload)
+    const created = await api.post<any>(`/api/spaces/${route.params.id}/transactions`, payload)
+    if (imageManagerRef.value) {
+      await imageManagerRef.value.commit(created.id)
+    }
     detailStore.invalidate('transactions')
     router.push(`/spaces/${route.params.id}/ledger`)
   } catch (e: any) {

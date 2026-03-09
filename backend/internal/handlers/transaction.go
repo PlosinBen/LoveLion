@@ -203,6 +203,7 @@ func (h *TransactionHandler) Get(c *gin.Context) {
 	if err := h.db.Where("id = ? AND ledger_id = ?", txnID, space.ID).
 		Preload("Items").
 		Preload("Splits").
+		Preload("Images", "entity_type = ?", "transaction").
 		First(&txn).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found"})
@@ -331,7 +332,7 @@ func (h *TransactionHandler) Update(c *gin.Context) {
 	}
 
 	// Reload with items and splits
-	h.db.Preload("Items").Preload("Splits").First(&txn, "id = ?", txnID)
+	h.db.Preload("Items").Preload("Splits").Preload("Images", "entity_type = ?", "transaction").First(&txn, "id = ?", txnID)
 
 	c.JSON(http.StatusOK, txn)
 }

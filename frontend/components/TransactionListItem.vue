@@ -4,8 +4,11 @@
     class="flex justify-between items-center hover:bg-neutral-800 transition-colors cursor-pointer group active:scale-95 shadow-sm"
   >
     <div class="flex items-center gap-3">
-      <!-- Category Icon -->
-      <div class="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center text-indigo-500 border border-neutral-700">
+      <!-- Thumbnail or Category Icon -->
+      <div v-if="thumbnail" class="w-10 h-10 rounded-xl overflow-hidden shrink-0">
+        <img :src="thumbnail" class="w-full h-full object-cover" />
+      </div>
+      <div v-else class="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center text-indigo-500 border border-neutral-700 shrink-0">
         <Icon :icon="getCategoryIcon(transaction.category)" class="text-xl" />
       </div>
       
@@ -41,12 +44,21 @@ const props = defineProps<{
     currency: string
     total_amount: number | string
     billing_amount?: number | string
+    images?: { id: string; file_path: string }[]
   },
   spaceId: string | number,
   baseCurrency?: string
 }>()
 
 const router = useRouter()
+
+const thumbnail = computed(() => {
+  const images = props.transaction.images
+  if (images && images.length > 0 && images[0]) {
+    return images[0].file_path
+  }
+  return null
+})
 
 const isBaseCurrency = computed(() => {
   return props.transaction.billing_amount && Number(props.transaction.billing_amount) > 0

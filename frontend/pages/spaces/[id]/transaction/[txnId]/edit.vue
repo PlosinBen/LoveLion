@@ -176,12 +176,21 @@
           </div>
         </div>
 
+        <!-- Images -->
+        <div class="flex flex-col gap-2">
+          <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">收據 / 照片</label>
+          <ImageManager
+            :entity-id="route.params.txnId as string"
+            entity-type="transaction"
+          />
+        </div>
+
         <!-- Note -->
         <div class="flex flex-col gap-2">
           <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">備註</label>
-          <BaseTextarea 
-            v-model="form.note" 
-            placeholder="選填" 
+          <BaseTextarea
+            v-model="form.note"
+            placeholder="選填"
             rows="3"
           />
         </div>
@@ -220,6 +229,7 @@ import BaseInput from '~/components/BaseInput.vue'
 import BaseSelect from '~/components/BaseSelect.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
 import PageTitle from '~/components/PageTitle.vue'
+import ImageManager from '~/components/ImageManager.vue'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 
 definePageMeta({
