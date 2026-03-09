@@ -4,7 +4,7 @@
       <p class="text-neutral-400 font-medium">個人記帳 & 旅遊專案助手</p>
     </div>
 
-    <div class="w-full max-w-sm mx-auto bg-neutral-900 rounded-2xl p-6 border border-neutral-800 shadow-xl">
+    <BaseCard padding="p-6" class="w-full max-w-sm mx-auto shadow-xl">
       <div v-if="!isRegister">
         <h2 class="mb-8 text-center text-2xl font-bold text-white tracking-tight">歡迎回來</h2>
 
@@ -89,7 +89,7 @@
           <BaseButton @click="isRegister = false" variant="ghost" class="p-0 font-bold hover:underline h-auto inline-flex">點此登入</BaseButton>
         </p>
       </div>
-    </div>
+    </BaseCard>
   </div>
 </template>
 
@@ -97,6 +97,7 @@
 import { ref } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 import BaseButton from '~/components/BaseButton.vue'
+import BaseCard from '~/components/BaseCard.vue'
 
 definePageMeta({
   layout: 'default',

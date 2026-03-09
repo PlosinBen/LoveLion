@@ -10,7 +10,7 @@
       <!-- Profile Section -->
       <section class="flex flex-col gap-2">
         <label class="text-xs font-bold text-neutral-500 uppercase tracking-widest px-1">帳戶資訊</label>
-        <div class="bg-neutral-900 rounded-2xl border border-neutral-800 p-6 flex items-center justify-between shadow-sm">
+        <BaseCard padding="p-6" class="flex items-center justify-between shadow-sm">
           <div class="flex items-center gap-4">
             <div class="w-14 h-14 rounded-xl bg-neutral-800 flex items-center justify-center text-indigo-500 border border-neutral-700">
               <Icon icon="mdi:account-outline" class="text-3xl" />
@@ -23,13 +23,13 @@
           <BaseButton @click="handleLogout" variant="danger" size="sm">
             登出
           </BaseButton>
-        </div>
+        </BaseCard>
       </section>
 
       <!-- App Info -->
       <section class="flex flex-col gap-2">
         <label class="text-xs font-bold text-neutral-500 uppercase tracking-widest px-1">關於</label>
-        <div class="bg-neutral-900 rounded-2xl border border-neutral-800 p-6 flex flex-col gap-4 shadow-sm">
+        <BaseCard padding="p-6" class="flex flex-col gap-4 shadow-sm">
           <div class="flex items-center justify-between text-sm">
             <span class="text-neutral-400 font-medium">軟體版本</span>
             <span class="text-white font-bold">v1.2.0-stable</span>
@@ -38,7 +38,7 @@
             <span class="text-neutral-400 font-medium">開發團隊</span>
             <span class="text-white font-bold">Antigravity Design</span>
           </div>
-        </div>
+        </BaseCard>
       </section>
 
       <p class="text-center text-xs text-neutral-700 font-bold uppercase tracking-widest mt-10">
@@ -54,6 +54,7 @@ import { Icon } from '@iconify/vue'
 import { useAuth } from '~/composables/useAuth'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseButton from '~/components/BaseButton.vue'
+import BaseCard from '~/components/BaseCard.vue'
 
 definePageMeta({
   layout: 'default'

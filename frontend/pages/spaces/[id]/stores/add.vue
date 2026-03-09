@@ -11,7 +11,7 @@
       <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
         <div class="flex flex-col gap-2">
           <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">店家資訊</label>
-          <div class="bg-neutral-900 rounded-2xl border border-neutral-800 p-5 flex flex-col gap-5">
+          <BaseCard padding="p-5" class="flex flex-col gap-5">
             <BaseInput 
               v-model="form.name" 
               label="店家名稱" 
@@ -19,7 +19,7 @@
               required
               autofocus
             />
-          </div>
+          </BaseCard>
         </div>
 
         <p class="text-xs text-neutral-500 px-4 leading-relaxed">
@@ -46,6 +46,7 @@ import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseButton from '~/components/BaseButton.vue'
+import BaseCard from '~/components/BaseCard.vue'
 
 definePageMeta({
   layout: 'default'

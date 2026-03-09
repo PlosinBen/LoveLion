@@ -1,7 +1,7 @@
 <template>
-  <div 
+  <BaseCard
     @click="router.push(`/spaces/${spaceId}/ledger/transaction/${transaction.id}`)"
-    class="flex justify-between items-center p-4 rounded-2xl border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 transition-colors cursor-pointer group active:scale-95 shadow-sm"
+    class="flex justify-between items-center hover:bg-neutral-800 transition-colors cursor-pointer group active:scale-95 shadow-sm"
   >
     <div class="flex items-center gap-3">
       <!-- Category Icon -->
@@ -23,13 +23,14 @@
         {{ formatAmount(displayAmount) }}
       </div>
     </div>
-  </div>
+  </BaseCard>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
+import BaseCard from '~/components/BaseCard.vue'
 
 const props = defineProps<{
   transaction: {

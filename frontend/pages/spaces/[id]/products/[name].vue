@@ -21,11 +21,12 @@
       </div>
 
       <div class="flex flex-col gap-3">
-        <div 
-          v-for="(p, index) in sortedProducts" 
+        <BaseCard
+          v-for="(p, index) in sortedProducts"
           :key="p.id"
           @click="router.push(`/spaces/${route.params.id}/stores/${p.store_id}`)"
-          class="bg-neutral-900 border border-neutral-800 p-5 rounded-2xl flex flex-col gap-4 cursor-pointer hover:bg-neutral-800 transition-colors relative overflow-hidden"
+          padding="p-5"
+          class="flex flex-col gap-4 cursor-pointer hover:bg-neutral-800 transition-colors relative overflow-hidden"
         >
           <!-- Ranking Ribbon for the cheapest -->
           <div v-if="index === 0" class="absolute top-0 right-0">
@@ -57,7 +58,7 @@
           <div v-if="p.note" class="bg-neutral-800/50 p-3 rounded-xl text-xs text-neutral-400 italic border border-neutral-800/50">
              "{{ p.note }}"
           </div>
-        </div>
+        </BaseCard>
       </div>
     </div>
   </div>
@@ -69,6 +70,7 @@ import { Icon } from '@iconify/vue'
 import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
+import BaseCard from '~/components/BaseCard.vue'
 
 const route = useRoute()
 const router = useRouter()

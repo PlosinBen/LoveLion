@@ -26,11 +26,11 @@
     </div>
 
     <div v-else class="flex flex-col gap-4">
-      <div
+      <BaseCard
         v-for="s in detailStore.stores"
         :key="s.id"
         @click="router.push(`/spaces/${route.params.id}/stores/${s.id}`)"
-        class="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl flex items-center justify-between cursor-pointer hover:bg-neutral-800 transition-colors"
+        class="flex items-center justify-between cursor-pointer hover:bg-neutral-800 transition-colors"
       >
         <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-neutral-800 flex items-center justify-center text-indigo-400 border border-neutral-700">
@@ -42,7 +42,7 @@
             </div>
         </div>
         <Icon icon="mdi:chevron-right" class="text-neutral-700 text-xl" />
-      </div>
+      </BaseCard>
     </div>
 
     <!-- FAB for adding store -->
@@ -50,14 +50,16 @@
     </div>
     </template>
 
-    <script setup lang="ts">
-    import BaseButton from '~/components/BaseButton.vue'
-    import { onMounted } from 'vue'
-    import { Icon } from '@iconify/vue'
-    import { useAuth } from '~/composables/useAuth'
-    import { useSpaceDetailStore } from '~/stores/spaceDetail'
-    import PageTitle from '~/components/PageTitle.vue'
-    import BaseFab from '~/components/BaseFab.vue'
+<script setup lang="ts">
+import BaseButton from '~/components/BaseButton.vue'
+import { onMounted } from 'vue'
+import { Icon } from '@iconify/vue'
+import { useAuth } from '~/composables/useAuth'
+import { useSpaceDetailStore } from '~/stores/spaceDetail'
+import PageTitle from '~/components/PageTitle.vue'
+import BaseFab from '~/components/BaseFab.vue'
+import BaseSegmentControl from '~/components/BaseSegmentControl.vue'
+import BaseCard from '~/components/BaseCard.vue'
 
 definePageMeta({
   layout: 'default'

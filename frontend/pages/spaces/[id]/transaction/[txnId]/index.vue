@@ -21,7 +21,7 @@
       <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
 
       <div v-else-if="transaction" class="content">
-        <div class="text-center py-8 px-5 mb-6 bg-neutral-900 rounded-2xl border border-neutral-800">
+        <BaseCard padding="py-8 px-5" class="text-center mb-6">
           <div class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-800 rounded-2xl mb-4">
             <Icon :icon="getCategoryIcon(transaction.category)" class="text-xl text-indigo-500" />
             <span class="font-bold text-sm">{{ transaction.category || '未分類' }}</span>
@@ -47,7 +47,7 @@
                   <span class="text-neutral-200">TWD {{ formatAmount(transaction.handling_fee) }}</span>
               </div>
           </div>
-        </div>
+        </BaseCard>
 
         <div class="mb-6">
           <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3 px-1">項目明細</h2>
@@ -86,6 +86,7 @@ import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
+import BaseCard from '~/components/BaseCard.vue'
 
 const router = useRouter()
 const route = useRoute()

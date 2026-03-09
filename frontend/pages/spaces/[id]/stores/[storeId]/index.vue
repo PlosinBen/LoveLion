@@ -40,8 +40,8 @@
 
       <!-- Product List -->
       <div v-else class="flex flex-col gap-3">
-        <div v-for="product in store?.products" :key="product.id" 
-             class="bg-neutral-900 rounded-2xl border border-neutral-800 transition-all duration-300">
+        <BaseCard v-for="product in store?.products" :key="product.id"
+             padding="" class="transition-all duration-300">
             
             <div class="p-5 flex items-center gap-4 cursor-pointer" @click="toggleProductExpand(product.id)">
                 <!-- Thumbnail/Icon -->
@@ -98,7 +98,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </BaseCard>
       </div>
     </div>
 
@@ -118,6 +118,8 @@ import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import ImageManager from '~/components/ImageManager.vue'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseFab from '~/components/BaseFab.vue'
+import BaseCard from '~/components/BaseCard.vue'
+
 const router = useRouter()
 definePageMeta({
   layout: 'default'

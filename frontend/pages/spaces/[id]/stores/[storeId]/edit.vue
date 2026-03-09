@@ -7,7 +7,7 @@
     </div>
 
     <form v-else @submit.prevent="handleUpdate" class="flex flex-col gap-6">
-      <div class="bg-neutral-900 rounded-2xl border border-neutral-800 p-6 flex flex-col gap-6">
+      <BaseCard padding="p-6" class="flex flex-col gap-6">
         <BaseInput 
           v-model="form.name" 
           label="商店名稱" 
@@ -46,7 +46,7 @@
             儲存變更
           </BaseButton>
         </div>
-      </div>
+      </BaseCard>
     </form>
   </div>
 </template>
@@ -61,6 +61,7 @@ import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
+import BaseCard from '~/components/BaseCard.vue'
 
 definePageMeta({
   layout: 'default'

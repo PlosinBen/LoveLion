@@ -8,7 +8,7 @@
     />
 
     <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
-      <div class="bg-neutral-900 rounded-2xl border border-neutral-800 p-5 flex flex-col gap-5">
+      <BaseCard padding="p-5" class="flex flex-col gap-5">
         <BaseInput
           v-model="form.name"
           label="商品名稱"
@@ -45,7 +45,7 @@
           placeholder="口味、規格等補充資訊"
           :rows="2"
         />
-      </div>
+      </BaseCard>
 
       <BaseButton
         type="submit"
@@ -68,6 +68,7 @@ import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
+import BaseCard from '~/components/BaseCard.vue'
 
 definePageMeta({
   layout: 'default'

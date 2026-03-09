@@ -14,7 +14,7 @@
           <h2 class="text-lg font-bold">基本設定</h2>
         </div>
 
-        <div class="bg-neutral-900 rounded-2xl border border-neutral-800 p-6 flex flex-col gap-6">
+        <BaseCard padding="p-6" class="flex flex-col gap-6">
           <!-- Cover Image -->
           <div>
             <label class="block text-xs text-neutral-500 uppercase tracking-wider mb-3 ml-1">空間封面圖</label>
@@ -70,7 +70,7 @@
           >
             儲存基本設定
           </BaseButton>
-        </div>
+        </BaseCard>
       </section>
 
       <!-- List Configurations -->
@@ -80,7 +80,7 @@
           <h2 class="text-lg font-bold">分類與選項</h2>
         </div>
 
-        <div class="bg-neutral-900 rounded-2xl border border-neutral-800 p-6 flex flex-col gap-8">
+        <BaseCard padding="p-6" class="flex flex-col gap-8">
           <ListEditor v-model="form.categories" label="交易分類" placeholder="新增分類..." />
           <ListEditor v-model="form.currencies" label="支援幣別" placeholder="例如: JPY, USD..." />
           <ListEditor v-model="form.payment_methods" label="付款方式" placeholder="例如: 現金, 信用卡..." />
@@ -94,7 +94,7 @@
           >
             儲存分類設定
           </BaseButton>
-        </div>
+        </BaseCard>
       </section>
 
       <!-- 2. Members Section -->
@@ -104,7 +104,7 @@
           <h2 class="text-lg font-bold">成員與權重</h2>
         </div>
 
-        <div class="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden shadow-sm">
+        <BaseCard padding="" class="overflow-hidden shadow-sm">
           <div v-for="member in detailStore.members" :key="member.user_id" class="p-5 border-b border-neutral-800 last:border-0 flex items-center justify-between hover:bg-neutral-800 transition-colors">
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 rounded-xl bg-neutral-800 flex items-center justify-center text-indigo-400 font-bold text-lg border border-neutral-700">
@@ -128,7 +128,7 @@
               </BaseButton>
             </div>
           </div>
-        </div>
+        </BaseCard>
       </section>
 
       <!-- 3. Invites Section -->
@@ -148,7 +148,7 @@
         </div>
 
         <div v-else class="flex flex-col gap-3">
-          <div v-for="invite in detailStore.invites" :key="invite.id" class="p-5 bg-neutral-900 rounded-2xl border border-neutral-800 flex items-center justify-between hover:bg-neutral-800 transition-colors">
+          <BaseCard v-for="invite in detailStore.invites" :key="invite.id" padding="p-5" class="flex items-center justify-between hover:bg-neutral-800 transition-colors">
             <div class="flex flex-col gap-1">
               <div class="flex items-center gap-2">
                 <span class="text-xs px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400 font-bold uppercase border border-neutral-700">
@@ -169,7 +169,7 @@
                 <Icon icon="mdi:trash-can-outline" class="text-xl" />
               </BaseButton>
             </div>
-          </div>
+          </BaseCard>
         </div>
       </section>
 
@@ -243,6 +243,7 @@ import BaseInput from '~/components/BaseInput.vue'
 import BaseModal from '~/components/BaseModal.vue'
 import ListEditor from '~/components/ListEditor.vue'
 import BaseButton from '~/components/BaseButton.vue'
+import BaseCard from '~/components/BaseCard.vue'
 
 const route = useRoute()
 const router = useRouter()

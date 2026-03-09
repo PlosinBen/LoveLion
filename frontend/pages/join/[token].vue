@@ -4,7 +4,7 @@
       正在驗證邀請連結...
     </div>
 
-    <div v-else-if="error" class="bg-neutral-900 p-8 rounded-2xl border border-neutral-800 text-center max-w-sm w-full shadow-2xl">
+    <BaseCard v-else-if="error" padding="p-8" class="text-center max-w-sm w-full shadow-2xl">
       <div class="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
         <Icon icon="mdi:alert-circle-outline" class="text-5xl text-red-500" />
       </div>
@@ -13,9 +13,9 @@
       <BaseButton @click="router.push('/')" variant="secondary" full-width>
         回到首頁
       </BaseButton>
-    </div>
+    </BaseCard>
 
-    <div v-else-if="inviteInfo" class="bg-neutral-900 p-8 rounded-2xl border border-neutral-800 text-center max-w-sm w-full shadow-2xl">
+    <BaseCard v-else-if="inviteInfo" padding="p-8" class="text-center max-w-sm w-full shadow-2xl">
       <div class="w-20 h-20 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
         <Icon icon="mdi:account-group-outline" class="text-5xl text-indigo-500" />
       </div>
@@ -43,7 +43,7 @@
       <BaseButton @click="router.push('/')" variant="ghost" class="mt-6 text-sm">
         暫時不要
       </BaseButton>
-    </div>
+    </BaseCard>
   </div>
 </template>
 
@@ -53,6 +53,7 @@ import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import BaseButton from '~/components/BaseButton.vue'
+import BaseCard from '~/components/BaseCard.vue'
 
 definePageMeta({
   layout: 'empty'

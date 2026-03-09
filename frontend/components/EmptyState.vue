@@ -1,5 +1,5 @@
 <template>
-  <div class="text-center py-16 px-6 bg-neutral-900 rounded-2xl border border-neutral-800">
+  <BaseCard padding="py-16 px-6" class="text-center">
     <Icon :icon="icon" class="text-5xl text-indigo-500 mb-4" />
     <h2 class="text-xl font-bold mb-2 text-white">{{ title }}</h2>
     <p class="text-neutral-400 text-sm mb-8">{{ description }}</p>
@@ -8,11 +8,12 @@
       <Icon icon="mdi:plus" />
       {{ actionLabel }}
     </NuxtLink>
-  </div>
+  </BaseCard>
 </template>
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
+import BaseCard from '~/components/BaseCard.vue'
 
 defineProps<{
   icon: string

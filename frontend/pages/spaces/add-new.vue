@@ -10,7 +10,7 @@
       <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
         <div class="flex flex-col gap-2">
           <label class="text-xs font-bold text-neutral-500 uppercase tracking-widest px-1">基本資訊</label>
-          <div class="bg-neutral-900 rounded-2xl border border-neutral-800 p-6 flex flex-col gap-6 shadow-sm">
+          <BaseCard padding="p-6" class="flex flex-col gap-6 shadow-sm">
             <BaseInput 
               v-model="form.name" 
               label="空間名稱" 
@@ -24,7 +24,7 @@
               label="本位幣別"
               :options="currencyOptions"
             />
-          </div>
+          </BaseCard>
         </div>
 
         <p class="text-xs text-neutral-500 px-4 leading-relaxed font-medium">
@@ -50,6 +50,7 @@ import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseButton from '~/components/BaseButton.vue'
+import BaseCard from '~/components/BaseCard.vue'
 
 definePageMeta({
   layout: 'default',

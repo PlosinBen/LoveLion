@@ -1,19 +1,19 @@
 <template>
   <div class="space-stats flex flex-col gap-6 pb-10">
     <!-- Total Balance Card -->
-    <div class="bg-neutral-900 rounded-2xl p-6 border border-neutral-800 flex flex-col items-center">
+    <BaseCard padding="p-6" class="flex flex-col items-center">
         <h3 class="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">空間累積支出</h3>
         <div class="text-3xl font-bold text-white tracking-tight">
             <span class="text-base text-neutral-500 mr-1">{{ baseCurrency }}</span>
             {{ totalAmount.toLocaleString() }}
         </div>
-    </div>
+    </BaseCard>
 
     <!-- Members / Split Summary -->
     <section class="flex flex-col gap-4">
         <h2 class="text-sm font-bold text-neutral-400 uppercase tracking-wider px-1">成員分攤摘要</h2>
         <div class="flex flex-col gap-3">
-            <div v-for="member in stats" :key="member.user_id" class="bg-neutral-900 rounded-2xl p-4 border border-neutral-800 flex items-center justify-between">
+            <BaseCard v-for="member in stats" :key="member.user_id" class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center border border-neutral-700">
                         <Icon icon="mdi:account-outline" class="text-xl text-neutral-400" />
@@ -27,7 +27,7 @@
                     <div class="font-bold text-white">{{ member.spent.toLocaleString() }}</div>
                     <div class="text-xs text-neutral-500 uppercase">{{ baseCurrency }}</div>
                 </div>
-            </div>
+            </BaseCard>
         </div>
     </section>
 
@@ -35,7 +35,7 @@
     <section class="flex flex-col gap-4">
         <h2 class="text-sm font-bold text-neutral-400 uppercase tracking-wider px-1">類別分布</h2>
         <div class="flex flex-col gap-3">
-             <div v-for="cat in categoryStats" :key="cat.name" class="bg-neutral-900 rounded-2xl p-4 border border-neutral-800">
+             <BaseCard v-for="cat in categoryStats" :key="cat.name">
                 <div class="flex justify-between items-center mb-3">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center text-indigo-400 border border-neutral-700">
@@ -52,7 +52,7 @@
                 <div class="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
                     <div class="h-full bg-indigo-500 rounded-full transition-all duration-700" :style="{ width: cat.percentage + '%' }"></div>
                 </div>
-             </div>
+             </BaseCard>
         </div>
     </section>
   </div>
@@ -61,6 +61,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
+import BaseCard from '~/components/BaseCard.vue'
 
 const props = defineProps<{
   transactions: any[]

@@ -1,6 +1,6 @@
 <template>
-  <div 
-    class="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl flex items-center justify-between transition-none cursor-pointer group shadow-sm"
+  <BaseCard
+    class="flex items-center justify-between transition-none cursor-pointer group shadow-sm"
     @click="$emit('click')"
   >
     <div class="flex items-center gap-4">
@@ -34,12 +34,13 @@
     >
       <Icon :icon="space.is_pinned ? 'mdi:pin' : 'mdi:pin-outline'" class="text-lg" />
     </button>
-  </div>
+  </BaseCard>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
+import BaseCard from '~/components/BaseCard.vue'
 
 const props = defineProps<{
   space: {
