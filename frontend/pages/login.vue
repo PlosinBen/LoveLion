@@ -39,8 +39,8 @@
         </BaseButton>
 
         <p class="text-center mt-6 text-neutral-500 text-sm font-medium flex items-center justify-center gap-1">
-          還沒有帳號嗎？ 
-          <BaseButton @click="isRegister = true" variant="ghost" class="p-0 font-bold hover:underline h-auto inline-flex">立即註冊</BaseButton>
+          還沒有帳號嗎？
+          <button @click="isRegister = true" class="text-indigo-400 font-bold hover:underline bg-transparent border-0 cursor-pointer p-0 text-sm">立即註冊</button>
         </p>
       </div>
 
@@ -85,8 +85,8 @@
         </BaseButton>
 
         <p class="text-center mt-6 text-neutral-500 text-sm font-medium flex items-center justify-center gap-1">
-          已經有帳號了？ 
-          <BaseButton @click="isRegister = false" variant="ghost" class="p-0 font-bold hover:underline h-auto inline-flex">點此登入</BaseButton>
+          已經有帳號了？
+          <button @click="isRegister = false" class="text-indigo-400 font-bold hover:underline bg-transparent border-0 cursor-pointer p-0 text-sm">點此登入</button>
         </p>
       </div>
     </BaseCard>

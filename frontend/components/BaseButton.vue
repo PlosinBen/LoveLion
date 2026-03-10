@@ -3,7 +3,7 @@
     :type="type"
     :disabled="disabled || loading"
     @click.stop="$emit('click', $event)"
-    class="flex justify-center items-center transition-all active:scale-95 disabled:opacity-50 border-0 cursor-pointer font-bold shrink-0 px-6 py-4 text-sm rounded-xl"
+    class="flex justify-center items-center transition-all active:scale-95 disabled:opacity-50 border-0 cursor-pointer font-bold shrink-0 px-4 py-2.5 text-sm rounded"
     :class="[
       variantClasses,
       fullWidth ? 'w-full' : ''

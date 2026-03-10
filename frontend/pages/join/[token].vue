@@ -10,9 +10,9 @@
       </div>
       <h1 class="text-xl font-bold mb-2">邀請無效</h1>
       <p class="text-neutral-400 mb-8 leading-relaxed">{{ error }}</p>
-      <BaseButton @click="router.push('/')" variant="secondary" full-width>
+      <NuxtLink to="/" class="w-full inline-flex justify-center items-center px-4 py-2.5 text-sm rounded bg-neutral-800 text-neutral-400 font-bold hover:text-white hover:bg-neutral-700 no-underline transition-all active:scale-95">
         回到首頁
-      </BaseButton>
+      </NuxtLink>
     </BaseCard>
 
     <BaseCard v-else-if="inviteInfo" padding="p-8" class="text-center max-w-sm w-full shadow-2xl">
@@ -40,9 +40,9 @@
         接受邀請並加入
       </BaseButton>
 
-      <BaseButton @click="router.push('/')" variant="ghost" class="mt-6 text-sm">
+      <NuxtLink to="/" class="mt-6 text-sm text-neutral-500 hover:text-neutral-300 no-underline font-bold transition-colors">
         暫時不要
-      </BaseButton>
+      </NuxtLink>
     </BaseCard>
   </div>
 </template>

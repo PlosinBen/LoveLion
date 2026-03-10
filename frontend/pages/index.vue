@@ -21,7 +21,7 @@
       <div v-if="allSpaces.length === 0" class="flex flex-col items-center justify-center py-20 bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed text-neutral-500">
         <Icon icon="mdi:view-grid-plus-outline" class="text-5xl mb-4 opacity-20" />
         <p class="text-sm">尚未建立任何管理空間</p>
-        <BaseButton @click="router.push('/spaces/add-new')" class="mt-6">立即建立</BaseButton>
+        <NuxtLink to="/spaces/add-new" class="mt-6 inline-flex justify-center items-center px-4 py-2.5 text-sm rounded bg-indigo-500 text-white font-bold hover:bg-indigo-600 no-underline shadow-lg transition-all active:scale-95">立即建立</NuxtLink>
       </div>
 
       <div v-else class="flex flex-col gap-4">
@@ -29,7 +29,7 @@
           v-for="space in sortedSpaces"
           :key="space.id"
           :space="space"
-          @click="router.push(`/spaces/${space.id}`)"
+          @click="router.push(`/spaces/${space.id}/stats`)"
           @toggle-pin="handleTogglePin(space.id)"
         />
       </div>    </template>

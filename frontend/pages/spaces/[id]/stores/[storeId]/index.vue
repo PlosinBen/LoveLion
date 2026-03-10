@@ -16,12 +16,12 @@
 
       <template #right>
         <div class="flex gap-2">
-          <button v-if="store?.google_map_url" @click="windowOpen(store.google_map_url)" class="w-10 h-10 rounded-xl bg-neutral-900 text-green-500 flex items-center justify-center hover:bg-neutral-800 transition-colors border-0 cursor-pointer shrink-0">
+          <a v-if="store?.google_map_url" :href="store.google_map_url" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-xl bg-neutral-900 text-green-500 flex items-center justify-center hover:bg-neutral-800 transition-colors shrink-0 no-underline">
             <Icon icon="mdi:google-maps" class="text-xl" />
-          </button>
-          <button @click="router.push(`/spaces/${route.params.id}/stores/${route.params.storeId}/edit`)" class="w-10 h-10 rounded-xl bg-neutral-900 text-white flex items-center justify-center hover:bg-neutral-800 transition-colors border-0 cursor-pointer shrink-0">
+          </a>
+          <NuxtLink :to="`/spaces/${route.params.id}/stores/${route.params.storeId}/edit`" class="w-10 h-10 rounded-xl bg-neutral-900 text-white flex items-center justify-center hover:bg-neutral-800 transition-colors shrink-0 no-underline">
             <Icon icon="mdi:pencil-outline" class="text-xl" />
-          </button>
+          </NuxtLink>
         </div>
       </template>
     </PageTitle>
@@ -35,7 +35,7 @@
       <div v-if="!store?.products || store?.products?.length === 0" class="flex flex-col items-center justify-center py-20 bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed text-neutral-500">
         <Icon icon="mdi:package-variant" class="text-5xl mb-4 opacity-20" />
         <p class="text-sm">目前還沒有任何商品紀錄</p>
-        <BaseButton @click="router.push(`/spaces/${route.params.id}/stores/${route.params.storeId}/products/add`)" variant="primary" class="mt-6">立即新增</BaseButton>
+        <NuxtLink :to="`/spaces/${route.params.id}/stores/${route.params.storeId}/products/add`" class="mt-6 inline-flex justify-center items-center px-4 py-2.5 text-sm rounded bg-indigo-500 text-white font-bold hover:bg-indigo-600 no-underline shadow-lg transition-all active:scale-95">立即新增</NuxtLink>
       </div>
 
       <!-- Product List -->
@@ -64,9 +64,9 @@
 
                 <!-- Actions -->
                 <div class="flex items-center gap-1">
-                    <BaseButton @click.stop="router.push(`/spaces/${route.params.id}/stores/${route.params.storeId}/products/${product.id}/edit`)" variant="ghost" class="!p-0 !w-8 !h-8">
+                    <NuxtLink :to="`/spaces/${route.params.id}/stores/${route.params.storeId}/products/${product.id}/edit`" class="flex justify-center items-center !w-8 !h-8 rounded text-neutral-500 hover:text-neutral-300 no-underline transition-colors" @click.stop>
                         <Icon icon="mdi:pencil-outline" class="text-lg" />
-                    </BaseButton>
+                    </NuxtLink>
                     <BaseButton @click.stop="deleteProduct(product.id)" variant="ghost" class="!p-0 !w-8 !h-8 hover:!text-red-500">
                         <Icon icon="mdi:trash-can-outline" class="text-lg" />
                     </BaseButton>

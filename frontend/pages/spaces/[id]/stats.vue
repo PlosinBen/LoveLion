@@ -15,9 +15,9 @@
       <div class="flex flex-col items-center justify-center gap-4">
         <Icon icon="mdi:chart-arc" class="text-5xl opacity-20" />
         <p>目前還沒有交易紀錄，無法產生統計資訊</p>
-        <BaseButton @click="router.push(`/spaces/${route.params.id}/ledger/transaction/add`)" variant="primary">
+        <NuxtLink :to="`/spaces/${route.params.id}/ledger/transaction/add`" class="inline-flex justify-center items-center px-4 py-2.5 text-sm rounded bg-indigo-500 text-white font-bold hover:bg-indigo-600 no-underline shadow-lg transition-all active:scale-95">
           立即新增第一筆交易
-        </BaseButton>
+        </NuxtLink>
       </div>
     </div>
 
@@ -41,7 +41,6 @@ import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import SpaceStats from '~/components/SpaceStats.vue'
 import BaseFab from '~/components/BaseFab.vue'
-import BaseButton from '~/components/BaseButton.vue'
 
 // Map both /spaces/:id and /spaces/:id/stats to this file
 definePageMeta({

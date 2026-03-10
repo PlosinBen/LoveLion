@@ -23,7 +23,7 @@
     <div v-if="detailStore.stores.length === 0" class="flex flex-col items-center justify-center py-20 bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed text-neutral-500">
       <Icon icon="mdi:store-plus-outline" class="text-5xl mb-4 opacity-20" />
       <p class="text-sm">尚未建立任何商店紀錄</p>
-      <BaseButton @click="router.push(`/spaces/${route.params.id}/stores/add`)" variant="primary" class="mt-6">立即新增</BaseButton>
+      <NuxtLink :to="`/spaces/${route.params.id}/stores/add`" class="mt-6 inline-flex justify-center items-center px-4 py-2.5 text-sm rounded bg-indigo-500 text-white font-bold hover:bg-indigo-600 no-underline shadow-lg transition-all active:scale-95">立即新增</NuxtLink>
     </div>
 
     <div v-else class="flex flex-col gap-4">
@@ -52,7 +52,6 @@
     </template>
 
 <script setup lang="ts">
-import BaseButton from '~/components/BaseButton.vue'
 import { onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useAuth } from '~/composables/useAuth'
