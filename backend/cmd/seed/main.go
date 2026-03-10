@@ -1,24 +1,33 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
 	"lovelion/internal/models"
 
 	"github.com/google/uuid"
-	"github.com/shopspring/decimal"
-	"gorm.io/datatypes"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
+
+var apiBase string
 
 func main() {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		log.Fatal("DATABASE_URL is required")
+	}
+
+	apiBase = os.Getenv("API_BASE")
+	if apiBase == "" {
+		apiBase = "http://localhost:8080/api"
 	}
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -33,215 +42,219 @@ func main() {
 		return
 	}
 
-	// 1. Create main test user
-	user := &models.User{
-		ID:          uuid.New(),
-		Username:    "dev",
-		DisplayName: "Antigravity",
+	// === Step 1: Create users via DB (only exception) ===
+	users := map[string]*models.User{
+		"dev":  {ID: uuid.New(), Username: "dev", DisplayName: "Antigravity"},
+		"ming": {ID: uuid.New(), Username: "ming", DisplayName: "小明"},
+		"mei":  {ID: uuid.New(), Username: "mei", DisplayName: "小美"},
 	}
-	user.SetPassword("dev123")
-	db.Create(user)
-	fmt.Println("✓ Created user: dev / dev123")
-
-	// 2. Create other test users for collaboration
-	userMing := &models.User{ID: uuid.New(), Username: "ming", DisplayName: "小明"}
-	userMei := &models.User{ID: uuid.New(), Username: "mei", DisplayName: "小美"}
-	db.Create(userMing)
-	db.Create(userMei)
-	fmt.Println("✓ Created collaborator users: ming, mei")
-
-	// 3. Create personal space
-	personalSpace := &models.Ledger{
-		ID:             uuid.New(),
-		UserID:         user.ID,
-		Name:           "日常開銷",
-		Type:           "personal",
-		BaseCurrency:   "TWD",
-		Currencies:     datatypes.JSON([]byte(`["TWD", "JPY", "USD"]`)),
-		Categories:     datatypes.JSON([]byte(`["餐飲", "交通", "購物", "娛樂", "生活"]`)),
-		PaymentMethods: datatypes.JSON([]byte(`["現金", "信用卡", "Line Pay"]`)),
-		IsPinned:       true,
+	for _, u := range users {
+		u.SetPassword(u.Username + "123")
+		db.Create(u)
 	}
-	db.Create(personalSpace)
-	db.Create(&models.LedgerMember{ID: uuid.New(), LedgerID: personalSpace.ID, UserID: user.ID, Role: "owner"})
-	fmt.Println("✓ Created space: 日常開銷 (pinned)")
+	fmt.Println("✓ Created users: dev, ming, mei")
 
-	// 4. Create sample transactions for personal space
-	now := time.Now()
-	transactions := []models.Transaction{
-		{
-			ID:            "txn_p_01",
-			LedgerID:      personalSpace.ID,
-			Title:         "星巴克",
-			Payer:         "Antigravity",
-			Date:          now.Add(-2 * time.Hour),
-			Currency:      "TWD",
-			ExchangeRate:  decimal.NewFromInt(1),
-			TotalAmount:   decimal.NewFromInt(310),
-			BillingAmount: decimal.NewFromInt(310),
-			Category:      "餐飲",
-			PaymentMethod: "信用卡",
-			Note:          "跟同事下午茶",
-		},
-		{
-			ID:            "txn_p_02",
-			LedgerID:      personalSpace.ID,
-			Title:         "捷運定期票",
-			Payer:         "Antigravity",
-			Date:          now.Add(-24 * time.Hour),
-			Currency:      "TWD",
-			ExchangeRate:  decimal.NewFromInt(1),
-			TotalAmount:   decimal.NewFromInt(1200),
-			BillingAmount: decimal.NewFromInt(1200),
-			Category:      "交通",
-			PaymentMethod: "現金",
-		},
-	}
-	for _, txn := range transactions {
-		db.Create(&txn)
-	}
+	// === Step 2: Login to get tokens ===
+	devToken := login("dev", "dev123")
+	mingToken := login("ming", "ming123")
+	meiToken := login("mei", "mei123")
+	fmt.Println("✓ Obtained auth tokens")
 
-	// 4.1 Add items to personal transactions
-	db.Create(&models.TransactionItem{
-		ID:            uuid.New(),
-		TransactionID: "txn_p_01",
-		Name:          "特大杯拿鐵",
-		UnitPrice:     decimal.NewFromInt(155),
-		Quantity:      decimal.NewFromInt(2),
-		Amount:        decimal.NewFromInt(310),
+	// === Step 3: Create personal space via API ===
+	personalSpace := apiPost(devToken, "/spaces", map[string]any{
+		"name":            "日常開銷",
+		"type":            "personal",
+		"base_currency":   "TWD",
+		"currencies":      []string{"TWD", "JPY", "USD"},
+		"categories":      []string{"餐飲", "交通", "購物", "娛樂", "生活"},
+		"payment_methods": []string{"現金", "信用卡", "Line Pay"},
+		"is_pinned":       true,
 	})
-	fmt.Println("✓ Created sample transactions and items for personal space")
+	personalSpaceID := personalSpace["id"].(string)
+	fmt.Printf("✓ Created space: 日常開銷 (%s)\n", personalSpaceID)
 
-	// 5. Create a sample space (unified Ledger + Trip)
-	sampleSpace := &models.Ledger{
-		ID:             uuid.New(),
-		UserID:         user.ID,
-		Name:           "2024 東京春櫻季",
-		Description:    "5 天 4 夜 東京賞櫻團",
-		Type:           "trip",
-		BaseCurrency:   "TWD",
-		Currencies:     datatypes.JSON([]byte(`["TWD", "JPY"]`)),
-		Categories:     datatypes.JSON([]byte(`["住宿", "交通", "飲食", "購物", "娛樂"]`)),
-		PaymentMethods: datatypes.JSON([]byte(`["現金", "信用卡"]`)),
-		StartDate:      timePtr(now.AddDate(0, 1, 0)),
-		EndDate:        timePtr(now.AddDate(0, 1, 5)),
-		IsPinned:       true,
-		CoverImage:     "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=800&auto=format&fit=crop",
-	}
-	db.Create(sampleSpace)
-	fmt.Println("✓ Created space: 2024 東京春櫻季 (pinned)")
+	// === Step 4: Create personal transactions ===
+	now := time.Now()
+	apiPost(devToken, fmt.Sprintf("/spaces/%s/transactions", personalSpaceID), map[string]any{
+		"title":          "星巴克",
+		"payer":          "Antigravity",
+		"date":           now.Add(-2 * time.Hour).Format(time.RFC3339),
+		"currency":       "TWD",
+		"exchange_rate":  1,
+		"category":       "餐飲",
+		"payment_method": "信用卡",
+		"note":           "跟同事下午茶",
+		"items": []map[string]any{
+			{"name": "特大杯拿鐵", "unit_price": 155, "quantity": 2},
+		},
+	})
+	fmt.Println("✓ Created transaction: 星巴克")
 
-	// 6. Add ledger members for sample space
-	memberDev := models.LedgerMember{ID: uuid.New(), LedgerID: sampleSpace.ID, UserID: user.ID, Role: "owner", Alias: "Antigravity"}
-	memberMing := models.LedgerMember{ID: uuid.New(), LedgerID: sampleSpace.ID, UserID: userMing.ID, Role: "member", Alias: "小明"}
-	memberMei := models.LedgerMember{ID: uuid.New(), LedgerID: sampleSpace.ID, UserID: userMei.ID, Role: "member", Alias: "小美"}
-	db.Create(&memberDev)
-	db.Create(&memberMing)
-	db.Create(&memberMei)
-	fmt.Println("✓ Added members to sample space")
+	apiPost(devToken, fmt.Sprintf("/spaces/%s/transactions", personalSpaceID), map[string]any{
+		"title":          "捷運定期票",
+		"payer":          "Antigravity",
+		"date":           now.Add(-24 * time.Hour).Format(time.RFC3339),
+		"currency":       "TWD",
+		"exchange_rate":  1,
+		"category":       "交通",
+		"payment_method": "現金",
+		"items": []map[string]any{
+			{"name": "捷運定期票", "unit_price": 1200, "quantity": 1},
+		},
+	})
+	fmt.Println("✓ Created transaction: 捷運定期票")
 
-	// 7. Create comparison stores for sample space
-	store1 := &models.ComparisonStore{
-		ID:       "store_s_01",
-		LedgerID: sampleSpace.ID,
-		Name:     "唐吉軻德 澀谷店",
-		Location: "澀谷",
-		GoogleMapURL: "https://maps.app.goo.gl/ShibuyaDonki",
-	}
-	store2 := &models.ComparisonStore{
-		ID:       "store_s_02",
-		LedgerID: sampleSpace.ID,
-		Name:     "Bic Camera 新宿",
-		Location: "新宿",
-	}
-	db.Create(store1)
-	db.Create(store2)
+	// === Step 5: Create trip space via API ===
+	tripSpace := apiPost(devToken, "/spaces", map[string]any{
+		"name":            "2024 東京春櫻季",
+		"description":     "5 天 4 夜 東京賞櫻團",
+		"type":            "trip",
+		"base_currency":   "TWD",
+		"currencies":      []string{"TWD", "JPY"},
+		"categories":      []string{"住宿", "交通", "飲食", "購物", "娛樂"},
+		"payment_methods": []string{"現金", "信用卡"},
+		"start_date":      now.AddDate(0, 1, 0).Format(time.RFC3339),
+		"end_date":        now.AddDate(0, 1, 5).Format(time.RFC3339),
+		"is_pinned":       true,
+	})
+	tripSpaceID := tripSpace["id"].(string)
+	fmt.Printf("✓ Created space: 2024 東京春櫻季 (%s)\n", tripSpaceID)
+
+	// === Step 6: Invite members via API ===
+	invite := apiPost(devToken, fmt.Sprintf("/spaces/%s/invites", tripSpaceID), map[string]any{
+		"is_one_time": false,
+		"max_uses":    10,
+	})
+	inviteToken := invite["token"].(string)
+
+	apiPost(mingToken, fmt.Sprintf("/invites/%s/join", inviteToken), nil)
+	apiPost(meiToken, fmt.Sprintf("/invites/%s/join", inviteToken), nil)
+	fmt.Println("✓ Added members: ming, mei")
+
+	// Set member aliases
+	apiPatch(devToken, fmt.Sprintf("/spaces/%s/members/%s", tripSpaceID, users["ming"].ID), map[string]any{"alias": "小明"})
+	apiPatch(devToken, fmt.Sprintf("/spaces/%s/members/%s", tripSpaceID, users["mei"].ID), map[string]any{"alias": "小美"})
+	fmt.Println("✓ Set member aliases")
+
+	// === Step 7: Create comparison stores ===
+	store1 := apiPost(devToken, fmt.Sprintf("/spaces/%s/stores", tripSpaceID), map[string]any{
+		"name":           "唐吉軻德 澀谷店",
+		"location":       "澀谷",
+		"google_map_url": "https://maps.app.goo.gl/ShibuyaDonki",
+	})
+	store1ID := store1["id"].(string)
+
+	store2 := apiPost(devToken, fmt.Sprintf("/spaces/%s/stores", tripSpaceID), map[string]any{
+		"name":     "Bic Camera 新宿",
+		"location": "新宿",
+	})
+	store2ID := store2["id"].(string)
 	fmt.Println("✓ Created comparison stores")
 
-	// 8. Create comparison products
-	products := []models.ComparisonProduct{
-		{ID: uuid.New(), StoreID: store1.ID, Name: "一蘭拉麵泡麵", Price: decimal.NewFromInt(1850), Currency: "JPY"},
-		{ID: uuid.New(), StoreID: store2.ID, Name: "一蘭拉麵泡麵", Price: decimal.NewFromInt(1980), Currency: "JPY"},
-		{ID: uuid.New(), StoreID: store1.ID, Name: "Dyson 吹風機", Price: decimal.NewFromInt(45000), Currency: "JPY"},
-	}
-	for _, p := range products {
-		db.Create(&p)
-	}
+	// === Step 8: Create comparison products ===
+	apiPost(devToken, fmt.Sprintf("/spaces/%s/stores/%s/products", tripSpaceID, store1ID), map[string]any{
+		"name": "一蘭拉麵泡麵", "price": 1850, "currency": "JPY",
+	})
+	apiPost(devToken, fmt.Sprintf("/spaces/%s/stores/%s/products", tripSpaceID, store2ID), map[string]any{
+		"name": "一蘭拉麵泡麵", "price": 1980, "currency": "JPY",
+	})
+	apiPost(devToken, fmt.Sprintf("/spaces/%s/stores/%s/products", tripSpaceID, store1ID), map[string]any{
+		"name": "Dyson 吹風機", "price": 45000, "currency": "JPY",
+	})
 	fmt.Println("✓ Created comparison products")
 
-	// 9. Create sample transactions with splits
-	txnSampleID := "txn_s_01"
-	txnSample := models.Transaction{
-		ID:            txnSampleID,
-		LedgerID:      sampleSpace.ID,
-		Title:         "利木津巴士",
-		Payer:         "Antigravity",
-		Date:          now.AddDate(0, 1, 0),
-		Currency:      "JPY",
-		TotalAmount:   decimal.NewFromInt(9000),
-		ExchangeRate:  decimal.NewFromFloat(0.216),
-		BillingAmount: decimal.NewFromFloat(1944),
-		HandlingFee:   decimal.NewFromFloat(29.16), // 1.5% fee
-		Category:      "交通",
-		PaymentMethod: "信用卡",
-	}
-	db.Create(&txnSample)
-
-	// Add items to trip transaction
-	db.Create(&models.TransactionItem{
-		ID:            uuid.New(),
-		TransactionID: txnSampleID,
-		Name:          "成人票",
-		UnitPrice:     decimal.NewFromInt(3000),
-		Quantity:      decimal.NewFromInt(3),
-		Amount:        decimal.NewFromInt(9000),
+	// === Step 9: Create trip transactions ===
+	apiPost(devToken, fmt.Sprintf("/spaces/%s/transactions", tripSpaceID), map[string]any{
+		"title":          "利木津巴士",
+		"payer":          "Antigravity",
+		"date":           now.AddDate(0, 1, 0).Format(time.RFC3339),
+		"currency":       "JPY",
+		"exchange_rate":  0.216,
+		"billing_amount": 1944,
+		"handling_fee":   29.16,
+		"category":       "交通",
+		"payment_method": "信用卡",
+		"items": []map[string]any{
+			{"name": "成人票", "unit_price": 3000, "quantity": 3},
+		},
 	})
+	fmt.Println("✓ Created transaction: 利木津巴士")
 
-	// Add another complex transaction with items
-	txnComplexID := "txn_s_02"
-	txnComplex := models.Transaction{
-		ID:            txnComplexID,
-		LedgerID:      sampleSpace.ID,
-		Title:         "一蘭拉麵",
-		Payer:         "Antigravity",
-		Date:          now.AddDate(0, 1, 1),
-		Currency:      "JPY",
-		TotalAmount:   decimal.NewFromInt(5800),
-		ExchangeRate:  decimal.NewFromFloat(0.216),
-		BillingAmount: decimal.NewFromFloat(1253),
-		HandlingFee:   decimal.NewFromInt(0), // Cash payment
-		Category:      "飲食",
-		PaymentMethod: "現金",
-	}
-	db.Create(&txnComplex)
-
-	items := []models.TransactionItem{
-		{ID: uuid.New(), TransactionID: txnComplexID, Name: "天然豚骨拉麵", UnitPrice: decimal.NewFromInt(980), Quantity: decimal.NewFromInt(3), Amount: decimal.NewFromInt(2940)},
-		{ID: uuid.New(), TransactionID: txnComplexID, Name: "加麵", UnitPrice: decimal.NewFromInt(210), Quantity: decimal.NewFromInt(2), Amount: decimal.NewFromInt(420)},
-		{ID: uuid.New(), TransactionID: txnComplexID, Name: "生啤酒", UnitPrice: decimal.NewFromInt(580), Quantity: decimal.NewFromInt(3), Amount: decimal.NewFromInt(1740)},
-		{ID: uuid.New(), TransactionID: txnComplexID, Name: "半熟鹽味蛋", UnitPrice: decimal.NewFromInt(140), Quantity: decimal.NewFromInt(5), Amount: decimal.NewFromInt(700)},
-	}
-	for _, item := range items {
-		db.Create(&item)
-	}
-
-	// Splits: Antigravity paid for everyone, split 3 ways
-	splits := []models.TransactionSplit{
-		{ID: uuid.New(), TransactionID: txnSampleID, Name: "Antigravity", Amount: decimal.NewFromInt(9000), IsPayer: true, MemberID: &memberDev.ID},
-		{ID: uuid.New(), TransactionID: txnSampleID, Name: "Antigravity", Amount: decimal.NewFromInt(3000), IsPayer: false, MemberID: &memberDev.ID},
-		{ID: uuid.New(), TransactionID: txnSampleID, Name: "小明", Amount: decimal.NewFromInt(3000), IsPayer: false, MemberID: &memberMing.ID},
-		{ID: uuid.New(), TransactionID: txnSampleID, Name: "小美", Amount: decimal.NewFromInt(3000), IsPayer: false, MemberID: &memberMei.ID},
-	}
-	for _, s := range splits {
-		db.Create(&s)
-	}
-	fmt.Println("✓ Created sample transaction with 3-way split")
+	apiPost(devToken, fmt.Sprintf("/spaces/%s/transactions", tripSpaceID), map[string]any{
+		"title":          "一蘭拉麵",
+		"payer":          "Antigravity",
+		"date":           now.AddDate(0, 1, 1).Format(time.RFC3339),
+		"currency":       "JPY",
+		"exchange_rate":  0.216,
+		"billing_amount": 1253,
+		"handling_fee":   0,
+		"category":       "飲食",
+		"payment_method": "現金",
+		"items": []map[string]any{
+			{"name": "天然豚骨拉麵", "unit_price": 980, "quantity": 3},
+			{"name": "加麵", "unit_price": 210, "quantity": 2},
+			{"name": "生啤酒", "unit_price": 580, "quantity": 3},
+			{"name": "半熟鹽味蛋", "unit_price": 140, "quantity": 5},
+		},
+	})
+	fmt.Println("✓ Created transaction: 一蘭拉麵")
 
 	fmt.Println("\n🎉 Seed completed successfully!")
 	fmt.Println("   Login User: dev")
 	fmt.Println("   Password:   dev123")
 }
 
-func timePtr(t time.Time) *time.Time {
-	return &t
+// --- API helpers ---
+
+func login(username, password string) string {
+	resp := apiPost("", "/users/login", map[string]any{
+		"username": username,
+		"password": password,
+	})
+	token, ok := resp["token"].(string)
+	if !ok || token == "" {
+		log.Fatalf("Failed to login as %s", username)
+	}
+	return token
+}
+
+func apiPost(token, path string, body map[string]any) map[string]any {
+	return apiRequest("POST", token, path, body)
+}
+
+func apiPatch(token, path string, body map[string]any) map[string]any {
+	return apiRequest("PATCH", token, path, body)
+}
+
+func apiRequest(method, token, path string, body map[string]any) map[string]any {
+	var reqBody io.Reader
+	if body != nil {
+		data, _ := json.Marshal(body)
+		reqBody = bytes.NewReader(data)
+	}
+
+	req, err := http.NewRequest(method, apiBase+path, reqBody)
+	if err != nil {
+		log.Fatalf("Failed to create request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatalf("API request failed: %s %s: %v", method, path, err)
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+
+	if resp.StatusCode >= 400 {
+		log.Fatalf("API error: %s %s → %d: %s", method, path, resp.StatusCode, string(respBody))
+	}
+
+	var result map[string]any
+	json.Unmarshal(respBody, &result)
+	return result
 }

@@ -1,11 +1,9 @@
 #!/bin/bash
 
 # LoveLion Integration Test
-# Runs: go fmt → go test → refresh DB (includes migrate + seed + restart)
+# Runs: go fmt → go test → stop → drop/create DB → cleanup R2 → start → migrate → seed
 
 set -e
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "🧪 Starting integration test..."
 echo ""
@@ -22,8 +20,38 @@ docker compose exec backend go test ./...
 echo "✅ All tests passed"
 echo ""
 
-# Step 3: Refresh database (stop → drop → create → start → migrate → seed)
-"$SCRIPT_DIR/refresh-database"
+# Step 3: Stop backend to release DB connections
+echo "🛑 Stopping backend..."
+docker compose stop backend
+
+# Step 4: Drop and recreate database
+echo "🗑️  Dropping existing database..."
+docker compose exec postgres psql -U postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'lovelion' AND pid <> pg_backend_pid();" > /dev/null 2>&1 || true
+docker compose exec postgres psql -U postgres -c "DROP DATABASE IF EXISTS lovelion"
+echo "📦 Creating fresh database..."
+docker compose exec postgres psql -U postgres -c "CREATE DATABASE lovelion"
+
+# Step 5: Clean up R2 bucket
+echo "🧹 Cleaning up R2 bucket..."
+docker compose run --rm backend go run cmd/cleanup-r2/main.go
+
+# Step 6: Start backend
+echo "🚀 Starting backend..."
+docker compose start backend
+echo "⏳ Waiting for backend to be ready..."
+sleep 3
+
+# Step 7: Migrate
+echo "📋 Running migrations..."
+docker compose exec backend go run cmd/migrate/main.go
+
+# Step 8: Seed
+echo "🌱 Seeding test data..."
+docker compose exec backend go run cmd/seed/main.go
 
 echo ""
 echo "🎉 Integration test passed!"
+echo ""
+echo "📝 Test account:"
+echo "   Username: dev"
+echo "   Password: dev123"
