@@ -32,7 +32,6 @@ type CreateSpaceRequest struct {
 	PaymentMethods []string   `json:"payment_methods"`
 	StartDate      *time.Time `json:"start_date"`
 	EndDate        *time.Time `json:"end_date"`
-	CoverImage     string     `json:"cover_image"`
 	IsPinned       bool       `json:"is_pinned"`
 }
 
@@ -46,7 +45,6 @@ type UpdateSpaceRequest struct {
 	PaymentMethods []string   `json:"payment_methods"`
 	StartDate      *time.Time `json:"start_date"`
 	EndDate        *time.Time `json:"end_date"`
-	CoverImage     *string    `json:"cover_image"`
 	IsPinned       *bool      `json:"is_pinned"`
 }
 
@@ -66,7 +64,8 @@ func (h *SpaceHandler) List(c *gin.Context) {
 	query := h.db.
 		Joins("JOIN ledger_members ON ledger_members.ledger_id = ledgers.id").
 		Where("ledger_members.user_id = ?", userID).
-		Preload("User") // Preload owner info
+		Preload("User").
+		Preload("Images", "entity_type = ?", "space")
 
 	if spaceType != "" {
 		query = query.Where("ledgers.type = ?", spaceType)
@@ -79,6 +78,10 @@ func (h *SpaceHandler) List(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch spaces"})
 		return
+	}
+
+	for i := range spaces {
+		spaces[i].PopulateCoverImage()
 	}
 
 	c.JSON(http.StatusOK, spaces)
@@ -103,7 +106,6 @@ func (h *SpaceHandler) Create(c *gin.Context) {
 		BaseCurrency: req.BaseCurrency,
 		StartDate:    req.StartDate,
 		EndDate:      req.EndDate,
-		CoverImage:   req.CoverImage,
 		IsPinned:     req.IsPinned,
 	}
 
@@ -197,9 +199,6 @@ func (h *SpaceHandler) Update(c *gin.Context) {
 	if req.EndDate != nil {
 		space.EndDate = req.EndDate
 	}
-	if req.CoverImage != nil {
-		space.CoverImage = *req.CoverImage
-	}
 	if req.IsPinned != nil {
 		space.IsPinned = *req.IsPinned
 	}
@@ -208,6 +207,10 @@ func (h *SpaceHandler) Update(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update space"})
 		return
 	}
+
+	// Reload images for response
+	h.db.Where("entity_id = ? AND entity_type = ?", space.ID, "space").Find(&space.Images)
+	space.PopulateCoverImage()
 
 	c.JSON(http.StatusOK, space)
 }

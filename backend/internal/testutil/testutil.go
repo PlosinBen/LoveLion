@@ -66,7 +66,13 @@ func TestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("Failed to connect to test database with schema: %v", err)
 	}
 
-	// Auto-migrate all models
+	// Auto-migrate Image first to establish entity_id as varchar before
+	// polymorphic associations in Ledger/Transaction try to override it.
+	err = db.AutoMigrate(&models.Image{})
+	if err != nil {
+		t.Fatalf("Failed to migrate Image model: %v", err)
+	}
+
 	err = db.AutoMigrate(
 		&models.User{},
 		&models.Ledger{},
@@ -77,7 +83,6 @@ func TestDB(t *testing.T) *gorm.DB {
 		&models.TransactionSplit{},
 		&models.ComparisonStore{},
 		&models.ComparisonProduct{},
-		&models.Image{},
 	)
 	if err != nil {
 		t.Fatalf("Failed to migrate test database: %v", err)

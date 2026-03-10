@@ -18,15 +18,12 @@
           <!-- Cover Image -->
           <div>
             <label class="block text-xs text-neutral-500 uppercase tracking-wider mb-3 ml-1">空間封面圖</label>
-            <div class="relative h-32 rounded-xl overflow-hidden bg-neutral-800 group border border-neutral-700">
-                <img v-if="form.cover_image" :src="getImageUrl(form.cover_image)" class="w-full h-full object-cover" />
-                <div v-else class="w-full h-full flex items-center justify-center text-neutral-600">
-                    <Icon icon="mdi:image-outline" class="text-4xl" />
-                </div>
-                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <BaseButton @click="triggerImageUpload" variant="white" size="sm" class="!rounded-full">更換相片</BaseButton>
-                </div>
-            </div>
+            <ImageManager
+              :entity-id="spaceId"
+              entity-type="space"
+              :max-count="1"
+              :allow-reorder="false"
+            />
           </div>
 
           <!-- Name -->
@@ -181,9 +178,6 @@
       </section>
     </div>
 
-    <!-- Hidden File Input -->
-    <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleImageChange" />
-
     <!-- Modals -->
     <BaseModal v-model="showInviteModal" title="建立邀請連結">
         <div class="p-6 flex flex-col gap-6">
@@ -236,10 +230,10 @@ import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
-import { useImages } from '~/composables/useImages'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseInput from '~/components/BaseInput.vue'
+import ImageManager from '~/components/ImageManager.vue'
 import BaseModal from '~/components/BaseModal.vue'
 import ListEditor from '~/components/ListEditor.vue'
 import BaseButton from '~/components/BaseButton.vue'
@@ -249,7 +243,6 @@ const route = useRoute()
 const router = useRouter()
 const api = useApi()
 const { initAuth } = useAuth()
-const { getImageUrl, uploadImage } = useImages()
 const detailStore = useSpaceDetailStore()
 
 const loading = ref(true)
@@ -263,14 +256,11 @@ const form = ref({
   base_currency: '',
   start_date: null as string | null,
   end_date: null as string | null,
-  cover_image: '',
   is_pinned: false,
   currencies: [] as string[],
   categories: [] as string[],
   payment_methods: [] as string[]
 })
-
-const fileInput = ref<HTMLInputElement | null>(null)
 
 // Modal States
 const showInviteModal = ref(false)
@@ -314,7 +304,6 @@ const fetchData = async () => {
       base_currency: s.base_currency || '',
       start_date: formatDate(s.start_date),
       end_date: formatDate(s.end_date),
-      cover_image: s.cover_image || '',
       is_pinned: s.is_pinned || false,
       currencies: parseJSON(s.currencies),
       categories: parseJSON(s.categories),
@@ -336,7 +325,6 @@ const handleUpdateSpace = async () => {
       description: form.value.description,
       start_date: form.value.start_date ? new Date(form.value.start_date) : null,
       end_date: form.value.end_date ? new Date(form.value.end_date) : null,
-      cover_image: form.value.cover_image,
       is_pinned: form.value.is_pinned
     })
     // Refresh store so other pages see updated data
@@ -364,21 +352,6 @@ const handleUpdateLists = async () => {
   } finally {
     updating.value = false
   }
-}
-
-const triggerImageUpload = () => fileInput.value?.click()
-
-const handleImageChange = async (e: Event) => {
-    const file = (e.target as HTMLInputElement).files?.[0]
-    if (!file) return
-
-    try {
-        const result = await uploadImage(file, spaceId, 'space_cover')
-        form.value.cover_image = result.file_path
-        await handleUpdateSpace()
-    } catch (e) {
-        alert('上傳失敗')
-    }
 }
 
 const openAliasModal = (member: any) => {

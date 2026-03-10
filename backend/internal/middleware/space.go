@@ -50,11 +50,12 @@ func SpaceAccess(db *gorm.DB) gin.HandlerFunc {
 
 		// Fetch space to ensure it exists and provide it to handlers
 		var space models.Ledger
-		if err := db.First(&space, "id = ?", spaceID).Error; err != nil {
+		if err := db.Preload("Images", "entity_type = ?", "space").First(&space, "id = ?", spaceID).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Space not found"})
 			c.Abort()
 			return
 		}
+		space.PopulateCoverImage()
 
 		// Store in context for handlers to use
 		c.Set("space", &space)

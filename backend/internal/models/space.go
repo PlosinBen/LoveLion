@@ -21,7 +21,7 @@ type Ledger struct {
 	PaymentMethods datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"payment_methods"`
 	StartDate      *time.Time     `gorm:"type:date" json:"start_date"`
 	EndDate        *time.Time     `gorm:"type:date" json:"end_date"`
-	CoverImage     string         `gorm:"type:text" json:"cover_image"`
+	CoverImage     string         `gorm:"-" json:"cover_image"`
 	IsPinned       bool           `gorm:"default:false" json:"is_pinned"`
 	CreatedAt      time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt      time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
@@ -31,6 +31,14 @@ type Ledger struct {
 	Transactions []Transaction  `gorm:"foreignKey:LedgerID" json:"transactions,omitempty"`
 	Members      []LedgerMember `gorm:"foreignKey:LedgerID;constraint:OnDelete:CASCADE" json:"members,omitempty"`
 	Invites      []LedgerInvite `gorm:"foreignKey:LedgerID;constraint:OnDelete:CASCADE" json:"invites,omitempty"`
+	Images       []Image        `gorm:"polymorphic:Entity;polymorphicValue:space" json:"images,omitempty"`
+}
+
+// PopulateCoverImage sets CoverImage from the first associated image.
+func (l *Ledger) PopulateCoverImage() {
+	if len(l.Images) > 0 {
+		l.CoverImage = l.Images[0].FilePath
+	}
 }
 
 func (Ledger) TableName() string {
