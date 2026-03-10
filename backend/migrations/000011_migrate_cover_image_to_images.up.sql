@@ -1,1 +1,0 @@
-ALTER TABLE ledgers DROP COLUMN IF EXISTS cover_image;

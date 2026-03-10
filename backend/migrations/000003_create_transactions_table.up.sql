@@ -32,7 +32,5 @@ CREATE TABLE IF NOT EXISTS transaction_items (
 
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_transactions_ledger_id ON transactions (ledger_id);
-
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions (date);
-
 CREATE INDEX IF NOT EXISTS idx_transaction_items_transaction_id ON transaction_items (transaction_id);

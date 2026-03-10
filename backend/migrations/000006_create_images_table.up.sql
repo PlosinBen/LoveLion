@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS images (
     entity_id VARCHAR(50) NOT NULL,
     entity_type VARCHAR(50) NOT NULL,
     file_path TEXT NOT NULL,
+    blur_hash VARCHAR(100),
     sort_order INT DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

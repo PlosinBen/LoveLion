@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS ledgers (
     payment_methods JSONB DEFAULT '[]',
     start_date DATE,
     end_date DATE,
-    cover_image TEXT,
     is_pinned BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW (),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW ()
