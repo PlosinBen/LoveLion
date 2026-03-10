@@ -41,6 +41,7 @@ func main() {
 
 			// Protected routes
 			users.GET("/me", middleware.AuthRequiredWithDB(cfg.JWTSecret, db), authHandler.GetMe)
+			users.PUT("/me", middleware.AuthRequiredWithDB(cfg.JWTSecret, db), authHandler.UpdateMe)
 		}
 
 		// Sharing routes (Public Info)
@@ -61,6 +62,7 @@ func main() {
 			spaceGroup.Use(middleware.SpaceAccess(db))
 			{
 				spaceGroup.GET("", spaceHandler.Get)
+				spaceGroup.POST("/leave", spaceHandler.Leave)
 
 				// Owner only operations
 				ownerGroup := spaceGroup.Group("")

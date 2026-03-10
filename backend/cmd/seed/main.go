@@ -199,6 +199,32 @@ func main() {
 	})
 	fmt.Println("✓ Created transaction: 一蘭拉麵")
 
+	// === Step 10: Test Update Profile API ===
+	fmt.Println("\n🧪 Testing Update Profile API...")
+	apiPut(devToken, "/users/me", map[string]any{
+		"display_name": "Antigravity (Updated)",
+	})
+	fmt.Println("✓ Updated display name")
+
+	apiPut(devToken, "/users/me", map[string]any{
+		"current_password": "dev123",
+		"new_password":     "newpass123",
+	})
+	fmt.Println("✓ Updated password")
+
+	// Verify login with new password
+	newDevToken := login("dev", "newpass123")
+	if newDevToken != "" {
+		fmt.Println("✓ Verified new password login works")
+	}
+
+	// Revert password back to dev123 for consistency
+	apiPut(newDevToken, "/users/me", map[string]any{
+		"current_password": "newpass123",
+		"new_password":     "dev123",
+	})
+	fmt.Println("✓ Reverted password to dev123")
+
 	fmt.Println("\n🎉 Seed completed successfully!")
 	fmt.Println("   Login User: dev")
 	fmt.Println("   Password:   dev123")
@@ -220,6 +246,10 @@ func login(username, password string) string {
 
 func apiPost(token, path string, body map[string]any) map[string]any {
 	return apiRequest("POST", token, path, body)
+}
+
+func apiPut(token, path string, body map[string]any) map[string]any {
+	return apiRequest("PUT", token, path, body)
 }
 
 func apiPatch(token, path string, body map[string]any) map[string]any {

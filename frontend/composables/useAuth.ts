@@ -84,11 +84,23 @@ export function useAuth() {
         try {
             const response = await api.get<User>('/api/users/me')
             user.value = response
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('user', JSON.stringify(response))
+            }
             return response
         } catch (e) {
             logout()
             throw e
         }
+    }
+
+    const updateProfile = async (data: { display_name?: string; current_password?: string; new_password?: string }) => {
+        const response = await api.put<User>('/api/users/me', data)
+        user.value = response
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify(response))
+        }
+        return response
     }
 
     return {
@@ -100,5 +112,6 @@ export function useAuth() {
         register,
         logout,
         fetchUser,
+        updateProfile,
     }
 }

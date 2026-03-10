@@ -227,3 +227,41 @@ func (h *SpaceHandler) Delete(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Space deleted"})
 }
+
+// Leave a space
+func (h *SpaceHandler) Leave(c *gin.Context) {
+	userID := c.MustGet("userID").(uuid.UUID)
+	spaceVal, _ := c.Get("space")
+	space := spaceVal.(*models.Ledger)
+
+	// Check if user is a member
+	var member models.LedgerMember
+	if err := h.db.Where("ledger_id = ? AND user_id = ?", space.ID, userID).First(&member).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Member not found in this space"})
+		return
+	}
+
+	// Count total members
+	var memberCount int64
+	h.db.Model(&models.LedgerMember{}).Where("ledger_id = ?", space.ID).Count(&memberCount)
+
+	// If owner and only member, suggest deleting instead
+	if member.Role == "owner" && memberCount == 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "You are the only member and owner. Please delete the space instead of leaving."})
+		return
+	}
+
+	// If owner but there are others, force transfer ownership or block
+	if member.Role == "owner" && memberCount > 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "You are the owner. Please transfer ownership before leaving or delete the space."})
+		return
+	}
+
+	// Proceed to remove membership
+	if err := h.db.Delete(&member).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to leave space"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully left the space"})
+}

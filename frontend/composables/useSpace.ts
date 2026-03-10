@@ -61,6 +61,22 @@ export const useSpace = () => {
     }
   }
 
+  const leaveSpace = async (id: string) => {
+    try {
+      await api.post(`/api/spaces/${id}/leave`)
+      // Update local state by removing the space
+      allSpaces.value = allSpaces.value.filter(s => s.id !== id)
+      
+      // If current space was the one left, reset current space
+      if (currentSpaceId.value === id) {
+        currentSpaceId.value = allSpaces.value.length > 0 ? allSpaces.value[0].id : null
+      }
+    } catch (e) {
+      console.error('Failed to leave space:', e)
+      throw e
+    }
+  }
+
   return {
     allSpaces,
     currentSpace,
@@ -72,7 +88,8 @@ export const useSpace = () => {
     loading,
     fetchSpaces,
     selectSpace,
-    togglePin
+    togglePin,
+    leaveSpace
   }
 }
 
