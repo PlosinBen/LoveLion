@@ -2,9 +2,8 @@
   <div v-if="store.space" class="space-detail-page">
     <PageTitle
       title="消費記帳"
-      :show-back="true"
       :settings-to="`/spaces/${store.space.id}/settings`"
-      :breadcrumbs="[{ label: store.space.name, to: `/spaces/${store.space.id}` }]"
+      :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: store.space.name }]"
     />
 
     <div class="flex flex-col gap-6">

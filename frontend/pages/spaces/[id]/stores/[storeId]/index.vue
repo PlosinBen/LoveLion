@@ -4,6 +4,7 @@
       :title="store?.name || '載入中...'"
       :show-back="true"
       :back-to="`/spaces/${route.params.id}/stores`"
+      :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}` }, { label: '商店', to: `/spaces/${route.params.id}/stores` }]"
     >
       <template #subtitle>
         <div class="flex items-center gap-1.5 text-neutral-500 text-xs font-medium mt-0.5">

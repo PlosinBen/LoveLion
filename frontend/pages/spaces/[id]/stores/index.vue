@@ -2,9 +2,8 @@
   <div class="stores-page">
     <PageTitle
       title="商店"
-      :show-back="true"
       :settings-to="`/spaces/${route.params.id}/settings`"
-      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/ledger` }]"
+      :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: detailStore.space?.name || '空間' }]"
     />
 
     <!-- View Toggle via URL -->
