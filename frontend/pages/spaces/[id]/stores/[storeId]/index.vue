@@ -127,7 +127,7 @@ const route = useRoute()
 // Define route for direct access AND for product context entry
 definePageMeta({
   layout: 'default',
-  alias: '/spaces/:id/products/:productName/stores/:storeId'
+  alias: '/spaces/:id/products/:productName?/stores/:storeId'
 })
 
 const api = useApi()
