@@ -1,10 +1,10 @@
 <template>
   <div class="space-stats-page">
     <PageTitle
-      :title="store.space?.name || '統計'"
+      title="消費統計"
       :show-back="true"
       :settings-to="`/spaces/${route.params.id}/settings`"
-      :breadcrumbs="[{ label: '我的空間', to: '/' }]"
+      :breadcrumbs="[{ label: store.space?.name || '空間', to: `/spaces/${route.params.id}/ledger` }]"
     />
 
     <div v-if="store.loading.space || store.loading.transactions" class="flex justify-center items-center py-20 text-neutral-500">

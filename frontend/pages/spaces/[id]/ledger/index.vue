@@ -1,7 +1,7 @@
 <template>
   <div v-if="store.space" class="space-detail-page">
     <PageTitle
-      :title="store.space.name"
+      title="消費記帳"
       :show-back="true"
       :settings-to="`/spaces/${store.space.id}/settings`"
       :breadcrumbs="[{ label: store.space.name, to: `/spaces/${store.space.id}` }]"

@@ -1,9 +1,10 @@
 <template>
   <div class="products-index-page">
     <PageTitle
-      :title="detailStore.space?.name || '商品比價'"
+      title="商品"
       :show-back="true"
       :settings-to="`/spaces/${route.params.id}/settings`"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/ledger` }]"
     />
 
     <!-- View Toggle via URL -->
