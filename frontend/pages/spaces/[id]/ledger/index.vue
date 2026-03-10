@@ -3,7 +3,7 @@
     <PageTitle
       title="消費記帳"
       :settings-to="`/spaces/${store.space.id}/settings`"
-      :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: store.space.name }]"
+      :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: store.space.name, to: `/spaces/${store.space.id}/stats` }]"
     />
 
     <div class="flex flex-col gap-6">

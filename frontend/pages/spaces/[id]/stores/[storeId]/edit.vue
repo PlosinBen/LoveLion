@@ -4,8 +4,8 @@
       title="編輯商店"
       :show-back="true"
       :back-to="`/spaces/${spaceId}/stores/${storeId}`"
-      :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: detailStore.space?.name || '空間', to: `/spaces/${spaceId}` }, { label: '商店', to: `/spaces/${spaceId}/stores` }, { label: storeName || '店家', to: `/spaces/${spaceId}/stores/${storeId}` }]"
-    />
+      :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/stats` }, { label: '商店', to: `/spaces/${route.params.id}/stores` }, { label: storeName || '店家', to: `/spaces/${spaceId}/stores/${storeId}` }]"
+      />
 
     <div v-if="loading" class="flex justify-center items-center py-20 text-neutral-500">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />

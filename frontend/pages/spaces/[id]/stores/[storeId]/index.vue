@@ -3,8 +3,8 @@
     <PageTitle
       :title="store?.name || '載入中...'"
       :show-back="true"
-      :back-to="`/spaces/${route.params.id}/stores`"
-      :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}` }, { label: '商店', to: `/spaces/${route.params.id}/stores` }]"
+      :back-to="backTo"
+      :breadcrumbs="breadcrumbs"
     >
       <template #subtitle>
         <div class="flex items-center gap-1.5 text-neutral-500 text-xs font-medium mt-0.5">
@@ -122,10 +122,14 @@ import BaseFab from '~/components/BaseFab.vue'
 import BaseCard from '~/components/BaseCard.vue'
 
 const router = useRouter()
-definePageMeta({
-  layout: 'default'
-})
 const route = useRoute()
+
+// Define route for direct access AND for product context entry
+definePageMeta({
+  layout: 'default',
+  alias: '/spaces/:id/products/:productName/stores/:storeId'
+})
+
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
 const { getImageUrl } = useImages()
@@ -133,6 +137,36 @@ const detailStore = useSpaceDetailStore()
 
 const store = ref<any>(null)
 const loading = ref(true)
+
+// Navigation context detection
+const fromProductName = computed(() => {
+  const name = route.params.productName
+  return typeof name === 'string' ? decodeURIComponent(name) : null
+})
+
+const backTo = computed(() => {
+  if (fromProductName.value) {
+    return `/spaces/${route.params.id}/products/${encodeURIComponent(fromProductName.value)}`
+  }
+  return `/spaces/${route.params.id}/stores`
+})
+
+const breadcrumbs = computed(() => {
+  const base = [
+    { label: '我的空間', to: '/' },
+    { label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/stats` }
+  ]
+
+  if (fromProductName.value) {
+    base.push({ label: '商品', to: `/spaces/${route.params.id}/products` })
+    base.push({ label: fromProductName.value, to: `/spaces/${route.params.id}/products/${encodeURIComponent(fromProductName.value)}` })
+  } else {
+    base.push({ label: '商店', to: `/spaces/${route.params.id}/stores` })
+  }
+
+  return base
+})
+
 const expandedProductId = ref<string | null>(null)
 const imageManagers = ref<Record<string, any>>({})
 

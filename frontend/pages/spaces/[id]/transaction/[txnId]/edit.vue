@@ -3,7 +3,7 @@
     <PageTitle
       title="編輯交易"
       :back-to="`/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}`"
-      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/ledger` }, { label: transaction?.title || '交易詳情', to: `/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}` }]"
+      :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/stats` }, { label: transaction?.title || '交易詳情', to: `/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}` }]"
     />
 
     <div v-if="loading" class="p-20 flex justify-center items-center text-neutral-500">

@@ -3,7 +3,7 @@
     <PageTitle
       title="商品"
       :settings-to="`/spaces/${route.params.id}/settings`"
-      :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: detailStore.space?.name || '空間' }]"
+      :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/stats` }]"
     />
 
     <!-- View Toggle via URL -->

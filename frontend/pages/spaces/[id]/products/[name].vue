@@ -4,7 +4,7 @@
       :title="productName"
       :show-back="true"
       :back-to="`/spaces/${route.params.id}/products`"
-      :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}` }, { label: '商品', to: `/spaces/${route.params.id}/products` }]"
+      :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/stats` }, { label: '商品', to: `/spaces/${route.params.id}/products` }]"
     />
 
     <div v-if="detailStore.loading.products" class="flex justify-center items-center py-20 text-neutral-500">
@@ -24,7 +24,7 @@
         <BaseCard
           v-for="(p, index) in sortedProducts"
           :key="p.id"
-          @click="router.push(`/spaces/${route.params.id}/stores/${p.store_id}`)"
+          @click="router.push(`/spaces/${route.params.id}/products/${encodeURIComponent(productName)}/stores/${p.store_id}`)"
           padding="p-5"
           class="flex flex-col gap-4 cursor-pointer hover:bg-neutral-800 transition-colors relative overflow-hidden"
         >

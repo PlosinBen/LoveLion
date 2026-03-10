@@ -4,7 +4,7 @@
       title="交易詳情"
       :show-back="true"
       :back-to="`/spaces/${route.params.id}/ledger`"
-      :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}` }, { label: '記帳', to: `/spaces/${route.params.id}/ledger` }]"
+      :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/stats` }, { label: '記帳', to: `/spaces/${route.params.id}/ledger` }]"
     >
       <template #right>
         <div class="flex gap-1">
