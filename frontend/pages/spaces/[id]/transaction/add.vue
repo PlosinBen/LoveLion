@@ -100,8 +100,7 @@
                   type="button" 
                   @click="removeItem(index)" 
                   variant="danger"
-                  size="icon"
-                  class="mb-1"
+                  class="!p-0 w-10 h-10 mb-1"
                 >
                   <Icon icon="mdi:close" class="text-xl" />
                 </BaseButton>

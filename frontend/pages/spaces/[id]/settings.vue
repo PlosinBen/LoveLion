@@ -117,10 +117,10 @@
             </div>
 
             <div class="flex items-center gap-1">
-              <BaseButton @click="openAliasModal(member)" variant="secondary" size="icon">
+              <BaseButton @click="openAliasModal(member)" variant="secondary" class="!p-0 w-10 h-10">
                 <Icon icon="mdi:pencil-outline" class="text-lg" />
               </BaseButton>
-              <BaseButton v-if="member.role !== 'owner'" @click="handleRemoveMember(member)" variant="danger" size="icon" class="ml-1">
+              <BaseButton v-if="member.role !== 'owner'" @click="handleRemoveMember(member)" variant="danger" class="!p-0 w-10 h-10 ml-1">
                 <Icon icon="mdi:account-remove-outline" class="text-lg" />
               </BaseButton>
             </div>
@@ -135,7 +135,7 @@
             <Icon icon="mdi:link-variant" class="text-indigo-500 text-xl" />
             <h2 class="text-lg font-bold">邀請連結</h2>
           </div>
-          <BaseButton @click="showInviteModal = true" variant="ghost" size="sm" class="!font-bold !text-indigo-400">
+          <BaseButton @click="showInviteModal = true" variant="ghost" class="!font-bold !text-indigo-400">
             + 建立邀請
           </BaseButton>
         </div>
@@ -159,10 +159,10 @@
             </div>
 
             <div class="flex items-center gap-2">
-              <BaseButton @click="copyInviteLink(invite.token)" variant="ghost" size="icon" class="!text-indigo-400 !bg-indigo-500/10">
+              <BaseButton @click="copyInviteLink(invite.token)" variant="ghost" class="!p-0 w-10 h-10 !text-indigo-400 !bg-indigo-500/10">
                 <Icon icon="mdi:content-copy" class="text-xl" />
               </BaseButton>
-              <BaseButton @click="handleRevokeInvite(invite.id)" variant="secondary" size="icon">
+              <BaseButton @click="handleRevokeInvite(invite.id)" variant="secondary" class="!p-0 w-10 h-10">
                 <Icon icon="mdi:trash-can-outline" class="text-xl" />
               </BaseButton>
             </div>

@@ -1,7 +1,7 @@
 <template>
   <div class="media-view-page bg-black fixed inset-0 flex flex-col items-center justify-center">
     <div class="absolute top-6 left-6 z-10">
-      <BaseButton @click="router.back()" size="icon" variant="ghost" class="rounded-full backdrop-blur-md">
+      <BaseButton @click="router.back()" variant="ghost" class="!p-0 w-10 h-10 rounded-full backdrop-blur-md">
         <Icon icon="mdi:close" class="text-xl" />
       </BaseButton>
     </div>

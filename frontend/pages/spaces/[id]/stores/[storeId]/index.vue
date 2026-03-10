@@ -64,10 +64,10 @@
 
                 <!-- Actions -->
                 <div class="flex items-center gap-1">
-                    <BaseButton @click.stop="router.push(`/spaces/${route.params.id}/stores/${route.params.storeId}/products/${product.id}/edit`)" variant="ghost" size="sm" class="!w-8 !h-8">
+                    <BaseButton @click.stop="router.push(`/spaces/${route.params.id}/stores/${route.params.storeId}/products/${product.id}/edit`)" variant="ghost" class="!p-0 !w-8 !h-8">
                         <Icon icon="mdi:pencil-outline" class="text-lg" />
                     </BaseButton>
-                    <BaseButton @click.stop="deleteProduct(product.id)" variant="ghost" size="sm" class="!w-8 !h-8 hover:!text-red-500">
+                    <BaseButton @click.stop="deleteProduct(product.id)" variant="ghost" class="!p-0 !w-8 !h-8 hover:!text-red-500">
                         <Icon icon="mdi:trash-can-outline" class="text-lg" />
                     </BaseButton>
                 </div>
@@ -91,7 +91,7 @@
                             :instant-delete="false"
                         />
                         <div class="mt-4 flex justify-end">
-                            <BaseButton @click.stop="saveProductImages(product.id)" variant="secondary" size="sm">
+                            <BaseButton @click.stop="saveProductImages(product.id)" variant="secondary">
                                 儲存變更
                             </BaseButton>
                         </div>

@@ -17,7 +17,7 @@
           <!-- Header -->
           <div v-if="title" class="p-4 border-b border-neutral-800 flex items-center justify-between bg-neutral-900 sticky top-0 z-10">
             <h3 class="font-bold text-white text-lg px-2">{{ title }}</h3>
-            <BaseButton @click="$emit('update:modelValue', false)" variant="secondary" size="icon" class="!rounded-full">
+            <BaseButton @click="$emit('update:modelValue', false)" variant="secondary" class="!p-0 w-10 h-10 !rounded-full">
               <Icon icon="mdi:close" class="text-xl" />
             </BaseButton>
           </div>

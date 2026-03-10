@@ -3,14 +3,13 @@
     :type="type"
     :disabled="disabled || loading"
     @click.stop="$emit('click', $event)"
-    class="flex justify-center items-center transition-all active:scale-95 disabled:opacity-50 border-0 cursor-pointer font-bold shrink-0"
+    class="flex justify-center items-center transition-all active:scale-95 disabled:opacity-50 border-0 cursor-pointer font-bold shrink-0 px-6 py-4 text-sm rounded-xl"
     :class="[
       variantClasses,
-      sizeClasses,
       fullWidth ? 'w-full' : ''
     ]"
   >
-    <Icon v-if="loading" icon="mdi:loading" class="animate-spin" :class="size === 'sm' ? 'text-sm' : 'text-xl'" />
+    <Icon v-if="loading" icon="mdi:loading" class="animate-spin text-xl" />
     <slot v-else />
   </button>
 </template>
@@ -22,7 +21,6 @@ import { Icon } from '@iconify/vue'
 interface Props {
   type?: 'button' | 'submit' | 'reset'
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'white'
-  size?: 'sm' | 'md' | 'lg' | 'icon'
   fullWidth?: boolean
   disabled?: boolean
   loading?: boolean
@@ -31,7 +29,6 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   type: 'button',
   variant: 'primary',
-  size: 'md',
   fullWidth: false,
   disabled: false,
   loading: false
@@ -52,20 +49,7 @@ const variantClasses = computed(() => {
     case 'white':
       return 'bg-white text-black hover:bg-neutral-200'
     default:
-      return 'bg-neutral-900 text-indigo-400 hover:bg-neutral-800' // Custom default for our "Icon button" style
-  }
-})
-
-const sizeClasses = computed(() => {
-  if (props.size === 'icon') return 'w-10 h-10 rounded-xl'
-  
-  switch (props.size) {
-    case 'sm':
-      return 'px-4 py-2 text-xs rounded-lg'
-    case 'lg':
-      return 'px-8 py-5 text-lg rounded-2xl'
-    default:
-      return 'px-6 py-4 text-sm rounded-xl'
+      return 'bg-neutral-900 text-indigo-400 hover:bg-neutral-800'
   }
 })
 </script>

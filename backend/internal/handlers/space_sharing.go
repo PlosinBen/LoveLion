@@ -220,7 +220,7 @@ func (h *SpaceSharingHandler) RemoveMember(c *gin.Context) {
 	space := spaceVal.(*models.Ledger)
 	memberVal, _ := c.Get("member")
 	requestorMember := memberVal.(*models.LedgerMember)
-	
+
 	targetUserID, err := uuid.Parse(c.Param("user_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid User ID"})
@@ -230,7 +230,7 @@ func (h *SpaceSharingHandler) RemoveMember(c *gin.Context) {
 	// Permission logic:
 	// 1. If requestor is Owner, they can remove anyone EXCEPT themselves (to delete space, use DeleteSpace)
 	// 2. If requestor is NOT Owner, they can ONLY remove themselves (leaving)
-	
+
 	isOwner := requestorMember.Role == "owner"
 	isSelf := requestorID == targetUserID
 

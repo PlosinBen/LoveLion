@@ -2,7 +2,7 @@
   <component
     :is="to ? resolveComponent('NuxtLink') : tag"
     :to="to"
-    class="block bg-neutral-900 border border-neutral-800 rounded-2xl"
+    class="block bg-neutral-900 border border-neutral-800 rounded-xl"
     :class="[
       to && 'no-underline text-inherit',
       padding,

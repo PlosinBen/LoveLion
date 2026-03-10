@@ -16,8 +16,7 @@
         v-else
         @click="$emit('update:modelValue', option.value)"
         :variant="modelValue === option.value ? 'primary' : 'ghost'"
-        size="sm"
-        class="flex-1 !shadow-none"
+        class="flex-1 !shadow-none !py-2 !text-xs"
       >
         {{ option.label }}
       </BaseButton>

@@ -20,7 +20,7 @@
               <span class="text-xs text-neutral-500 font-medium">@{{ user?.username }}</span>
             </div>
           </div>
-          <BaseButton @click="handleLogout" variant="danger" size="sm">
+          <BaseButton @click="handleLogout" variant="danger">
             登出
           </BaseButton>
         </BaseCard>

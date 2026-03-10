@@ -121,7 +121,7 @@ func (h *SpaceHandler) Create(c *gin.Context) {
 	if req.Currencies == nil {
 		space.Currencies = toJSON([]string{space.BaseCurrency})
 	}
-	
+
 	space.MemberNames = toJSON(req.Members)
 	space.Categories = toJSON(req.Categories)
 	space.PaymentMethods = toJSON(req.PaymentMethods)

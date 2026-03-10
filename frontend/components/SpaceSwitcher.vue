@@ -35,8 +35,7 @@
                 v-if="space.user_id === user?.id"
                 @click.stop="router.push(`/spaces/${space.id}/settings`); showSwitcher = false"
                 variant="ghost"
-                size="icon"
-                class="!w-8 !h-8"
+                class="!p-0 !w-8 !h-8"
               >
                 <Icon icon="mdi:cog-outline" class="text-lg" />
               </BaseButton>

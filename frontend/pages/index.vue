@@ -5,7 +5,6 @@
         <BaseButton
           @click="router.push('/spaces/add-new')"
           variant="secondary"
-          size="sm"
           class="gap-2"
         >
           <Icon icon="mdi:plus" class="text-lg" />

@@ -61,7 +61,7 @@ func main() {
 			spaceGroup.Use(middleware.SpaceAccess(db))
 			{
 				spaceGroup.GET("", spaceHandler.Get)
-				
+
 				// Owner only operations
 				ownerGroup := spaceGroup.Group("")
 				ownerGroup.Use(middleware.SpaceOwnerOnly())
@@ -69,7 +69,7 @@ func main() {
 					ownerGroup.PUT("", spaceHandler.Update)
 					ownerGroup.PATCH("", spaceHandler.Update) // Add PATCH support
 					ownerGroup.DELETE("", spaceHandler.Delete)
-					
+
 					// Invitation management
 					ownerGroup.POST("/invites", sharingHandler.CreateInvite)
 					ownerGroup.GET("/invites", sharingHandler.ListInvites)

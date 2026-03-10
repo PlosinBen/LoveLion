@@ -8,21 +8,21 @@
     
     <!-- Overlay Actions -->
     <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-       <BaseButton 
+       <BaseButton
          type="button"
          @click.stop="$emit('delete', index)"
          variant="danger"
-         size="sm"
          title="Delete"
+         class="!p-2 !text-xs"
        >
          <Icon icon="mdi:trash-can-outline" class="h-4 w-4" />
        </BaseButton>
-       
+
        <div v-if="allowReorder" class="flex gap-1">
-         <BaseButton type="button" v-if="!isFirst" @click.stop="$emit('move', index, -1)" variant="white" size="sm">
+         <BaseButton type="button" v-if="!isFirst" @click.stop="$emit('move', index, -1)" variant="white" class="!p-2 !text-xs">
             <Icon icon="mdi:chevron-left" class="h-4 w-4" />
          </BaseButton>
-         <BaseButton type="button" v-if="!isLast" @click.stop="$emit('move', index, 1)" variant="white" size="sm">
+         <BaseButton type="button" v-if="!isLast" @click.stop="$emit('move', index, 1)" variant="white" class="!p-2 !text-xs">
             <Icon icon="mdi:chevron-right" class="h-4 w-4" />
          </BaseButton>
        </div>

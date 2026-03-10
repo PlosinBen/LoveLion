@@ -10,7 +10,7 @@
            </div>
        </div>
 
-       <BaseButton @click="router.back()" variant="ghost" size="icon" class="mt-2 !rounded-full !bg-black/40 !text-white backdrop-blur-md pointer-events-auto">
+       <BaseButton @click="router.back()" variant="ghost" class="!p-0 w-10 h-10 mt-2 !rounded-full !bg-black/40 !text-white backdrop-blur-md pointer-events-auto">
           <Icon icon="mdi:close" class="text-2xl" />
        </BaseButton>
     </header>
@@ -26,8 +26,7 @@
         <BaseButton 
              v-if="currentIndex > 0"
              variant="ghost"
-             size="icon"
-             class="absolute left-4 top-1/2 -translate-y-1/2 z-10 !rounded-full !bg-black/30 !text-white/80 backdrop-blur-sm transition-all duration-300 hover:!bg-black/50 border-0 hidden md:flex"
+             class="!p-0 w-10 h-10 absolute left-4 top-1/2 -translate-y-1/2 z-10 !rounded-full !bg-black/30 !text-white/80 backdrop-blur-sm transition-all duration-300 hover:!bg-black/50 border-0 hidden md:flex"
              :class="{ 'opacity-100': showControls, 'opacity-0': !showControls }"
              @click.stop="prev">
              <Icon icon="mdi:chevron-left" class="text-4xl" />
@@ -36,8 +35,7 @@
         <BaseButton
              v-if="currentIndex < images.length - 1"
              variant="ghost"
-             size="icon"
-             class="absolute right-4 top-1/2 -translate-y-1/2 z-10 !rounded-full !bg-black/30 !text-white/80 backdrop-blur-sm transition-all duration-300 hover:!bg-black/50 border-0 hidden md:flex"
+             class="!p-0 w-10 h-10 absolute right-4 top-1/2 -translate-y-1/2 z-10 !rounded-full !bg-black/30 !text-white/80 backdrop-blur-sm transition-all duration-300 hover:!bg-black/50 border-0 hidden md:flex"
              :class="{ 'opacity-100': showControls, 'opacity-0': !showControls }"
              @click.stop="next">
              <Icon icon="mdi:chevron-right" class="text-4xl" />
