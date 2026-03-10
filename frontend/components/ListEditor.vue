@@ -10,23 +10,22 @@
         @keydown.enter.prevent="add"
         @blur="add"
       />
-      <BaseButton 
-        type="button" 
-        @click="add" 
-        variant="ghost"
-        class="absolute right-1 top-1/2 -translate-y-1/2 !p-2"
+      <button
+        type="button"
+        @click="add"
+        class="absolute right-1 top-1/2 -translate-y-1/2 p-2 bg-transparent border-0 cursor-pointer text-neutral-500 hover:text-neutral-300 transition-all"
         :class="{ 'opacity-0 scale-75 pointer-events-none': !newItem, 'opacity-100 scale-100': newItem }"
       >
         <Icon icon="mdi:plus" class="text-xl" />
-      </BaseButton>
+      </button>
     </div>
 
     <div v-if="modelValue.length" class="flex flex-wrap gap-2">
       <div v-for="(item, index) in modelValue" :key="index" class="flex items-center gap-1 bg-neutral-700 px-3 py-1 rounded text-sm text-white">
         <span>{{ item }}</span>
-        <BaseButton type="button" @click="remove(index)" variant="ghost" class="!p-0 hover:!bg-transparent">
+        <button type="button" @click="remove(index)" class="bg-transparent border-0 cursor-pointer text-neutral-500 hover:text-neutral-300 p-0 transition-colors">
           <Icon icon="mdi:close" class="text-base" />
-        </BaseButton>
+        </button>
       </div>
     </div>
   </div>
@@ -35,7 +34,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Icon } from '@iconify/vue'
-import BaseButton from '~/components/BaseButton.vue'
 
 const props = defineProps<{
   modelValue: string[]

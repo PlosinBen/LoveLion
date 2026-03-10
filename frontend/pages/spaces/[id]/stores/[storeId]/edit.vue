@@ -34,19 +34,17 @@
         />
 
         <div class="mt-2 flex gap-3">
-          <BaseButton 
-            type="button"
-            @click="router.push(`/spaces/${spaceId}/stores/${storeId}`)"
+          <LinkButton
+            :to="`/spaces/${spaceId}/stores/${storeId}`"
             variant="secondary"
             class="flex-1"
           >
             取消
-          </BaseButton>
-          <BaseButton 
+          </LinkButton>
+          <BaseButton
             type="submit"
             variant="primary"
             class="flex-[2]"
-            :loading="updating"
           >
             儲存變更
           </BaseButton>
@@ -57,13 +55,14 @@
 </template>
 
 <script setup lang="ts">
-import BaseButton from '~/components/BaseButton.vue'
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { useLoading } from '~/composables/useLoading'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
+import LinkButton from '~/components/LinkButton.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
 import BaseCard from '~/components/BaseCard.vue'
@@ -76,11 +75,11 @@ const route = useRoute()
 const router = useRouter()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
+const { showLoading, hideLoading } = useLoading()
 const detailStore = useSpaceDetailStore()
 
 const loading = ref(true)
 const storeName = ref('')
-const updating = ref(false)
 const spaceId = route.params.id as string
 const storeId = route.params.storeId as string
 
@@ -108,14 +107,14 @@ const fetchData = async () => {
 }
 
 const handleUpdate = async () => {
-  updating.value = true
+  showLoading()
   try {
     await api.patch(`/api/spaces/${spaceId}/stores/${storeId}`, form.value)
     router.push(`/spaces/${spaceId}/stores/${storeId}`)
   } catch (e: any) {
     alert(e.message || '儲存失敗')
   } finally {
-    updating.value = false
+    hideLoading()
   }
 }
 

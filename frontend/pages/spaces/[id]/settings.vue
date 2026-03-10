@@ -60,10 +60,8 @@
 
           <BaseButton
             @click="handleUpdateSpace"
-            :loading="updating"
             variant="primary"
-            full-width
-            class="mt-2 shadow-lg"
+            class="w-full mt-2 shadow-lg"
           >
             儲存基本設定
           </BaseButton>
@@ -84,10 +82,8 @@
 
           <BaseButton
             @click="handleUpdateLists"
-            :loading="updating"
             variant="primary"
-            full-width
-            class="shadow-lg"
+            class="w-full shadow-lg"
           >
             儲存分類設定
           </BaseButton>
@@ -117,12 +113,12 @@
             </div>
 
             <div class="flex items-center gap-1">
-              <BaseButton @click="openAliasModal(member)" variant="secondary" class="!p-0 w-10 h-10">
+              <button @click="openAliasModal(member)" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 border-0 cursor-pointer transition-colors active:scale-95">
                 <Icon icon="mdi:pencil-outline" class="text-lg" />
-              </BaseButton>
-              <BaseButton v-if="member.role !== 'owner'" @click="handleRemoveMember(member)" variant="danger" class="!p-0 w-10 h-10 ml-1">
+              </button>
+              <button v-if="member.role !== 'owner'" @click="handleRemoveMember(member)" class="flex justify-center items-center w-10 h-10 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 cursor-pointer transition-colors active:scale-95 ml-1">
                 <Icon icon="mdi:account-remove-outline" class="text-lg" />
-              </BaseButton>
+              </button>
             </div>
           </div>
         </BaseCard>
@@ -135,9 +131,9 @@
             <Icon icon="mdi:link-variant" class="text-indigo-500 text-xl" />
             <h2 class="text-lg font-bold">邀請連結</h2>
           </div>
-          <BaseButton @click="showInviteModal = true" variant="ghost" class="!font-bold !text-indigo-400">
+          <button @click="showInviteModal = true" class="bg-transparent text-indigo-400 font-bold text-sm border-0 cursor-pointer hover:text-indigo-300 transition-colors active:scale-95">
             + 建立邀請
-          </BaseButton>
+          </button>
         </div>
 
         <div v-if="detailStore.invites.length === 0" class="p-12 text-center bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed">
@@ -159,12 +155,12 @@
             </div>
 
             <div class="flex items-center gap-2">
-              <BaseButton @click="copyInviteLink(invite.token)" variant="ghost" class="!p-0 w-10 h-10 !text-indigo-400 !bg-indigo-500/10">
+              <button @click="copyInviteLink(invite.token)" class="flex justify-center items-center w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 border-0 cursor-pointer hover:bg-indigo-500/20 transition-colors active:scale-95">
                 <Icon icon="mdi:content-copy" class="text-xl" />
-              </BaseButton>
-              <BaseButton @click="handleRevokeInvite(invite.id)" variant="secondary" class="!p-0 w-10 h-10">
+              </button>
+              <button @click="handleRevokeInvite(invite.id)" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 border-0 cursor-pointer transition-colors active:scale-95">
                 <Icon icon="mdi:trash-can-outline" class="text-xl" />
-              </BaseButton>
+              </button>
             </div>
           </BaseCard>
         </div>
@@ -172,7 +168,7 @@
 
       <!-- Danger Zone -->
       <section class="mt-4 pt-8 border-t border-neutral-800">
-          <BaseButton @click="handleDeleteSpace" variant="danger" full-width>
+          <BaseButton @click="handleDeleteSpace" variant="danger" class="w-full">
               刪除此空間
           </BaseButton>
       </section>
@@ -193,10 +189,8 @@
 
             <BaseButton
                 @click="handleCreateInvite"
-                :loading="updating"
                 variant="primary"
-                full-width
-                class="mt-2"
+                class="w-full mt-2"
             >
                 建立連結
             </BaseButton>
@@ -213,10 +207,8 @@
 
             <BaseButton
                 @click="handleUpdateAlias"
-                :loading="updating"
                 variant="primary"
-                full-width
-                class="mt-2"
+                class="w-full mt-2"
             >
                 更新別名
             </BaseButton>
@@ -236,7 +228,7 @@ import BaseInput from '~/components/BaseInput.vue'
 import ImageManager from '~/components/ImageManager.vue'
 import BaseModal from '~/components/BaseModal.vue'
 import ListEditor from '~/components/ListEditor.vue'
-import BaseButton from '~/components/BaseButton.vue'
+import { useLoading } from '~/composables/useLoading'
 import BaseCard from '~/components/BaseCard.vue'
 
 const route = useRoute()
@@ -245,8 +237,8 @@ const api = useApi()
 const { initAuth } = useAuth()
 const detailStore = useSpaceDetailStore()
 
+const { showLoading, hideLoading } = useLoading()
 const loading = ref(true)
-const updating = ref(false)
 const spaceId = route.params.id as string
 
 const form = ref({
@@ -318,7 +310,7 @@ const fetchData = async () => {
 }
 
 const handleUpdateSpace = async () => {
-  updating.value = true
+  showLoading()
   try {
     await api.patch(`/api/spaces/${spaceId}`, {
       name: form.value.name,
@@ -333,12 +325,12 @@ const handleUpdateSpace = async () => {
   } catch (e: any) {
     alert(e.message || '儲存失敗')
   } finally {
-    updating.value = false
+    hideLoading()
   }
 }
 
 const handleUpdateLists = async () => {
-  updating.value = true
+  showLoading()
   try {
     await api.patch(`/api/spaces/${spaceId}`, {
       currencies: form.value.currencies,
@@ -350,7 +342,7 @@ const handleUpdateLists = async () => {
   } catch (e: any) {
     alert(e.message || '儲存失敗')
   } finally {
-    updating.value = false
+    hideLoading()
   }
 }
 
@@ -362,7 +354,7 @@ const openAliasModal = (member: any) => {
 
 const handleUpdateAlias = async () => {
     if (!selectedMember.value) return
-    updating.value = true
+    showLoading()
     try {
         await api.put(`/api/spaces/${spaceId}/members/${selectedMember.value.user_id}`, {
             alias: aliasValue.value
@@ -372,12 +364,12 @@ const handleUpdateAlias = async () => {
     } catch (e: any) {
         alert(e.message || '更新失敗')
     } finally {
-        updating.value = false
+        hideLoading()
     }
 }
 
 const handleCreateInvite = async () => {
-    updating.value = true
+    showLoading()
     try {
         await api.post(`/api/spaces/${spaceId}/invites`, {
             is_one_time: inviteForm.value.is_one_time
@@ -387,7 +379,7 @@ const handleCreateInvite = async () => {
     } catch (e: any) {
         alert(e.message || '建立失敗')
     } finally {
-        updating.value = false
+        hideLoading()
     }
 }
 

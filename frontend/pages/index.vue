@@ -2,14 +2,10 @@
   <div class="space-list-page">
     <PageTitle title="我的空間" :show-back="false">
       <template #right>
-        <BaseButton
-          @click="router.push('/spaces/add-new')"
-          variant="secondary"
-          class="gap-2"
-        >
+        <LinkButton to="/spaces/add-new" variant="secondary" class="gap-2">
           <Icon icon="mdi:plus" class="text-lg" />
           <span>新增空間</span>
-        </BaseButton>
+        </LinkButton>
       </template>
     </PageTitle>
 
@@ -43,7 +39,7 @@ import { useAuth } from '~/composables/useAuth'
 import { useSpace } from '~/composables/useSpace'
 import SpaceListItem from '~/components/SpaceListItem.vue'
 import PageTitle from '~/components/PageTitle.vue'
-import BaseButton from '~/components/BaseButton.vue'
+import LinkButton from '~/components/LinkButton.vue'
 
 const router = useRouter()
 const { isAuthenticated, initAuth } = useAuth()

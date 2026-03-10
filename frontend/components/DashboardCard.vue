@@ -8,20 +8,18 @@
     <span class="text-xs font-black uppercase tracking-widest">{{ label }}</span>
   </NuxtLink>
   
-  <BaseButton 
-    v-else 
-    @click="$emit('click')" 
-    variant="secondary"
-    class="flex-col p-5 h-auto shadow-sm !border !border-neutral-800 hover:!border-red-500/50"
+  <button
+    v-else
+    @click="$emit('click')"
+    class="flex flex-col items-center gap-2 p-5 rounded-2xl border border-neutral-800 bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 hover:border-red-500/50 no-underline transition-all duration-200 cursor-pointer active:scale-95 shadow-sm"
   >
     <Icon :icon="icon" class="text-3xl" :class="[iconColor || 'text-red-500']" />
     <span class="text-xs font-black uppercase tracking-widest">{{ label }}</span>
-  </BaseButton>
+  </button>
 </template>
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import BaseButton from '~/components/BaseButton.vue'
 
 defineProps<{
   to?: string

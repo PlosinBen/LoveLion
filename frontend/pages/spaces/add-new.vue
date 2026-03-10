@@ -31,11 +31,9 @@
           建立空間後，您可以邀請成員共同記帳、上傳收據照片，或是進行商品比價與費用分攤。
         </p>
 
-        <BaseButton 
-          type="submit" 
-          :loading="submitting"
-          fullWidth
-          class="mt-4"
+        <BaseButton
+          type="submit"
+          class="w-full mt-4"
         >
           建立空間
         </BaseButton>
@@ -48,8 +46,8 @@
 import { ref, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { useLoading } from '~/composables/useLoading'
 import PageTitle from '~/components/PageTitle.vue'
-import BaseButton from '~/components/BaseButton.vue'
 import BaseCard from '~/components/BaseCard.vue'
 
 definePageMeta({
@@ -60,8 +58,8 @@ definePageMeta({
 const router = useRouter()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
+const { showLoading, hideLoading } = useLoading()
 
-const submitting = ref(false)
 const form = ref({
   name: '',
   base_currency: 'TWD',
@@ -80,7 +78,7 @@ const currencyOptions = [
 const handleSubmit = async () => {
   if (!form.value.name.trim()) return
   
-  submitting.value = true
+  showLoading()
   try {
     if (!form.value.currencies.includes(form.value.base_currency)) {
         form.value.currencies.push(form.value.base_currency)
@@ -91,7 +89,7 @@ const handleSubmit = async () => {
   } catch (e: any) {
     alert(e.message || '建立失敗')
   } finally {
-    submitting.value = false
+    hideLoading()
   }
 }
 

@@ -95,22 +95,21 @@
                   </div>
                 </div>
 
-                <BaseButton 
+                <button
                   v-if="form.items.length > 1"
-                  type="button" 
-                  @click="removeItem(index)" 
-                  variant="danger"
-                  class="!p-0 w-10 h-10 mb-1"
+                  type="button"
+                  @click="removeItem(index)"
+                  class="flex justify-center items-center w-10 h-10 rounded bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 cursor-pointer transition-colors active:scale-95 mb-1"
                 >
                   <Icon icon="mdi:close" class="text-xl" />
-                </BaseButton>
+                </button>
               </div>
             </div>
           </div>
           
-          <BaseButton type="button" @click="addItem" variant="ghost" class="border border-dashed border-neutral-700 !text-neutral-500 hover:!text-indigo-400">
+          <button type="button" @click="addItem" class="flex justify-center items-center w-full py-2.5 text-sm rounded font-bold bg-transparent text-neutral-500 hover:text-indigo-400 border border-dashed border-neutral-700 cursor-pointer transition-all active:scale-95 gap-2">
             <Icon icon="mdi:plus" class="text-xl" /> 新增項目
-          </BaseButton>
+          </button>
         </div>
 
         <!-- Foreign Currency Settlement (Conditional) -->
@@ -196,13 +195,7 @@
         </div>
 
         <!-- Submit -->
-        <BaseButton 
-          type="submit" 
-          variant="primary"
-          fullWidth
-          class="mt-4"
-          :loading="submitting"
-        >
+        <BaseButton type="submit" variant="primary" class="w-full mt-4">
           儲存交易
         </BaseButton>
       </form>
@@ -215,7 +208,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-import BaseButton from '~/components/BaseButton.vue'
+import { useLoading } from '~/composables/useLoading'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseSelect from '~/components/BaseSelect.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
@@ -238,7 +231,7 @@ const categories = ref<{label: string, value: string}[]>([])
 const availableCurrencies = ref<{label: string, value: string}[]>([])
 
 const baseCurrency = ref('TWD')
-const submitting = ref(false)
+const { showLoading, hideLoading } = useLoading()
 const imageManagerRef = ref<InstanceType<typeof ImageManager> | null>(null)
 
 const form = ref({
@@ -296,7 +289,7 @@ const handleSubmit = async () => {
     return
   }
   
-  submitting.value = true
+  showLoading()
   try {
     const payload = {
       date: form.value.date.toISOString(),
@@ -324,7 +317,7 @@ const handleSubmit = async () => {
   } catch (e: any) {
     alert(e.message || '儲存失敗')
   } finally {
-    submitting.value = false
+    hideLoading()
   }
 }
 

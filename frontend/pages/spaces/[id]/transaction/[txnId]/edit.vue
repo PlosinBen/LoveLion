@@ -99,22 +99,21 @@
                   </div>
                 </div>
 
-                <BaseButton 
+                <button
                   v-if="form.items.length > 1"
-                  type="button" 
-                  @click="removeItem(index)" 
-                  variant="danger"
-                  class="!p-0 w-10 h-10 mb-1"
+                  type="button"
+                  @click="removeItem(index)"
+                  class="flex justify-center items-center w-10 h-10 rounded bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 cursor-pointer transition-colors active:scale-95 mb-1"
                 >
                   <Icon icon="mdi:close" class="text-xl" />
-                </BaseButton>
+                </button>
               </div>
             </div>
           </div>
           
-          <BaseButton type="button" @click="addItem" variant="ghost" fullWidth class="border-2 border-dashed border-neutral-700 hover:border-indigo-500/50 gap-2">
+          <button type="button" @click="addItem" class="flex justify-center items-center w-full py-2.5 text-sm rounded font-bold bg-transparent text-neutral-500 hover:text-neutral-300 border-2 border-dashed border-neutral-700 hover:border-indigo-500/50 cursor-pointer transition-all active:scale-95 gap-2">
             <Icon icon="mdi:plus" class="text-xl" /> 新增項目
-          </BaseButton>
+          </button>
         </div>
 
         <!-- Foreign Currency Settlement (Conditional) -->
@@ -196,19 +195,15 @@
 
         <!-- Actions -->
         <div class="flex flex-col gap-3 mt-4">
-          <BaseButton 
-            type="submit" 
-            fullWidth
-            :loading="submitting"
-          >
+          <BaseButton type="submit" class="w-full">
             儲存變更
           </BaseButton>
-          
-          <BaseButton 
+
+          <BaseButton
             type="button"
             @click="handleDelete"
             variant="danger"
-            fullWidth
+            class="w-full"
           >
             刪除此筆交易
           </BaseButton>
@@ -223,7 +218,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-import BaseButton from '~/components/BaseButton.vue'
+import { useLoading } from '~/composables/useLoading'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseSelect from '~/components/BaseSelect.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
@@ -246,8 +241,8 @@ const transaction = ref<any>(null)
 const categories = ref<{label: string, value: string}[]>([])
 const availableCurrencies = ref<{label: string, value: string}[]>([])
 
+const { showLoading, hideLoading } = useLoading()
 const loading = ref(true)
-const submitting = ref(false)
 const baseCurrency = ref('TWD')
 
 const form = ref({
@@ -354,7 +349,7 @@ const fetchData = async () => {
 }
 
 const handleSubmit = async () => {
-  submitting.value = true
+  showLoading()
   try {
     const payload = {
       date: form.value.date.toISOString(),
@@ -379,7 +374,7 @@ const handleSubmit = async () => {
   } catch (e: any) {
     alert(e.message || '更新失敗')
   } finally {
-    submitting.value = false
+    hideLoading()
   }
 }
 

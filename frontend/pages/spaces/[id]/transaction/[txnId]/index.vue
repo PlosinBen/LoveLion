@@ -11,9 +11,9 @@
           <NuxtLink :to="`/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}/edit`" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-indigo-400 hover:bg-neutral-800 transition-colors active:scale-95 no-underline">
             <Icon icon="mdi:pencil-outline" class="text-xl" />
           </NuxtLink>
-          <BaseButton @click="handleDelete" variant="danger" class="!p-0 w-10 h-10">
+          <button @click="handleDelete" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-red-500 border-0 cursor-pointer hover:bg-neutral-800 transition-colors active:scale-95">
             <Icon icon="mdi:trash-can-outline" class="text-xl" />
-          </BaseButton>
+          </button>
         </div>
       </template>
     </PageTitle>

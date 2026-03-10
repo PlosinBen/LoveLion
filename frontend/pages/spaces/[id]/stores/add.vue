@@ -26,11 +26,10 @@
           建立店家後，您可以開始記錄該店家的商品價格，方便在不同店家間進行比價。
         </p>
 
-        <BaseButton 
-          type="submit" 
-          :loading="submitting"
+        <BaseButton
+          type="submit"
           variant="primary"
-          full-width
+          class="w-full"
         >
           建立店家
         </BaseButton>
@@ -43,9 +42,9 @@
 import { ref, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { useLoading } from '~/composables/useLoading'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
-import BaseButton from '~/components/BaseButton.vue'
 import BaseCard from '~/components/BaseCard.vue'
 
 definePageMeta({
@@ -56,9 +55,9 @@ const router = useRouter()
 const route = useRoute()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
+const { showLoading, hideLoading } = useLoading()
 const detailStore = useSpaceDetailStore()
 
-const submitting = ref(false)
 const form = ref({
   name: ''
 })
@@ -66,7 +65,7 @@ const form = ref({
 const handleSubmit = async () => {
   if (!form.value.name.trim()) return
   
-  submitting.value = true
+  showLoading()
   try {
     await api.post(`/api/spaces/${route.params.id}/stores`, form.value)
     detailStore.invalidate('stores')
@@ -74,7 +73,7 @@ const handleSubmit = async () => {
   } catch (e: any) {
     alert(e.message || '建立失敗')
   } finally {
-    submitting.value = false
+    hideLoading()
   }
 }
 

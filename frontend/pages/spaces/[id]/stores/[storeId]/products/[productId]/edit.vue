@@ -54,8 +54,7 @@
         <BaseButton
           type="submit"
           variant="primary"
-          fullWidth
-          :loading="submitting"
+          class="w-full"
         >
           儲存變更
         </BaseButton>
@@ -64,7 +63,7 @@
           type="button"
           @click="handleDelete"
           variant="danger"
-          fullWidth
+          class="w-full"
         >
           刪除此商品
         </BaseButton>
@@ -74,11 +73,11 @@
 </template>
 
 <script setup lang="ts">
-import BaseButton from '~/components/BaseButton.vue'
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import { useLoading } from '~/composables/useLoading'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseInput from '~/components/BaseInput.vue'
@@ -93,6 +92,7 @@ const router = useRouter()
 const route = useRoute()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
+const { showLoading, hideLoading } = useLoading()
 const detailStore = useSpaceDetailStore()
 
 const spaceId = route.params.id as string
@@ -101,7 +101,6 @@ const productId = route.params.productId as string
 
 const storeName = ref('')
 const loading = ref(true)
-const submitting = ref(false)
 const form = ref({
   name: '',
   price: 0,
@@ -131,7 +130,7 @@ const fetchProduct = async () => {
 const handleSubmit = async () => {
   if (!form.value.name.trim() || !form.value.price) return
 
-  submitting.value = true
+  showLoading()
   try {
     await api.put(`/api/spaces/${spaceId}/stores/${storeId}/products/${productId}`, form.value)
     detailStore.invalidate('stores')
@@ -139,19 +138,22 @@ const handleSubmit = async () => {
   } catch (e: any) {
     alert(e.message || '儲存失敗')
   } finally {
-    submitting.value = false
+    hideLoading()
   }
 }
 
 const handleDelete = async () => {
   if (!confirm('確定要刪除此商品嗎？')) return
 
+  showLoading()
   try {
     await api.del(`/api/spaces/${spaceId}/stores/${storeId}/products/${productId}`)
     detailStore.invalidate('stores')
     router.push(`/spaces/${spaceId}/stores/${storeId}`)
   } catch (e: any) {
     alert(e.message || '刪除失敗')
+  } finally {
+    hideLoading()
   }
 }
 

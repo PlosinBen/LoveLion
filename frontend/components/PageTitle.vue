@@ -50,7 +50,6 @@
 import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import SpaceSwitcher from './SpaceSwitcher.vue'
-import BaseButton from '~/components/BaseButton.vue'
 
 interface Breadcrumb {
   label: string

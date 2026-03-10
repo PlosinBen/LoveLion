@@ -67,12 +67,12 @@
               密碼修改成功！
             </div>
 
-            <BaseButton 
-              @click="handleUpdatePassword" 
+            <BaseButton
+              @click="handleUpdatePassword"
               class="mt-2"
-              :disabled="isUpdatingPassword || !passwordForm.current || !passwordForm.new"
+              :disabled="!passwordForm.current || !passwordForm.new"
             >
-              {{ isUpdatingPassword ? '更新中...' : '確認修改' }}
+              確認修改
             </BaseButton>
           </div>
         </BaseCard>
@@ -140,9 +140,7 @@
         />
         <div class="flex justify-end gap-3 mt-4">
           <BaseButton variant="secondary" @click="isEditProfileOpen = false">取消</BaseButton>
-          <BaseButton @click="handleUpdateProfile" :disabled="isUpdatingProfile">
-            {{ isUpdatingProfile ? '儲存中...' : '儲存修改' }}
-          </BaseButton>
+          <BaseButton @click="handleUpdateProfile">儲存修改</BaseButton>
         </div>
       </div>
     </BaseModal>
@@ -161,9 +159,7 @@
           退出後，您將無法再存取此空間的所有帳務資料。
         </p>
         <div class="flex flex-col gap-2 mt-4">
-          <BaseButton variant="danger" @click="handleLeaveSpace" :disabled="isLeavingSpace">
-            {{ isLeavingSpace ? '處理中...' : '確認退出' }}
-          </BaseButton>
+          <BaseButton variant="danger" @click="handleLeaveSpace">確認退出</BaseButton>
           <BaseButton variant="secondary" @click="isLeaveModalOpen = false">取消</BaseButton>
         </div>
       </div>
@@ -177,7 +173,7 @@ import { Icon } from '@iconify/vue'
 import { useAuth } from '~/composables/useAuth'
 import { useSpace } from '~/composables/useSpace'
 import PageTitle from '~/components/PageTitle.vue'
-import BaseButton from '~/components/BaseButton.vue'
+import { useLoading } from '~/composables/useLoading'
 import BaseCard from '~/components/BaseCard.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseModal from '~/components/BaseModal.vue'
@@ -189,10 +185,10 @@ definePageMeta({
 const router = useRouter()
 const { user, logout: authLogout, initAuth, isAuthenticated, updateProfile } = useAuth()
 const { allSpaces, fetchSpaces, leaveSpace } = useSpace()
+const { showLoading, hideLoading } = useLoading()
 
 // Profile Edit Logic
 const isEditProfileOpen = ref(false)
-const isUpdatingProfile = ref(false)
 const editForm = reactive({
   displayName: ''
 })
@@ -205,19 +201,18 @@ const openEditProfile = () => {
 const handleUpdateProfile = async () => {
   if (!editForm.displayName.trim()) return
   
-  isUpdatingProfile.value = true
+  showLoading()
   try {
     await updateProfile({ display_name: editForm.displayName })
     isEditProfileOpen.value = false
   } catch (e: any) {
     alert(e.error || '更新失敗')
   } finally {
-    isUpdatingProfile.value = false
+    hideLoading()
   }
 }
 
 // Password Edit Logic
-const isUpdatingPassword = ref(false)
 const passwordError = ref('')
 const passwordSuccess = ref(false)
 const passwordForm = reactive({
@@ -239,7 +234,7 @@ const handleUpdatePassword = async () => {
     return
   }
 
-  isUpdatingPassword.value = true
+  showLoading()
   try {
     await updateProfile({
       current_password: passwordForm.current,
@@ -249,7 +244,7 @@ const handleUpdatePassword = async () => {
     passwordForm.current = ''
     passwordForm.new = ''
     passwordForm.confirm = ''
-    
+
     // Success message auto-hide
     setTimeout(() => {
       passwordSuccess.value = false
@@ -257,13 +252,12 @@ const handleUpdatePassword = async () => {
   } catch (e: any) {
     passwordError.value = e.error || '密碼更新失敗'
   } finally {
-    isUpdatingPassword.value = false
+    hideLoading()
   }
 }
 
 // Leave Space Logic
 const isLeaveModalOpen = ref(false)
-const isLeavingSpace = ref(false)
 const spaceToLeave = ref<any>(null)
 
 const confirmLeaveSpace = (space: any) => {
@@ -274,7 +268,7 @@ const confirmLeaveSpace = (space: any) => {
 const handleLeaveSpace = async () => {
   if (!spaceToLeave.value) return
   
-  isLeavingSpace.value = true
+  showLoading()
   try {
     await leaveSpace(spaceToLeave.value.id)
     isLeaveModalOpen.value = false
@@ -282,7 +276,7 @@ const handleLeaveSpace = async () => {
   } catch (e: any) {
     alert(e.error || '無法退出空間')
   } finally {
-    isLeavingSpace.value = false
+    hideLoading()
   }
 }
 

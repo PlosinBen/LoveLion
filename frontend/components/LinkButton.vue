@@ -1,28 +1,21 @@
 <template>
-  <button
-    :type="type"
-    :disabled="disabled"
-    @click.stop="$emit('click', $event)"
+  <NuxtLink
+    :to="to"
     :class="[useButtonStyle(variant), $attrs.class]"
   >
     <slot />
-  </button>
+  </NuxtLink>
 </template>
 
 <script setup lang="ts">
 import { useButtonStyle } from '~/composables/useButtonStyle'
 
 interface Props {
-  type?: 'button' | 'submit' | 'reset'
+  to: string
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
-  disabled?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
-  type: 'button',
   variant: 'primary',
-  disabled: false,
 })
-
-defineEmits(['click'])
 </script>

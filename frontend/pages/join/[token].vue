@@ -30,12 +30,10 @@
         <div class="text-xl font-bold text-indigo-400">{{ inviteInfo.space_name }}</div>
       </div>
 
-      <BaseButton 
-        @click="handleJoin" 
-        :loading="joining"
+      <BaseButton
+        @click="handleJoin"
         variant="primary"
-        full-width
-        class="shadow-lg"
+        class="w-full shadow-lg"
       >
         接受邀請並加入
       </BaseButton>
@@ -52,7 +50,7 @@ import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
-import BaseButton from '~/components/BaseButton.vue'
+import { useLoading } from '~/composables/useLoading'
 import BaseCard from '~/components/BaseCard.vue'
 
 definePageMeta({
@@ -63,9 +61,9 @@ const route = useRoute()
 const router = useRouter()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
+const { showLoading, hideLoading } = useLoading()
 
 const loading = ref(true)
-const joining = ref(false)
 const error = ref('')
 const inviteInfo = ref<any>(null)
 
@@ -87,14 +85,14 @@ const handleJoin = async () => {
     return
   }
 
-  joining.value = true
+  showLoading()
   try {
     await api.post(`/api/invites/${route.params.token}/join`, {})
     router.push('/')
   } catch (e: any) {
     alert(e.message || '加入失敗')
   } finally {
-    joining.value = false
+    hideLoading()
   }
 }
 

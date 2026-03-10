@@ -29,11 +29,9 @@
           {{ error }}
         </div>
 
-        <BaseButton 
-          @click="handleLogin" 
-          class="mt-8"
-          fullWidth
-          :loading="loading"
+        <BaseButton
+          @click="handleLogin"
+          class="w-full mt-8"
         >
           登入
         </BaseButton>
@@ -75,11 +73,9 @@
           {{ error }}
         </div>
 
-        <BaseButton 
-          @click="handleRegister" 
-          class="mt-8"
-          fullWidth
-          :loading="loading"
+        <BaseButton
+          @click="handleRegister"
+          class="w-full mt-8"
         >
           註冊帳號
         </BaseButton>
@@ -96,7 +92,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useAuth } from '~/composables/useAuth'
-import BaseButton from '~/components/BaseButton.vue'
+import { useLoading } from '~/composables/useLoading'
 import BaseCard from '~/components/BaseCard.vue'
 
 definePageMeta({
@@ -106,12 +102,12 @@ definePageMeta({
 
 const router = useRouter()
 const { login, register } = useAuth()
+const { showLoading, hideLoading } = useLoading()
 
 const isRegister = ref(false)
 const username = ref('')
 const password = ref('')
 const displayName = ref('')
-const loading = ref(false)
 const error = ref('')
 
 const handleLogin = async () => {
@@ -120,7 +116,7 @@ const handleLogin = async () => {
     return
   }
 
-  loading.value = true
+  showLoading()
   error.value = ''
 
   try {
@@ -129,7 +125,7 @@ const handleLogin = async () => {
   } catch (e: any) {
     error.value = e.message || '登入失敗，請檢查帳號密碼'
   } finally {
-    loading.value = false
+    hideLoading()
   }
 }
 
@@ -139,7 +135,7 @@ const handleRegister = async () => {
     return
   }
 
-  loading.value = true
+  showLoading()
   error.value = ''
 
   try {
@@ -148,7 +144,7 @@ const handleRegister = async () => {
   } catch (e: any) {
     error.value = e.message || '註冊失敗'
   } finally {
-    loading.value = false
+    hideLoading()
   }
 }
 </script>

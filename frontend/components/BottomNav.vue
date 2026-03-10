@@ -15,18 +15,17 @@
       </NuxtLink>
 
       <!-- Action Mode (Button) -->
-      <BaseButton
+      <button
         v-else
         @click="$emit('update:modelValue', item.id)"
-        variant="ghost"
-        class="!flex-col !gap-1 !h-auto !py-1 !px-2"
-        :class="isActive(item) ? '!text-indigo-400' : 'text-neutral-500'"
+        class="flex flex-col items-center gap-1 py-1 px-2 bg-transparent border-0 cursor-pointer transition-transform active:scale-95"
+        :class="isActive(item) ? 'text-indigo-400' : 'text-neutral-500'"
       >
         <Icon :icon="item.icon" class="text-2xl" />
         <span class="text-xs font-bold uppercase tracking-widest scale-90">
           {{ item.label }}
         </span>
-      </BaseButton>
+      </button>
     </template>
   </nav>
 </template>
@@ -35,7 +34,6 @@
 import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useRoute } from 'vue-router'
-import BaseButton from '~/components/BaseButton.vue'
 
 interface NavItem {
   id?: string

@@ -31,14 +31,14 @@
             </div>
 
             <div class="flex items-center gap-2 shrink-0 ml-3">
-              <BaseButton 
+              <NuxtLink
                 v-if="space.user_id === user?.id"
-                @click.stop="router.push(`/spaces/${space.id}/settings`); showSwitcher = false"
-                variant="ghost"
-                class="!p-0 !w-8 !h-8"
+                :to="`/spaces/${space.id}/settings`"
+                @click.stop="showSwitcher = false"
+                class="flex justify-center items-center w-8 h-8 text-neutral-500 hover:text-neutral-300 no-underline transition-colors"
               >
                 <Icon icon="mdi:cog-outline" class="text-lg" />
-              </BaseButton>
+              </NuxtLink>
               
               <Icon v-if="space.id === currentSpace?.id" icon="mdi:check" class="text-lg shrink-0" />
             </div>
@@ -59,7 +59,6 @@ import { ref } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useSpace } from '~/composables/useSpace'
 import { useAuth } from '~/composables/useAuth'
-import BaseButton from '~/components/BaseButton.vue'
 
 const router = useRouter()
 const { user } = useAuth()

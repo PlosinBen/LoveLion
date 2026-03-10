@@ -68,9 +68,9 @@
                     <NuxtLink :to="`/spaces/${route.params.id}/stores/${route.params.storeId}/products/${product.id}/edit`" class="flex justify-center items-center !w-8 !h-8 rounded text-neutral-500 hover:text-neutral-300 no-underline transition-colors" @click.stop>
                         <Icon icon="mdi:pencil-outline" class="text-lg" />
                     </NuxtLink>
-                    <BaseButton @click.stop="deleteProduct(product.id)" variant="ghost" class="!p-0 !w-8 !h-8 hover:!text-red-500">
+                    <button @click.stop="deleteProduct(product.id)" class="flex justify-center items-center w-8 h-8 rounded bg-transparent text-neutral-500 hover:text-red-500 border-0 cursor-pointer transition-colors active:scale-95">
                         <Icon icon="mdi:trash-can-outline" class="text-lg" />
-                    </BaseButton>
+                    </button>
                 </div>
             </div>
 
@@ -109,7 +109,6 @@
 </template>
 
 <script setup lang="ts">
-import BaseButton from '~/components/BaseButton.vue'
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'

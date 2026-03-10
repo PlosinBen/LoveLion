@@ -11,22 +11,21 @@
         {{ option.label }}
       </NuxtLink>
 
-      <!-- Action Mode (BaseButton) -->
-      <BaseButton
+      <!-- Action Mode -->
+      <button
         v-else
         @click="$emit('update:modelValue', option.value)"
-        :variant="modelValue === option.value ? 'primary' : 'ghost'"
-        class="flex-1 !shadow-none !py-2 !text-xs"
+        class="flex-1 py-2 text-sm font-bold rounded-lg transition-all text-center border-0 cursor-pointer"
+        :class="modelValue === option.value ? 'bg-indigo-500 text-white shadow-sm' : 'bg-transparent text-neutral-500 hover:text-neutral-300'"
       >
         {{ option.label }}
-      </BaseButton>
+      </button>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import BaseButton from '~/components/BaseButton.vue'
 
 interface Option {
   label: string

@@ -10,9 +10,9 @@
            </div>
        </div>
 
-       <BaseButton @click="router.back()" variant="ghost" class="!p-0 w-10 h-10 mt-2 !rounded-full !bg-black/40 !text-white backdrop-blur-md pointer-events-auto">
+       <button @click="router.back()" class="flex justify-center items-center w-10 h-10 mt-2 rounded-full bg-black/40 text-white backdrop-blur-md pointer-events-auto border-0 cursor-pointer transition-colors hover:bg-black/60 active:scale-95">
           <Icon icon="mdi:close" class="text-2xl" />
-       </BaseButton>
+       </button>
     </header>
 
     <!-- Image Container (Carousel) -->
@@ -23,23 +23,21 @@
          @click="toggleControls">
         
         <!-- Navigation Buttons (Desktop) -->
-        <BaseButton 
+        <button
              v-if="currentIndex > 0"
-             variant="ghost"
-             class="!p-0 w-10 h-10 absolute left-4 top-1/2 -translate-y-1/2 z-10 !rounded-full !bg-black/30 !text-white/80 backdrop-blur-sm transition-all duration-300 hover:!bg-black/50 border-0 hidden md:flex"
+             class="flex justify-center items-center w-10 h-10 absolute left-4 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/30 text-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-black/50 border-0 cursor-pointer hidden md:flex active:scale-95"
              :class="{ 'opacity-100': showControls, 'opacity-0': !showControls }"
              @click.stop="prev">
              <Icon icon="mdi:chevron-left" class="text-4xl" />
-        </BaseButton>
-        
-        <BaseButton
+        </button>
+
+        <button
              v-if="currentIndex < images.length - 1"
-             variant="ghost"
-             class="!p-0 w-10 h-10 absolute right-4 top-1/2 -translate-y-1/2 z-10 !rounded-full !bg-black/30 !text-white/80 backdrop-blur-sm transition-all duration-300 hover:!bg-black/50 border-0 hidden md:flex"
+             class="flex justify-center items-center w-10 h-10 absolute right-4 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/30 text-white/80 backdrop-blur-sm transition-all duration-300 hover:bg-black/50 border-0 cursor-pointer hidden md:flex active:scale-95"
              :class="{ 'opacity-100': showControls, 'opacity-0': !showControls }"
              @click.stop="next">
              <Icon icon="mdi:chevron-right" class="text-4xl" />
-        </BaseButton>
+        </button>
 
         <!-- Carousel Track -->
         <div class="relative w-full h-full flex">
@@ -87,7 +85,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
-import BaseButton from '~/components/BaseButton.vue'
 import { useImages } from '~/composables/useImages'
 
 definePageMeta({
