@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# LoveLion Integration Test
+# Runs: go fmt → go test → refresh DB (includes migrate + seed + restart)
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+echo "🧪 Starting integration test..."
+echo ""
+
+# Step 1: go fmt
+echo "📝 Running go fmt..."
+docker compose exec backend gofmt -w .
+echo "✅ go fmt complete"
+echo ""
+
+# Step 2: go test
+echo "🧪 Running go test..."
+docker compose exec backend go test ./...
+echo "✅ All tests passed"
+echo ""
+
+# Step 3: Refresh database (stop → drop → create → start → migrate → seed)
+"$SCRIPT_DIR/refresh-database"
+
+echo ""
+echo "🎉 Integration test passed!"
