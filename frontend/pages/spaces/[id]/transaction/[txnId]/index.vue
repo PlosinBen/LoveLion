@@ -26,6 +26,9 @@
             <Icon :icon="getCategoryIcon(transaction.category)" class="text-xl text-indigo-500" />
             <span class="font-bold text-sm">{{ transaction.category || '未分類' }}</span>
           </div>
+          
+          <h2 v-if="transaction.title" class="text-lg font-bold text-white mb-1">{{ transaction.title }}</h2>
+          
           <div class="text-4xl font-bold mb-2 tracking-tight">
             <span class="text-neutral-500 text-lg mr-1 font-bold">{{ transaction.currency }}</span>
             {{ formatAmount(transaction.total_amount) }}

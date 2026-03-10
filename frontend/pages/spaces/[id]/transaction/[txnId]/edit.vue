@@ -3,7 +3,7 @@
     <PageTitle
       title="編輯交易"
       :back-to="`/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}`"
-      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/ledger` }, { label: '交易詳情', to: `/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}` }]"
+      :breadcrumbs="[{ label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/ledger` }, { label: transaction?.title || '交易詳情', to: `/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}` }]"
     />
 
     <div v-if="loading" class="p-20 flex justify-center items-center text-neutral-500">
@@ -242,6 +242,7 @@ const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
 const detailStore = useSpaceDetailStore()
 
+const transaction = ref<any>(null)
 const categories = ref<{label: string, value: string}[]>([])
 const availableCurrencies = ref<{label: string, value: string}[]>([])
 
@@ -305,6 +306,7 @@ const fetchData = async () => {
       api.get<any>(`/api/spaces/${route.params.id}`)
     ])
     
+    transaction.value = txn
     baseCurrency.value = space.base_currency || 'TWD'
 
     // Load dynamic options from space
