@@ -1,7 +1,7 @@
 <template>
   <button
     @click="$emit('click')"
-    class="fixed right-6 bottom-24 w-14 h-14 bg-indigo-500 shadow-lg rounded-full flex items-center justify-center text-white cursor-pointer border-0"
+    class="fixed right-6 bottom-24 w-12 h-12 bg-indigo-500 shadow-lg rounded-full flex items-center justify-center text-white cursor-pointer border-0"
   >
     <Icon :icon="icon" class="text-3xl" />
   </button>
