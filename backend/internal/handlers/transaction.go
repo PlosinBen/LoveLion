@@ -271,62 +271,71 @@ func (h *TransactionHandler) Update(c *gin.Context) {
 	}
 	txn.Note = req.Note
 
-	// If items are provided, replace them
-	if req.Items != nil {
-		// Delete existing items
-		h.db.Where("transaction_id = ?", txnID).Delete(&models.TransactionItem{})
+	if err := h.db.Transaction(func(tx *gorm.DB) error {
+		// If items are provided, replace them
+		if req.Items != nil {
+			// Delete existing items
+			if err := tx.Where("transaction_id = ?", txnID).Delete(&models.TransactionItem{}).Error; err != nil {
+				return err
+			}
 
-		// Create new items
-		totalAmount := decimal.Zero
-		var items []models.TransactionItem
+			// Create new items
+			totalAmount := decimal.Zero
+			var items []models.TransactionItem
 
-		if len(req.Items) > 0 {
-			for _, itemReq := range req.Items {
-				quantity := itemReq.Quantity
-				if quantity.IsZero() {
-					quantity = decimal.NewFromInt(1)
+			if len(req.Items) > 0 {
+				for _, itemReq := range req.Items {
+					quantity := itemReq.Quantity
+					if quantity.IsZero() {
+						quantity = decimal.NewFromInt(1)
+					}
+
+					amount := itemReq.UnitPrice.Sub(itemReq.Discount).Mul(quantity)
+
+					item := models.TransactionItem{
+						ID:            uuid.New(),
+						TransactionID: txnID,
+						Name:          itemReq.Name,
+						UnitPrice:     itemReq.UnitPrice,
+						Quantity:      quantity,
+						Discount:      itemReq.Discount,
+						Amount:        amount,
+					}
+					items = append(items, item)
+					totalAmount = totalAmount.Add(amount)
 				}
+				txn.TotalAmount = totalAmount
+			}
+			txn.Items = items
+		}
 
-				amount := itemReq.UnitPrice.Sub(itemReq.Discount).Mul(quantity)
+		// If splits are provided, replace them
+		if req.Splits != nil {
+			// Delete existing splits
+			if err := tx.Where("transaction_id = ?", txnID).Delete(&models.TransactionSplit{}).Error; err != nil {
+				return err
+			}
 
-				item := models.TransactionItem{
+			var splits []models.TransactionSplit
+			for _, splitReq := range req.Splits {
+				split := models.TransactionSplit{
 					ID:            uuid.New(),
 					TransactionID: txnID,
-					Name:          itemReq.Name,
-					UnitPrice:     itemReq.UnitPrice,
-					Quantity:      quantity,
-					Discount:      itemReq.Discount,
-					Amount:        amount,
+					MemberID:      splitReq.MemberID,
+					Name:          splitReq.Name,
+					Amount:        splitReq.Amount,
+					IsPayer:       splitReq.IsPayer,
 				}
-				items = append(items, item)
-				totalAmount = totalAmount.Add(amount)
+				splits = append(splits, split)
 			}
-			txn.TotalAmount = totalAmount
+			txn.Splits = splits
 		}
-		txn.Items = items
-	}
 
-	// If splits are provided, replace them
-	if req.Splits != nil {
-		// Delete existing splits
-		h.db.Where("transaction_id = ?", txnID).Delete(&models.TransactionSplit{})
-
-		var splits []models.TransactionSplit
-		for _, splitReq := range req.Splits {
-			split := models.TransactionSplit{
-				ID:            uuid.New(),
-				TransactionID: txnID,
-				MemberID:      splitReq.MemberID,
-				Name:          splitReq.Name,
-				Amount:        splitReq.Amount,
-				IsPayer:       splitReq.IsPayer,
-			}
-			splits = append(splits, split)
+		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Save(&txn).Error; err != nil {
+			return err
 		}
-		txn.Splits = splits
-	}
-
-	if err := h.db.Session(&gorm.Session{FullSaveAssociations: true}).Save(&txn).Error; err != nil {
+		return nil
+	}); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update transaction"})
 		return
 	}

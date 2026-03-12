@@ -48,12 +48,15 @@ type UpdateSpaceRequest struct {
 	IsPinned       *bool      `json:"is_pinned"`
 }
 
-func toJSON(v interface{}) datatypes.JSON {
+func toJSON(v interface{}) (datatypes.JSON, error) {
 	if v == nil {
-		return datatypes.JSON("[]")
+		return datatypes.JSON("[]"), nil
 	}
-	bytes, _ := json.Marshal(v)
-	return datatypes.JSON(bytes)
+	bytes, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+	return datatypes.JSON(bytes), nil
 }
 
 // List user's spaces
@@ -117,14 +120,28 @@ func (h *SpaceHandler) Create(c *gin.Context) {
 		space.Type = "personal"
 	}
 
-	space.Currencies = toJSON(req.Currencies)
-	if req.Currencies == nil {
-		space.Currencies = toJSON([]string{space.BaseCurrency})
+	currencies := req.Currencies
+	if currencies == nil {
+		currencies = []string{space.BaseCurrency}
 	}
 
-	space.MemberNames = toJSON(req.Members)
-	space.Categories = toJSON(req.Categories)
-	space.PaymentMethods = toJSON(req.PaymentMethods)
+	jsonFields := []struct {
+		target *datatypes.JSON
+		value  interface{}
+	}{
+		{&space.Currencies, currencies},
+		{&space.MemberNames, req.Members},
+		{&space.Categories, req.Categories},
+		{&space.PaymentMethods, req.PaymentMethods},
+	}
+	for _, f := range jsonFields {
+		data, err := toJSON(f.value)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to encode space data"})
+			return
+		}
+		*f.target = data
+	}
 
 	// Use a transaction to create both the space and the owner membership
 	err := h.db.Transaction(func(tx *gorm.DB) error {
@@ -181,17 +198,25 @@ func (h *SpaceHandler) Update(c *gin.Context) {
 	if req.BaseCurrency != "" {
 		space.BaseCurrency = req.BaseCurrency
 	}
-	if req.Currencies != nil {
-		space.Currencies = toJSON(req.Currencies)
+	jsonUpdates := []struct {
+		target *datatypes.JSON
+		value  interface{}
+	}{
+		{&space.Currencies, req.Currencies},
+		{&space.MemberNames, req.Members},
+		{&space.Categories, req.Categories},
+		{&space.PaymentMethods, req.PaymentMethods},
 	}
-	if req.Members != nil {
-		space.MemberNames = toJSON(req.Members)
-	}
-	if req.Categories != nil {
-		space.Categories = toJSON(req.Categories)
-	}
-	if req.PaymentMethods != nil {
-		space.PaymentMethods = toJSON(req.PaymentMethods)
+	for _, f := range jsonUpdates {
+		if f.value == nil {
+			continue
+		}
+		data, err := toJSON(f.value)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to encode space data"})
+			return
+		}
+		*f.target = data
 	}
 	if req.StartDate != nil {
 		space.StartDate = req.StartDate
