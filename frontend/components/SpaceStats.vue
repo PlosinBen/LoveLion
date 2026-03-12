@@ -62,10 +62,11 @@
 import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import BaseCard from '~/components/BaseCard.vue'
+import type { Transaction, Member } from '~/types'
 
 const props = defineProps<{
-  transactions: any[]
-  members: any[]
+  transactions: Transaction[]
+  members: Member[]
   baseCurrency: string
 }>()
 

@@ -177,6 +177,7 @@ import { useLoading } from '~/composables/useLoading'
 import BaseCard from '~/components/BaseCard.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseModal from '~/components/BaseModal.vue'
+import type { Space } from '~/types'
 
 definePageMeta({
   layout: 'default'
@@ -258,9 +259,9 @@ const handleUpdatePassword = async () => {
 
 // Leave Space Logic
 const isLeaveModalOpen = ref(false)
-const spaceToLeave = ref<any>(null)
+const spaceToLeave = ref<Space | null>(null)
 
-const confirmLeaveSpace = (space: any) => {
+const confirmLeaveSpace = (space: Space) => {
   spaceToLeave.value = space
   isLeaveModalOpen.value = true
 }

@@ -101,7 +101,7 @@
           <div v-for="member in detailStore.members" :key="member.user_id" class="p-5 border-b border-neutral-800 last:border-0 flex items-center justify-between hover:bg-neutral-800 transition-colors">
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 rounded-xl bg-neutral-800 flex items-center justify-center text-indigo-400 font-bold text-lg border border-neutral-700">
-                {{ (member.alias || member.user?.display_name || '?')[0].toUpperCase() }}
+                {{ (member.alias || member.user?.display_name || '?').charAt(0).toUpperCase() }}
               </div>
               <div class="flex flex-col">
                 <div class="flex items-center gap-2">
@@ -230,6 +230,7 @@ import BaseModal from '~/components/BaseModal.vue'
 import ListEditor from '~/components/ListEditor.vue'
 import { useLoading } from '~/composables/useLoading'
 import BaseCard from '~/components/BaseCard.vue'
+import type { Member } from '~/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -258,7 +259,7 @@ const form = ref({
 const showInviteModal = ref(false)
 const showAliasModal = ref(false)
 const inviteForm = ref({ is_one_time: false })
-const selectedMember = ref<any>(null)
+const selectedMember = ref<Member | null>(null)
 const aliasValue = ref('')
 
 const fetchData = async () => {
@@ -270,7 +271,8 @@ const fetchData = async () => {
       detailStore.fetchInvites(true)
     ])
     const s = detailStore.space
-    
+    if (!s) return
+
     const parseJSON = (v: any): string[] => {
       if (Array.isArray(v)) return v
       if (typeof v === 'string') { try { return JSON.parse(v) } catch { return [] } }
@@ -346,7 +348,7 @@ const handleUpdateLists = async () => {
   }
 }
 
-const openAliasModal = (member: any) => {
+const openAliasModal = (member: Member) => {
     selectedMember.value = member
     aliasValue.value = member.alias || ''
     showAliasModal.value = true
@@ -383,7 +385,7 @@ const handleCreateInvite = async () => {
     }
 }
 
-const handleRemoveMember = async (member: any) => {
+const handleRemoveMember = async (member: Member) => {
   if (!confirm(`確定要移除成員 ${member.alias || member.user?.display_name} 嗎？`)) return
   try {
     await api.del(`/api/spaces/${spaceId}/members/${member.user_id}`)

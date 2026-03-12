@@ -27,7 +27,7 @@
           >
             <div class="flex flex-col min-w-0 flex-1">
               <span class="font-medium truncate">{{ space.name }}</span>
-              <span class="text-xs text-neutral-500">{{ space.creator_name || '系統' }} 的空間</span>
+              <span class="text-xs text-neutral-500">{{ space.user?.display_name || '系統' }} 的空間</span>
             </div>
 
             <div class="flex items-center gap-2 shrink-0 ml-3">

@@ -1,11 +1,6 @@
 ﻿import { ref, computed } from 'vue'
 import { useApi } from './useApi'
-
-interface User {
-    id: string
-    username: string
-    display_name: string
-}
+import type { User } from '~/types'
 
 interface AuthResponse {
     token: string

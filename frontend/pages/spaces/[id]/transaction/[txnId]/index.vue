@@ -103,6 +103,7 @@ import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseCard from '~/components/BaseCard.vue'
+import type { Transaction } from '~/types'
 
 definePageMeta({
   path: '/spaces/:id/ledger/transaction/:txnId'
@@ -114,7 +115,7 @@ const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
 const detailStore = useSpaceDetailStore()
 
-const transaction = ref<any>(null)
+const transaction = ref<Transaction | null>(null)
 const loading = ref(true)
 
 const getCategoryIcon = (category: string) => {

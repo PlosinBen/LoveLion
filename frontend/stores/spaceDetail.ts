@@ -1,17 +1,20 @@
 import { defineStore } from 'pinia'
 import { useApi } from '~/composables/useApi'
+import type { Space, Member, Invite } from '~/types'
+import type { Transaction } from '~/types/transaction'
+import type { ComparisonStore, ComparisonProduct } from '~/types/comparison'
 
 export const useSpaceDetailStore = defineStore('spaceDetail', () => {
   const api = useApi()
 
   // State
   const spaceId = ref<string | null>(null)
-  const space = ref<any>(null)
-  const transactions = ref<any[]>([])
-  const stores = ref<any[]>([])
-  const products = ref<any[]>([])
-  const members = ref<any[]>([])
-  const invites = ref<any[]>([])
+  const space = ref<Space | null>(null)
+  const transactions = ref<Transaction[]>([])
+  const stores = ref<ComparisonStore[]>([])
+  const products = ref<ComparisonProduct[]>([])
+  const members = ref<Member[]>([])
+  const invites = ref<Invite[]>([])
 
   const loading = ref({
     space: false,
@@ -58,7 +61,7 @@ export const useSpaceDetailStore = defineStore('spaceDetail', () => {
     if (fetched.value.space && !force) return
     loading.value.space = true
     try {
-      space.value = await api.get<any>(`/api/spaces/${spaceId.value}`)
+      space.value = await api.get<Space>(`/api/spaces/${spaceId.value}`)
       members.value = space.value.members || []
       fetched.value.space = true
     } catch (e) {
@@ -74,7 +77,7 @@ export const useSpaceDetailStore = defineStore('spaceDetail', () => {
     if (fetched.value.transactions && !force) return
     loading.value.transactions = true
     try {
-      transactions.value = await api.get<any[]>(`/api/spaces/${spaceId.value}/transactions`) || []
+      transactions.value = await api.get<Transaction[]>(`/api/spaces/${spaceId.value}/transactions`) || []
       fetched.value.transactions = true
     } catch (e) {
       console.error('Failed to fetch transactions:', e)
@@ -89,7 +92,7 @@ export const useSpaceDetailStore = defineStore('spaceDetail', () => {
     if (fetched.value.stores && !force) return
     loading.value.stores = true
     try {
-      stores.value = await api.get<any[]>(`/api/spaces/${spaceId.value}/stores`) || []
+      stores.value = await api.get<ComparisonStore[]>(`/api/spaces/${spaceId.value}/stores`) || []
       fetched.value.stores = true
     } catch (e) {
       console.error('Failed to fetch stores:', e)
@@ -104,7 +107,7 @@ export const useSpaceDetailStore = defineStore('spaceDetail', () => {
     if (fetched.value.products && !force) return
     loading.value.products = true
     try {
-      products.value = await api.get<any[]>(`/api/spaces/${spaceId.value}/products`) || []
+      products.value = await api.get<ComparisonProduct[]>(`/api/spaces/${spaceId.value}/products`) || []
       fetched.value.products = true
     } catch (e) {
       console.error('Failed to fetch products:', e)
@@ -119,7 +122,7 @@ export const useSpaceDetailStore = defineStore('spaceDetail', () => {
     if (fetched.value.members && !force) return
     loading.value.members = true
     try {
-      members.value = await api.get<any[]>(`/api/spaces/${spaceId.value}/members`) || []
+      members.value = await api.get<Member[]>(`/api/spaces/${spaceId.value}/members`) || []
       fetched.value.members = true
     } catch (e) {
       console.error('Failed to fetch members:', e)
@@ -134,7 +137,7 @@ export const useSpaceDetailStore = defineStore('spaceDetail', () => {
     if (fetched.value.invites && !force) return
     loading.value.invites = true
     try {
-      invites.value = await api.get<any[]>(`/api/spaces/${spaceId.value}/invites`) || []
+      invites.value = await api.get<Invite[]>(`/api/spaces/${spaceId.value}/invites`) || []
       fetched.value.invites = true
     } catch (e) {
       console.error('Failed to fetch invites:', e)

@@ -1,14 +1,5 @@
 ﻿import { useApi } from './useApi'
-
-export interface Image {
-    id: string
-    entity_id: string
-    entity_type: string
-    file_path: string
-    blur_hash?: string
-    sort_order: number
-    created_at: string
-}
+import type { Image } from '~/types'
 
 export function useImages() {
     const { get, upload, put, del } = useApi()

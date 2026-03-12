@@ -9,9 +9,9 @@
       <template #subtitle>
         <div class="flex items-center gap-1.5 text-neutral-500 text-xs font-medium mt-0.5">
           <Icon icon="mdi:package-variant-closed" class="text-indigo-500" />
-          <span>{{ store?.products?.length || 0 }} 個商品</span>
-          <span v-if="store?.products?.length > 0" class="text-neutral-700">|</span>
-          <span v-if="store?.products?.length > 0" class="text-indigo-400">{{ getPriceRange(store.products) }}</span>
+          <span>{{ store?.products?.length ?? 0 }} 個商品</span>
+          <span v-if="(store?.products?.length ?? 0) > 0" class="text-neutral-700">|</span>
+          <span v-if="(store?.products?.length ?? 0) > 0" class="text-indigo-400">{{ getPriceRange(store?.products ?? []) }}</span>
         </div>
       </template>
 
@@ -119,6 +119,7 @@ import ImageManager from '~/components/ImageManager.vue'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseFab from '~/components/BaseFab.vue'
 import BaseCard from '~/components/BaseCard.vue'
+import type { ComparisonStore, ComparisonProduct } from '~/types'
 
 const router = useRouter()
 const route = useRoute()
@@ -134,7 +135,7 @@ const { isAuthenticated, initAuth } = useAuth()
 const { getImageUrl } = useImages()
 const detailStore = useSpaceDetailStore()
 
-const store = ref<any>(null)
+const store = ref<ComparisonStore | null>(null)
 const loading = ref(true)
 
 // Navigation context detection
@@ -191,7 +192,7 @@ const formatPrice = (price: number | string) => {
   return num.toLocaleString('zh-TW', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
-const getPriceRange = (products: any[]) => {
+const getPriceRange = (products: ComparisonProduct[]) => {
     if (!products || products.length === 0) return ''
     const prices = products
         .map(p => parseFloat(p?.price || '0'))

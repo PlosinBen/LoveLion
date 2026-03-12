@@ -225,6 +225,7 @@ import BaseTextarea from '~/components/BaseTextarea.vue'
 import PageTitle from '~/components/PageTitle.vue'
 import ImageManager from '~/components/ImageManager.vue'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
+import type { Transaction } from '~/types'
 
 definePageMeta({
   path: '/spaces/:id/ledger/transaction/:txnId/edit',
@@ -237,7 +238,7 @@ const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
 const detailStore = useSpaceDetailStore()
 
-const transaction = ref<any>(null)
+const transaction = ref<Transaction | null>(null)
 const categories = ref<{label: string, value: string}[]>([])
 const availableCurrencies = ref<{label: string, value: string}[]>([])
 

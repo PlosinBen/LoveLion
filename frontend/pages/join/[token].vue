@@ -52,6 +52,7 @@ import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useLoading } from '~/composables/useLoading'
 import BaseCard from '~/components/BaseCard.vue'
+import type { InviteInfo } from '~/types'
 
 definePageMeta({
   layout: 'empty'
@@ -65,11 +66,11 @@ const { showLoading, hideLoading } = useLoading()
 
 const loading = ref(true)
 const error = ref('')
-const inviteInfo = ref<any>(null)
+const inviteInfo = ref<InviteInfo | null>(null)
 
 const fetchInviteInfo = async () => {
   try {
-    const data = await api.get<any>(`/api/invites/${route.params.token}`)
+    const data = await api.get<InviteInfo>(`/api/invites/${route.params.token}`)
     inviteInfo.value = data
   } catch (e: any) {
     error.value = e.message || '邀請連結已失效或不存在'

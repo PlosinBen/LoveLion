@@ -29,7 +29,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
-import { useImages, type Image } from '~/composables/useImages'
+import { useImages } from '~/composables/useImages'
+import type { Image } from '~/types'
 import ImageGridItem from '~/components/ImageManager/ImageGridItem.vue'
 import ImageUploadArea from '~/components/ImageManager/ImageUploadArea.vue'
 

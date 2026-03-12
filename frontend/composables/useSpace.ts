@@ -1,11 +1,12 @@
 ﻿import { ref, computed } from 'vue'
 import { useApi } from './useApi'
+import type { Space } from '~/types'
 
 export const useSpace = () => {
   const api = useApi()
-  
+
   // Use useState for SSR safety and global state sharing
-  const allSpaces = useState<any[]>('all-spaces', () => [])
+  const allSpaces = useState<Space[]>('all-spaces', () => [])
   const currentSpaceId = useState<string | null>('current-space-id', () => null)
   const loading = useState<boolean>('spaces-loading', () => false)
 
@@ -25,10 +26,10 @@ export const useSpace = () => {
     loading.value = true
     try {
       // Fetch from unified spaces API
-      const spaces = await api.get<any[]>('/api/spaces')
+      const spaces = await api.get<Space[]>('/api/spaces')
       allSpaces.value = spaces
       
-      if (!currentSpaceId.value && spaces.length > 0) {
+      if (!currentSpaceId.value && spaces.length > 0 && spaces[0]) {
         currentSpaceId.value = spaces[0].id
       }
     } catch (e) {
@@ -47,10 +48,10 @@ export const useSpace = () => {
     if (!space) return
 
     try {
-      const updated = await api.patch(`/api/spaces/${id}`, {
+      const updated = await api.patch<Space>(`/api/spaces/${id}`, {
         is_pinned: !space.is_pinned
       })
-      
+
       // Update local state
       const index = allSpaces.value.findIndex(s => s.id === id)
       if (index !== -1) {
@@ -63,13 +64,13 @@ export const useSpace = () => {
 
   const leaveSpace = async (id: string) => {
     try {
-      await api.post(`/api/spaces/${id}/leave`)
+      await api.post<void>(`/api/spaces/${id}/leave`, {})
       // Update local state by removing the space
       allSpaces.value = allSpaces.value.filter(s => s.id !== id)
       
       // If current space was the one left, reset current space
       if (currentSpaceId.value === id) {
-        currentSpaceId.value = allSpaces.value.length > 0 ? allSpaces.value[0].id : null
+        currentSpaceId.value = allSpaces.value[0]?.id ?? null
       }
     } catch (e) {
       console.error('Failed to leave space:', e)
