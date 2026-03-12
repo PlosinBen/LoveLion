@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"lovelion/internal/models"
-	"lovelion/internal/utils"
+	"lovelion/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -14,11 +14,11 @@ import (
 )
 
 type TransactionHandler struct {
-	db *gorm.DB
+	svc *services.TransactionService
 }
 
 func NewTransactionHandler(db *gorm.DB) *TransactionHandler {
-	return &TransactionHandler{db: db}
+	return &TransactionHandler{svc: services.NewTransactionService(db)}
 }
 
 type TransactionItemRequest struct {
@@ -67,19 +67,46 @@ type UpdateTransactionRequest struct {
 	Splits        []TransactionSplitRequest `json:"splits"`
 }
 
+func toItemInputs(reqs []TransactionItemRequest) []services.TransactionItemInput {
+	if reqs == nil {
+		return nil
+	}
+	inputs := make([]services.TransactionItemInput, len(reqs))
+	for i, r := range reqs {
+		inputs[i] = services.TransactionItemInput{
+			Name:      r.Name,
+			UnitPrice: r.UnitPrice,
+			Quantity:  r.Quantity,
+			Discount:  r.Discount,
+		}
+	}
+	return inputs
+}
+
+func toSplitInputs(reqs []TransactionSplitRequest) []services.TransactionSplitInput {
+	if reqs == nil {
+		return nil
+	}
+	inputs := make([]services.TransactionSplitInput, len(reqs))
+	for i, r := range reqs {
+		inputs[i] = services.TransactionSplitInput{
+			MemberID: r.MemberID,
+			Name:     r.Name,
+			Amount:   r.Amount,
+			IsPayer:  r.IsPayer,
+		}
+	}
+	return inputs
+}
+
 // List transactions for a space
 func (h *TransactionHandler) List(c *gin.Context) {
 	spaceVal, _ := c.Get("space")
 	space := spaceVal.(*models.Ledger)
 
-	var transactions []models.Transaction
-	if err := h.db.Where("ledger_id = ?", space.ID).
-		Preload("Items").
-		Preload("Splits").
-		Preload("Images", "entity_type = ?", "transaction").
-		Order("date DESC").
-		Find(&transactions).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch transactions"})
+	transactions, err := h.svc.List(space.ID)
+	if err != nil {
+		respondError(c, err)
 		return
 	}
 
@@ -97,18 +124,11 @@ func (h *TransactionHandler) Create(c *gin.Context) {
 		return
 	}
 
-	// Generate short ID for transaction
-	txnID, err := utils.NewShortID(h.db, "transactions", "id")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate ID"})
-		return
-	}
-
-	txn := &models.Transaction{
-		ID:            txnID,
-		LedgerID:      space.ID,
+	txn, err := h.svc.Create(space.ID, services.CreateTransactionInput{
 		Payer:         req.Payer,
+		Date:          req.Date,
 		Currency:      req.Currency,
+		TotalAmount:   req.TotalAmount,
 		ExchangeRate:  req.ExchangeRate,
 		BillingAmount: req.BillingAmount,
 		HandlingFee:   req.HandlingFee,
@@ -116,77 +136,11 @@ func (h *TransactionHandler) Create(c *gin.Context) {
 		Title:         req.Title,
 		PaymentMethod: req.PaymentMethod,
 		Note:          req.Note,
-	}
-
-	if req.Date != nil {
-		txn.Date = *req.Date
-	} else {
-		txn.Date = time.Now()
-	}
-
-	if txn.Currency == "" {
-		txn.Currency = "TWD"
-	}
-
-	if txn.ExchangeRate.IsZero() {
-		txn.ExchangeRate = decimal.NewFromInt(1)
-	}
-
-	// Calculate items and total
-	totalAmount := decimal.Zero
-	var items []models.TransactionItem
-
-	if len(req.Items) > 0 {
-		for _, itemReq := range req.Items {
-			quantity := itemReq.Quantity
-			if quantity.IsZero() {
-				quantity = decimal.NewFromInt(1)
-			}
-
-			amount := itemReq.UnitPrice.Sub(itemReq.Discount).Mul(quantity)
-
-			item := models.TransactionItem{
-				ID:            uuid.New(),
-				TransactionID: txnID,
-				Name:          itemReq.Name,
-				UnitPrice:     itemReq.UnitPrice,
-				Quantity:      quantity,
-				Discount:      itemReq.Discount,
-				Amount:        amount,
-			}
-			items = append(items, item)
-			totalAmount = totalAmount.Add(amount)
-		}
-		txn.TotalAmount = totalAmount
-	} else {
-		txn.TotalAmount = req.TotalAmount
-	}
-
-	txn.Items = items
-
-	// Calculate splits
-	var splits []models.TransactionSplit
-	for _, splitReq := range req.Splits {
-		split := models.TransactionSplit{
-			ID:            uuid.New(),
-			TransactionID: txnID,
-			MemberID:      splitReq.MemberID,
-			Name:          splitReq.Name,
-			Amount:        splitReq.Amount,
-			IsPayer:       splitReq.IsPayer,
-		}
-		splits = append(splits, split)
-	}
-	txn.Splits = splits
-
-	// Use transaction to save both
-	if err := h.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(txn).Error; err != nil {
-			return err
-		}
-		return nil
-	}); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create transaction"})
+		Items:         toItemInputs(req.Items),
+		Splits:        toSplitInputs(req.Splits),
+	})
+	if err != nil {
+		respondError(c, err)
 		return
 	}
 
@@ -199,17 +153,9 @@ func (h *TransactionHandler) Get(c *gin.Context) {
 	space := spaceVal.(*models.Ledger)
 	txnID := c.Param("txn_id")
 
-	var txn models.Transaction
-	if err := h.db.Where("id = ? AND ledger_id = ?", txnID, space.ID).
-		Preload("Items").
-		Preload("Splits").
-		Preload("Images", "entity_type = ?", "transaction").
-		First(&txn).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch transaction"})
+	txn, err := h.svc.GetByID(txnID, space.ID)
+	if err != nil {
+		respondError(c, err)
 		return
 	}
 
@@ -222,126 +168,31 @@ func (h *TransactionHandler) Update(c *gin.Context) {
 	space := spaceVal.(*models.Ledger)
 	txnID := c.Param("txn_id")
 
-	var txn models.Transaction
-	if err := h.db.Where("id = ? AND ledger_id = ?", txnID, space.ID).First(&txn).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch transaction"})
-		return
-	}
-
 	var req UpdateTransactionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Update fields
-	if req.Payer != "" {
-		txn.Payer = req.Payer
-	}
-	if req.Date != nil {
-		txn.Date = *req.Date
-	}
-	if req.Currency != "" {
-		txn.Currency = req.Currency
-	}
-	if req.TotalAmount != nil {
-		txn.TotalAmount = *req.TotalAmount
-	}
-	if req.ExchangeRate != nil {
-		txn.ExchangeRate = *req.ExchangeRate
-	}
-	if req.BillingAmount != nil {
-		txn.BillingAmount = *req.BillingAmount
-	}
-	if req.HandlingFee != nil {
-		txn.HandlingFee = *req.HandlingFee
-	}
-	if req.Category != "" {
-		txn.Category = req.Category
-	}
-	if req.Title != "" {
-		txn.Title = req.Title
-	}
-	if req.PaymentMethod != "" {
-		txn.PaymentMethod = req.PaymentMethod
-	}
-	txn.Note = req.Note
-
-	if err := h.db.Transaction(func(tx *gorm.DB) error {
-		// If items are provided, replace them
-		if req.Items != nil {
-			// Delete existing items
-			if err := tx.Where("transaction_id = ?", txnID).Delete(&models.TransactionItem{}).Error; err != nil {
-				return err
-			}
-
-			// Create new items
-			totalAmount := decimal.Zero
-			var items []models.TransactionItem
-
-			if len(req.Items) > 0 {
-				for _, itemReq := range req.Items {
-					quantity := itemReq.Quantity
-					if quantity.IsZero() {
-						quantity = decimal.NewFromInt(1)
-					}
-
-					amount := itemReq.UnitPrice.Sub(itemReq.Discount).Mul(quantity)
-
-					item := models.TransactionItem{
-						ID:            uuid.New(),
-						TransactionID: txnID,
-						Name:          itemReq.Name,
-						UnitPrice:     itemReq.UnitPrice,
-						Quantity:      quantity,
-						Discount:      itemReq.Discount,
-						Amount:        amount,
-					}
-					items = append(items, item)
-					totalAmount = totalAmount.Add(amount)
-				}
-				txn.TotalAmount = totalAmount
-			}
-			txn.Items = items
-		}
-
-		// If splits are provided, replace them
-		if req.Splits != nil {
-			// Delete existing splits
-			if err := tx.Where("transaction_id = ?", txnID).Delete(&models.TransactionSplit{}).Error; err != nil {
-				return err
-			}
-
-			var splits []models.TransactionSplit
-			for _, splitReq := range req.Splits {
-				split := models.TransactionSplit{
-					ID:            uuid.New(),
-					TransactionID: txnID,
-					MemberID:      splitReq.MemberID,
-					Name:          splitReq.Name,
-					Amount:        splitReq.Amount,
-					IsPayer:       splitReq.IsPayer,
-				}
-				splits = append(splits, split)
-			}
-			txn.Splits = splits
-		}
-
-		if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Save(&txn).Error; err != nil {
-			return err
-		}
-		return nil
-	}); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update transaction"})
+	txn, err := h.svc.Update(txnID, space.ID, services.UpdateTransactionInput{
+		Payer:         req.Payer,
+		Date:          req.Date,
+		Currency:      req.Currency,
+		TotalAmount:   req.TotalAmount,
+		ExchangeRate:  req.ExchangeRate,
+		BillingAmount: req.BillingAmount,
+		HandlingFee:   req.HandlingFee,
+		Category:      req.Category,
+		Title:         req.Title,
+		PaymentMethod: req.PaymentMethod,
+		Note:          req.Note,
+		Items:         toItemInputs(req.Items),
+		Splits:        toSplitInputs(req.Splits),
+	})
+	if err != nil {
+		respondError(c, err)
 		return
 	}
-
-	// Reload with items and splits
-	h.db.Preload("Items").Preload("Splits").Preload("Images", "entity_type = ?", "transaction").First(&txn, "id = ?", txnID)
 
 	c.JSON(http.StatusOK, txn)
 }
@@ -352,14 +203,8 @@ func (h *TransactionHandler) Delete(c *gin.Context) {
 	space := spaceVal.(*models.Ledger)
 	txnID := c.Param("txn_id")
 
-	result := h.db.Where("id = ? AND ledger_id = ?", txnID, space.ID).Delete(&models.Transaction{})
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete transaction"})
-		return
-	}
-
-	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Transaction not found"})
+	if err := h.svc.Delete(txnID, space.ID); err != nil {
+		respondError(c, err)
 		return
 	}
 
