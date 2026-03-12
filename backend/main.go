@@ -110,7 +110,10 @@ func main() {
 		images := api.Group("/images")
 		images.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db))
 		{
-			imageHandler := handlers.NewImageHandler(db)
+			imageHandler, err := handlers.NewImageHandler(db)
+			if err != nil {
+				log.Fatalf("Failed to initialize image handler: %v", err)
+			}
 			images.POST("", imageHandler.Upload)
 			images.GET("", imageHandler.List)
 			images.PUT("/order", imageHandler.Reorder)

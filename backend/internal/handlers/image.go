@@ -30,7 +30,7 @@ type ImageHandler struct {
 	publicDomain string
 }
 
-func NewImageHandler(db *gorm.DB) *ImageHandler {
+func NewImageHandler(db *gorm.DB) (*ImageHandler, error) {
 	cfg := config.Load()
 
 	// Setup S3 Client for R2
@@ -46,7 +46,7 @@ func NewImageHandler(db *gorm.DB) *ImageHandler {
 		awsconfig.WithRegion("auto"),
 	)
 	if err != nil {
-		panic("configuration error, " + err.Error())
+		return nil, fmt.Errorf("failed to load R2 config: %w", err)
 	}
 
 	client := s3.NewFromConfig(awsCfg)
@@ -56,7 +56,7 @@ func NewImageHandler(db *gorm.DB) *ImageHandler {
 		s3Client:     client,
 		bucket:       cfg.R2Bucket,
 		publicDomain: cfg.R2PublicDomain,
-	}
+	}, nil
 }
 
 // Upload handles file upload and creates a database record
