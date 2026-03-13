@@ -7,6 +7,8 @@ import (
 	"lovelion/internal/database"
 	"lovelion/internal/handlers"
 	"lovelion/internal/middleware"
+	"lovelion/internal/repositories"
+	"lovelion/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -44,8 +46,19 @@ func main() {
 			users.PUT("/me", middleware.AuthRequiredWithDB(cfg.JWTSecret, db), authHandler.UpdateMe)
 		}
 
+		// Repositories
+		inviteRepo := repositories.NewInviteRepo(db)
+		memberRepo := repositories.NewMemberRepo(db)
+		txnRepo := repositories.NewTransactionRepo(db)
+		itemRepo := repositories.NewTransactionItemRepo(db)
+		splitRepo := repositories.NewTransactionSplitRepo(db)
+
+		// Services
+		inviteService := services.NewInviteService(db, inviteRepo, memberRepo)
+		txnService := services.NewTransactionService(db, txnRepo, itemRepo, splitRepo)
+
 		// Sharing routes (Public Info)
-		sharingHandler := handlers.NewSpaceSharingHandler(db)
+		sharingHandler := handlers.NewSpaceSharingHandler(inviteService, memberRepo)
 		api.GET("/invites/:token", sharingHandler.GetInviteInfo)
 		api.POST("/invites/:token/join", middleware.AuthRequiredWithDB(cfg.JWTSecret, db), sharingHandler.JoinSpace)
 
@@ -97,7 +110,7 @@ func main() {
 				spaceGroup.DELETE("/stores/:store_id/products/:product_id", comparisonHandler.DeleteProduct)
 
 				// Transaction routes nested under space
-				transactionHandler := handlers.NewTransactionHandler(db)
+				transactionHandler := handlers.NewTransactionHandler(txnService)
 				spaceGroup.GET("/transactions", transactionHandler.List)
 				spaceGroup.POST("/transactions", transactionHandler.Create)
 				spaceGroup.GET("/transactions/:txn_id", transactionHandler.Get)

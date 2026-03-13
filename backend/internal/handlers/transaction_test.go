@@ -5,8 +5,20 @@ import (
 	"testing"
 
 	"lovelion/internal/middleware"
+	"lovelion/internal/repositories"
+	"lovelion/internal/services"
 	"lovelion/internal/testutil"
+
+	"gorm.io/gorm"
 )
+
+func newTestTransactionHandler(db *gorm.DB) *TransactionHandler {
+	txnRepo := repositories.NewTransactionRepo(db)
+	itemRepo := repositories.NewTransactionItemRepo(db)
+	splitRepo := repositories.NewTransactionSplitRepo(db)
+	svc := services.NewTransactionService(db, txnRepo, itemRepo, splitRepo)
+	return NewTransactionHandler(svc)
+}
 
 func TestTransactionHandler_List(t *testing.T) {
 	db := testutil.TestDB(t)
@@ -28,7 +40,7 @@ func TestTransactionHandler_List(t *testing.T) {
 
 	// Test list transactions
 	router := testutil.TestRouter()
-	handler := NewTransactionHandler(db)
+	handler := newTestTransactionHandler(db)
 	router.GET("/api/spaces/:id/transactions", testutil.AuthContext(user.ID), middleware.SpaceAccess(db), handler.List)
 
 	w = httptest.NewRecorder()
@@ -57,7 +69,7 @@ func TestTransactionHandler_Create(t *testing.T) {
 
 	// Test create transaction
 	router := testutil.TestRouter()
-	handler := NewTransactionHandler(db)
+	handler := newTestTransactionHandler(db)
 	router.POST("/api/spaces/:id/transactions", testutil.AuthContext(user.ID), middleware.SpaceAccess(db), handler.Create)
 
 	tests := []struct {
@@ -106,7 +118,7 @@ func TestTransactionHandler_Get(t *testing.T) {
 
 	// Setup
 	spaceHandler := NewSpaceHandler(db)
-	txnHandler := NewTransactionHandler(db)
+	txnHandler := newTestTransactionHandler(db)
 
 	router := testutil.TestRouter()
 	router.POST("/api/spaces", testutil.AuthContext(user.ID), spaceHandler.Create)
@@ -145,7 +157,7 @@ func TestTransactionHandler_Delete(t *testing.T) {
 	user := testutil.CreateTestUser(t, db)
 
 	spaceHandler := NewSpaceHandler(db)
-	txnHandler := NewTransactionHandler(db)
+	txnHandler := newTestTransactionHandler(db)
 
 	router := testutil.TestRouter()
 	router.POST("/api/spaces", testutil.AuthContext(user.ID), spaceHandler.Create)

@@ -5,22 +5,22 @@ import (
 	"time"
 
 	"lovelion/internal/models"
+	"lovelion/internal/repositories"
 	"lovelion/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type SpaceSharingHandler struct {
-	db            *gorm.DB
 	inviteService *services.InviteService
+	memberRepo    *repositories.MemberRepo
 }
 
-func NewSpaceSharingHandler(db *gorm.DB) *SpaceSharingHandler {
+func NewSpaceSharingHandler(inviteService *services.InviteService, memberRepo *repositories.MemberRepo) *SpaceSharingHandler {
 	return &SpaceSharingHandler{
-		db:            db,
-		inviteService: services.NewInviteService(db),
+		inviteService: inviteService,
+		memberRepo:    memberRepo,
 	}
 }
 
@@ -42,7 +42,7 @@ func (h *SpaceSharingHandler) CreateInvite(c *gin.Context) {
 		return
 	}
 
-	invite, err := h.inviteService.Create(space.ID, userID, services.CreateInviteParams{
+	invite, err := h.inviteService.Create(c.Request.Context(), space.ID, userID, services.CreateInviteParams{
 		IsOneTime: req.IsOneTime,
 		MaxUses:   req.MaxUses,
 		ExpiresAt: req.ExpiresAt,
@@ -59,7 +59,7 @@ func (h *SpaceSharingHandler) CreateInvite(c *gin.Context) {
 func (h *SpaceSharingHandler) GetInviteInfo(c *gin.Context) {
 	token := c.Param("token")
 
-	info, err := h.inviteService.GetInfo(token)
+	info, err := h.inviteService.GetInfo(c.Request.Context(), token)
 	if err != nil {
 		respondError(c, err)
 		return
@@ -73,7 +73,7 @@ func (h *SpaceSharingHandler) JoinSpace(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 	token := c.Param("token")
 
-	if err := h.inviteService.Join(token, userID); err != nil {
+	if err := h.inviteService.Join(c.Request.Context(), token, userID); err != nil {
 		respondError(c, err)
 		return
 	}
@@ -86,8 +86,8 @@ func (h *SpaceSharingHandler) ListMembers(c *gin.Context) {
 	spaceVal, _ := c.Get("space")
 	space := spaceVal.(*models.Ledger)
 
-	var members []models.LedgerMember
-	if err := h.db.Where("ledger_id = ?", space.ID).Preload("User").Find(&members).Error; err != nil {
+	members, err := h.memberRepo.FindBySpace(c.Request.Context(), space.ID)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch members"})
 		return
 	}
@@ -115,16 +115,13 @@ func (h *SpaceSharingHandler) UpdateMemberAlias(c *gin.Context) {
 		return
 	}
 
-	result := h.db.Model(&models.LedgerMember{}).
-		Where("ledger_id = ? AND user_id = ?", space.ID, targetUserID).
-		Update("alias", req.Alias)
-
-	if result.Error != nil {
+	rows, err := h.memberRepo.UpdateAlias(c.Request.Context(), space.ID, targetUserID, req.Alias)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update alias"})
 		return
 	}
 
-	if result.RowsAffected == 0 {
+	if rows == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Member not found in this space"})
 		return
 	}
@@ -159,13 +156,13 @@ func (h *SpaceSharingHandler) RemoveMember(c *gin.Context) {
 		return
 	}
 
-	result := h.db.Where("ledger_id = ? AND user_id = ?", space.ID, targetUserID).Delete(&models.LedgerMember{})
-	if result.Error != nil {
+	rows, err := h.memberRepo.Delete(c.Request.Context(), space.ID, targetUserID)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove member"})
 		return
 	}
 
-	if result.RowsAffected == 0 {
+	if rows == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Member not found in this space"})
 		return
 	}
@@ -178,7 +175,7 @@ func (h *SpaceSharingHandler) ListInvites(c *gin.Context) {
 	spaceVal, _ := c.Get("space")
 	space := spaceVal.(*models.Ledger)
 
-	invites, err := h.inviteService.ListActive(space.ID)
+	invites, err := h.inviteService.ListActive(c.Request.Context(), space.ID)
 	if err != nil {
 		respondError(c, err)
 		return
@@ -197,7 +194,7 @@ func (h *SpaceSharingHandler) RevokeInvite(c *gin.Context) {
 		return
 	}
 
-	if err := h.inviteService.Revoke(inviteID, space.ID); err != nil {
+	if err := h.inviteService.Revoke(c.Request.Context(), inviteID, space.ID); err != nil {
 		respondError(c, err)
 		return
 	}

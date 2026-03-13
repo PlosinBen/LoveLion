@@ -10,15 +10,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
-	"gorm.io/gorm"
 )
 
 type TransactionHandler struct {
 	svc *services.TransactionService
 }
 
-func NewTransactionHandler(db *gorm.DB) *TransactionHandler {
-	return &TransactionHandler{svc: services.NewTransactionService(db)}
+func NewTransactionHandler(svc *services.TransactionService) *TransactionHandler {
+	return &TransactionHandler{svc: svc}
 }
 
 type TransactionItemRequest struct {
@@ -104,7 +103,7 @@ func (h *TransactionHandler) List(c *gin.Context) {
 	spaceVal, _ := c.Get("space")
 	space := spaceVal.(*models.Ledger)
 
-	transactions, err := h.svc.List(space.ID)
+	transactions, err := h.svc.List(c.Request.Context(), space.ID)
 	if err != nil {
 		respondError(c, err)
 		return
@@ -124,7 +123,7 @@ func (h *TransactionHandler) Create(c *gin.Context) {
 		return
 	}
 
-	txn, err := h.svc.Create(space.ID, services.CreateTransactionInput{
+	txn, err := h.svc.Create(c.Request.Context(), space.ID, services.CreateTransactionInput{
 		Payer:         req.Payer,
 		Date:          req.Date,
 		Currency:      req.Currency,
@@ -153,7 +152,7 @@ func (h *TransactionHandler) Get(c *gin.Context) {
 	space := spaceVal.(*models.Ledger)
 	txnID := c.Param("txn_id")
 
-	txn, err := h.svc.GetByID(txnID, space.ID)
+	txn, err := h.svc.GetByID(c.Request.Context(), txnID, space.ID)
 	if err != nil {
 		respondError(c, err)
 		return
@@ -174,7 +173,7 @@ func (h *TransactionHandler) Update(c *gin.Context) {
 		return
 	}
 
-	txn, err := h.svc.Update(txnID, space.ID, services.UpdateTransactionInput{
+	txn, err := h.svc.Update(c.Request.Context(), txnID, space.ID, services.UpdateTransactionInput{
 		Payer:         req.Payer,
 		Date:          req.Date,
 		Currency:      req.Currency,
@@ -203,7 +202,7 @@ func (h *TransactionHandler) Delete(c *gin.Context) {
 	space := spaceVal.(*models.Ledger)
 	txnID := c.Param("txn_id")
 
-	if err := h.svc.Delete(txnID, space.ID); err != nil {
+	if err := h.svc.Delete(c.Request.Context(), txnID, space.ID); err != nil {
 		respondError(c, err)
 		return
 	}

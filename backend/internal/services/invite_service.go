@@ -1,24 +1,31 @@
 package services
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"time"
 
 	"lovelion/internal/models"
+	"lovelion/internal/repositories"
 	"lovelion/internal/utils/errorx"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type InviteService struct {
-	db *gorm.DB
+	db         *gorm.DB
+	inviteRepo *repositories.InviteRepo
+	memberRepo *repositories.MemberRepo
 }
 
-func NewInviteService(db *gorm.DB) *InviteService {
-	return &InviteService{db: db}
+func NewInviteService(db *gorm.DB, inviteRepo *repositories.InviteRepo, memberRepo *repositories.MemberRepo) *InviteService {
+	return &InviteService{
+		db:         db,
+		inviteRepo: inviteRepo,
+		memberRepo: memberRepo,
+	}
 }
 
 type CreateInviteParams struct {
@@ -39,8 +46,6 @@ func generateToken() string {
 	return hex.EncodeToString(b)
 }
 
-// validateInvite checks expiration and usage limits.
-// Shared by GetInviteInfo and JoinSpace to eliminate duplication.
 func validateInvite(invite *models.LedgerInvite) error {
 	if invite.ExpiresAt != nil && invite.ExpiresAt.Before(time.Now()) {
 		return errorx.Wrap(errorx.ErrExpired, "Invite link has expired")
@@ -51,7 +56,7 @@ func validateInvite(invite *models.LedgerInvite) error {
 	return nil
 }
 
-func (s *InviteService) Create(spaceID uuid.UUID, userID uuid.UUID, params CreateInviteParams) (*models.LedgerInvite, error) {
+func (s *InviteService) Create(ctx context.Context, spaceID uuid.UUID, userID uuid.UUID, params CreateInviteParams) (*models.LedgerInvite, error) {
 	invite := &models.LedgerInvite{
 		ID:        uuid.New(),
 		LedgerID:  spaceID,
@@ -66,20 +71,20 @@ func (s *InviteService) Create(spaceID uuid.UUID, userID uuid.UUID, params Creat
 		invite.MaxUses = 1
 	}
 
-	if err := s.db.Create(invite).Error; err != nil {
+	if err := s.inviteRepo.Create(ctx, invite); err != nil {
 		return nil, errorx.Wrap(errorx.ErrInternal, "Failed to create invite")
 	}
 
 	return invite, nil
 }
 
-func (s *InviteService) GetInfo(token string) (*InviteInfo, error) {
-	var invite models.LedgerInvite
-	if err := s.db.Where("token = ?", token).Preload("Ledger").Preload("Creator").First(&invite).Error; err != nil {
+func (s *InviteService) GetInfo(ctx context.Context, token string) (*InviteInfo, error) {
+	invite, err := s.inviteRepo.FindByToken(ctx, token)
+	if err != nil {
 		return nil, errorx.Wrap(errorx.ErrNotFound, "Invite link invalid or expired")
 	}
 
-	if err := validateInvite(&invite); err != nil {
+	if err := validateInvite(invite); err != nil {
 		return nil, err
 	}
 
@@ -90,20 +95,22 @@ func (s *InviteService) GetInfo(token string) (*InviteInfo, error) {
 	}, nil
 }
 
-func (s *InviteService) Join(token string, userID uuid.UUID) error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
-		var invite models.LedgerInvite
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("token = ?", token).First(&invite).Error; err != nil {
+func (s *InviteService) Join(ctx context.Context, token string, userID uuid.UUID) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		inviteRepo := s.inviteRepo.WithTx(tx)
+		memberRepo := s.memberRepo.WithTx(tx)
+
+		invite, err := inviteRepo.FindByTokenForUpdate(ctx, token)
+		if err != nil {
 			return errorx.Wrap(errorx.ErrNotFound, "Invite link invalid")
 		}
 
-		if err := validateInvite(&invite); err != nil {
+		if err := validateInvite(invite); err != nil {
 			return err
 		}
 
 		// Check if already a member
-		var existing models.LedgerMember
-		if err := tx.Where("ledger_id = ? AND user_id = ?", invite.LedgerID, userID).First(&existing).Error; err == nil {
+		if _, err := memberRepo.FindBySpaceAndUser(ctx, invite.LedgerID, userID); err == nil {
 			return nil // Already a member, no-op
 		}
 
@@ -114,12 +121,11 @@ func (s *InviteService) Join(token string, userID uuid.UUID) error {
 			Role:     "member",
 		}
 
-		if err := tx.Create(member).Error; err != nil {
+		if err := memberRepo.Create(ctx, member); err != nil {
 			return errorx.Wrap(errorx.ErrInternal, "Failed to add member")
 		}
 
-		invite.UseCount++
-		if err := tx.Save(&invite).Error; err != nil {
+		if err := inviteRepo.IncrementUseCount(ctx, invite.ID); err != nil {
 			return errorx.Wrap(errorx.ErrInternal, "Failed to update invite usage")
 		}
 
@@ -127,26 +133,20 @@ func (s *InviteService) Join(token string, userID uuid.UUID) error {
 	})
 }
 
-func (s *InviteService) ListActive(spaceID uuid.UUID) ([]models.LedgerInvite, error) {
-	var invites []models.LedgerInvite
-	err := s.db.Where(
-		"ledger_id = ? AND (expires_at IS NULL OR expires_at > ?) AND (max_uses = 0 OR use_count < max_uses)",
-		spaceID, time.Now(),
-	).Order("created_at DESC").Find(&invites).Error
-
+func (s *InviteService) ListActive(ctx context.Context, spaceID uuid.UUID) ([]models.LedgerInvite, error) {
+	invites, err := s.inviteRepo.FindActiveBySpace(ctx, spaceID)
 	if err != nil {
 		return nil, errorx.Wrap(errorx.ErrInternal, "Failed to fetch invites")
 	}
-
 	return invites, nil
 }
 
-func (s *InviteService) Revoke(inviteID uuid.UUID, spaceID uuid.UUID) error {
-	result := s.db.Where("id = ? AND ledger_id = ?", inviteID, spaceID).Delete(&models.LedgerInvite{})
-	if result.Error != nil {
+func (s *InviteService) Revoke(ctx context.Context, inviteID uuid.UUID, spaceID uuid.UUID) error {
+	rows, err := s.inviteRepo.Delete(ctx, inviteID, spaceID)
+	if err != nil {
 		return errorx.Wrap(errorx.ErrInternal, "Failed to revoke invite")
 	}
-	if result.RowsAffected == 0 {
+	if rows == 0 {
 		return errorx.Wrap(errorx.ErrNotFound, "Invite not found")
 	}
 	return nil
