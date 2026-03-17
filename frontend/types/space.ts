@@ -18,6 +18,8 @@ export interface Space {
   is_pinned: boolean
   created_at: string
   updated_at: string
+  my_role?: 'owner' | 'member'
+  member_count?: number
   user?: User
   members?: Member[]
   invites?: Invite[]

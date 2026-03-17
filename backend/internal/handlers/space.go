@@ -68,7 +68,8 @@ func (h *SpaceHandler) List(c *gin.Context) {
 		Joins("JOIN ledger_members ON ledger_members.ledger_id = ledgers.id").
 		Where("ledger_members.user_id = ?", userID).
 		Preload("User").
-		Preload("Images", "entity_type = ?", "space")
+		Preload("Images", "entity_type = ?", "space").
+		Preload("Members")
 
 	if spaceType != "" {
 		query = query.Where("ledgers.type = ?", spaceType)
@@ -83,11 +84,34 @@ func (h *SpaceHandler) List(c *gin.Context) {
 		return
 	}
 
-	for i := range spaces {
-		spaces[i].PopulateCoverImage()
+	type spaceResponse struct {
+		models.Ledger
+		MyRole      string `json:"my_role"`
+		MemberCount int    `json:"member_count"`
 	}
 
-	c.JSON(http.StatusOK, spaces)
+	var results []spaceResponse
+	for i := range spaces {
+		spaces[i].PopulateCoverImage()
+
+		role := ""
+		memberCount := 0
+		for _, m := range spaces[i].Members {
+			memberCount++
+			if m.UserID == userID {
+				role = m.Role
+			}
+		}
+
+		spaces[i].Members = nil // don't leak full member list
+		results = append(results, spaceResponse{
+			Ledger:      spaces[i],
+			MyRole:      role,
+			MemberCount: memberCount,
+		})
+	}
+
+	c.JSON(http.StatusOK, results)
 }
 
 // Create a new space
