@@ -81,4 +81,63 @@ func TestSharing(t *testing.T) {
 			Expect().
 			Status(http.StatusForbidden)
 	})
+
+	t.Run("remove and leave", func(t *testing.T) {
+		ae := authExpect(t, devToken)
+		mingE := authExpect(t, mingToken)
+		meiE := authExpect(t, meiToken)
+
+		// create a separate group space for removal tests
+		space := ae.POST("/api/spaces").
+			WithJSON(map[string]interface{}{"name": "移除測試", "type": "group"}).
+			Expect().
+			Status(http.StatusCreated).
+			JSON().Object()
+		sid := space.Value("id").String().Raw()
+
+		// invite ming and mei
+		inv := ae.POST("/api/spaces/{id}/invites", sid).
+			WithJSON(map[string]interface{}{"max_uses": 10}).
+			Expect().
+			Status(http.StatusCreated).
+			JSON().Object()
+		tok := inv.Value("token").String().Raw()
+
+		mingE.POST("/api/invites/{token}/join", tok).Expect().Status(http.StatusOK)
+		meiE.POST("/api/invites/{token}/join", tok).Expect().Status(http.StatusOK)
+
+		// owner removes mei
+		meiID := authExpect(t, meiToken).GET("/api/users/me").Expect().
+			Status(http.StatusOK).JSON().Object().Value("id").String().Raw()
+
+		ae.DELETE("/api/spaces/{id}/members/{user_id}", sid, meiID).
+			Expect().
+			Status(http.StatusOK)
+
+		// mei can no longer access
+		meiE.GET("/api/spaces/{id}", sid).
+			Expect().
+			Status(http.StatusForbidden)
+
+		// ming leaves voluntarily
+		mingE.POST("/api/spaces/{id}/leave", sid).
+			Expect().
+			Status(http.StatusOK)
+
+		// ming can no longer access
+		mingE.GET("/api/spaces/{id}", sid).
+			Expect().
+			Status(http.StatusForbidden)
+
+		// members = 1 (only owner left)
+		ae.GET("/api/spaces/{id}/members", sid).
+			Expect().
+			Status(http.StatusOK).
+			JSON().Array().Length().IsEqual(1)
+
+		// cleanup
+		ae.DELETE("/api/spaces/{id}", sid).
+			Expect().
+			Status(http.StatusOK)
+	})
 }
