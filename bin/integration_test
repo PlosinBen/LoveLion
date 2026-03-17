@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # LoveLion Integration Test
-# Runs: go fmt → go test → stop → drop/create DB → cleanup R2 → start → migrate → seed
+# Runs: go fmt → go test → stop → drop/create DB → cleanup R2 → start → migrate → integration tests
 
 set -e
 
@@ -14,10 +14,10 @@ docker compose exec backend gofmt -w .
 echo "✅ go fmt complete"
 echo ""
 
-# Step 2: go test
-echo "🧪 Running go test..."
+# Step 2: go test (unit tests)
+echo "🧪 Running unit tests..."
 docker compose exec backend go test ./...
-echo "✅ All tests passed"
+echo "✅ All unit tests passed"
 echo ""
 
 # Step 3: Stop backend to release DB connections
@@ -45,9 +45,11 @@ sleep 3
 echo "📋 Running migrations..."
 docker compose exec backend go run cmd/migrate/main.go
 
-# Step 8: Seed
-echo "🌱 Seeding test data..."
-docker compose exec backend go run cmd/seed/main.go
+# Step 8: Integration tests (also seeds dev data)
+echo ""
+echo "🧪 Running integration tests..."
+docker compose exec backend go test -v -tags integration -count=1 ./integration/...
+echo "✅ All integration tests passed"
 
 echo ""
 echo "🎉 Integration test passed!"
