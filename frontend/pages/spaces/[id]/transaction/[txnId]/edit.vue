@@ -174,6 +174,14 @@
           </div>
         </div>
 
+        <!-- Splits (only for shared spaces) -->
+        <SplitEditor
+          v-if="splits.length > 1"
+          :splits="splits"
+          :total-amount="totalAmount"
+          @update:splits="splits = $event"
+        />
+
         <!-- Images -->
         <div class="flex flex-col gap-2">
           <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">收據 / 照片</label>
@@ -224,6 +232,8 @@ import BaseSelect from '~/components/BaseSelect.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
 import PageTitle from '~/components/PageTitle.vue'
 import ImageManager from '~/components/ImageManager.vue'
+import SplitEditor from '~/components/SplitEditor.vue'
+import type { SplitItem } from '~/components/SplitEditor.vue'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import type { Transaction } from '~/types'
 
@@ -245,6 +255,7 @@ const availableCurrencies = ref<{label: string, value: string}[]>([])
 const { showLoading, hideLoading } = useLoading()
 const loading = ref(true)
 const baseCurrency = ref('TWD')
+const splits = ref<SplitItem[]>([])
 
 const form = ref({
   date: new Date(),
@@ -297,9 +308,10 @@ const removeItem = (index: number) => {
 
 const fetchData = async () => {
   try {
-    const [txn, space] = await Promise.all([
+    const [txn, space, membersData] = await Promise.all([
       api.get<any>(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`),
-      api.get<any>(`/api/spaces/${route.params.id}`)
+      api.get<any>(`/api/spaces/${route.params.id}`),
+      api.get<any[]>(`/api/spaces/${route.params.id}/members`),
     ])
     
     transaction.value = txn
@@ -342,6 +354,20 @@ const fetchData = async () => {
       billing_amount: txn.billing_amount,
       handling_fee: txn.handling_fee || 0
     }
+
+    // Populate splits from members, merging with existing split data
+    if (membersData && membersData.length > 1) {
+      const existingSplits = txn.splits || []
+      splits.value = membersData.map((m: any) => {
+        const existing = existingSplits.find((s: any) => s.member_id === m.user_id)
+        return {
+          member_id: m.user_id,
+          name: m.alias || m.user?.display_name || m.user?.username || '',
+          amount: existing ? Number(existing.amount) : 0,
+          is_payer: existing ? existing.is_payer : false,
+        }
+      })
+    }
   } catch (e) {
     console.error('Failed to fetch transaction:', e)
   } finally {
@@ -366,7 +392,15 @@ const handleSubmit = async () => {
       exchange_rate: form.value.currency === baseCurrency.value ? 1 : form.value.exchange_rate,
       billing_amount: form.value.currency === baseCurrency.value ? totalAmount.value : form.value.billing_amount,
       handling_fee: form.value.currency === baseCurrency.value ? 0 : form.value.handling_fee,
-      total_amount: totalAmount.value
+      total_amount: totalAmount.value,
+      splits: splits.value.length > 1
+        ? splits.value.map(s => ({
+            member_id: s.member_id,
+            name: s.name,
+            amount: s.amount,
+            is_payer: s.is_payer,
+          }))
+        : undefined,
     }
 
     await api.put(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`, payload)

@@ -172,6 +172,14 @@
           </div>
         </div>
 
+        <!-- Splits (only for shared spaces) -->
+        <SplitEditor
+          v-if="splits.length > 1"
+          :splits="splits"
+          :total-amount="totalAmount"
+          @update:splits="splits = $event"
+        />
+
         <!-- Images -->
         <div class="flex flex-col gap-2">
           <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">收據 / 照片</label>
@@ -214,6 +222,8 @@ import BaseSelect from '~/components/BaseSelect.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
 import PageTitle from '~/components/PageTitle.vue'
 import ImageManager from '~/components/ImageManager.vue'
+import SplitEditor from '~/components/SplitEditor.vue'
+import type { SplitItem } from '~/components/SplitEditor.vue'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 
 definePageMeta({
@@ -233,6 +243,7 @@ const availableCurrencies = ref<{label: string, value: string}[]>([])
 const baseCurrency = ref('TWD')
 const { showLoading, hideLoading } = useLoading()
 const imageManagerRef = ref<InstanceType<typeof ImageManager> | null>(null)
+const splits = ref<SplitItem[]>([])
 
 const form = ref({
   date: new Date(),
@@ -305,7 +316,15 @@ const handleSubmit = async () => {
       exchange_rate: form.value.currency === baseCurrency.value ? 1 : form.value.exchange_rate,
       billing_amount: form.value.currency === baseCurrency.value ? totalAmount.value : form.value.billing_amount,
       handling_fee: form.value.currency === baseCurrency.value ? 0 : form.value.handling_fee,
-      total_amount: totalAmount.value
+      total_amount: totalAmount.value,
+      splits: splits.value.length > 1
+        ? splits.value.map(s => ({
+            member_id: s.member_id,
+            name: s.name,
+            amount: s.amount,
+            is_payer: s.is_payer,
+          }))
+        : undefined,
     }
 
     const created = await api.post<any>(`/api/spaces/${route.params.id}/transactions`, payload)
@@ -359,7 +378,18 @@ onMounted(async () => {
         { label: 'USD', value: 'USD' }
       ]
     }
-    
+
+    // Load members for splits
+    const membersData = await api.get<any[]>(`/api/spaces/${route.params.id}/members`)
+    if (membersData && membersData.length > 1) {
+      splits.value = membersData.map(m => ({
+        member_id: m.user_id,
+        name: m.alias || m.user?.display_name || m.user?.username || '',
+        amount: 0,
+        is_payer: false,
+      }))
+    }
+
     // Set default category
     if (categories.value && categories.value.length > 0 && !form.value.category) {
       const firstCat = categories.value[0]
