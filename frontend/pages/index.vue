@@ -1,13 +1,6 @@
 <template>
   <div class="space-list-page">
-    <PageTitle title="我的空間" :show-back="false">
-      <template #right>
-        <LinkButton to="/spaces/add-new" variant="secondary" class="gap-2">
-          <Icon icon="mdi:plus" class="text-lg" />
-          <span>新增空間</span>
-        </LinkButton>
-      </template>
-    </PageTitle>
+    <PageTitle title="我的空間" :show-back="false" />
 
     <div v-if="localLoading" class="flex justify-center items-center py-20 text-neutral-500">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
@@ -29,6 +22,13 @@
           @toggle-pin="handleTogglePin(space.id)"
         />
       </div>    </template>
+
+    <NuxtLink
+      to="/spaces/add-new"
+      class="fixed bottom-20 right-4 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-indigo-500 text-white shadow-lg active:scale-95 transition-transform no-underline"
+    >
+      <Icon icon="mdi:plus" class="text-2xl" />
+    </NuxtLink>
   </div>
 </template>
 
@@ -39,7 +39,7 @@ import { useAuth } from '~/composables/useAuth'
 import { useSpace } from '~/composables/useSpace'
 import SpaceListItem from '~/components/SpaceListItem.vue'
 import PageTitle from '~/components/PageTitle.vue'
-import LinkButton from '~/components/LinkButton.vue'
+
 
 const router = useRouter()
 const { isAuthenticated, initAuth } = useAuth()
