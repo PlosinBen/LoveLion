@@ -82,6 +82,40 @@ func TestSharing(t *testing.T) {
 			Status(http.StatusForbidden)
 	})
 
+	t.Run("ming shares space with dev", func(t *testing.T) {
+		mingE := authExpect(t, mingToken)
+		devE := authExpect(t, devToken)
+
+		// ming creates a group space
+		space := mingE.POST("/api/spaces").
+			WithJSON(map[string]interface{}{
+				"name": "小明的讀書會",
+				"type": "group",
+			}).
+			Expect().
+			Status(http.StatusCreated).
+			JSON().Object()
+		sid := space.Value("id").String().Raw()
+
+		// ming invites dev
+		inv := mingE.POST("/api/spaces/{id}/invites", sid).
+			WithJSON(map[string]interface{}{"max_uses": 10}).
+			Expect().
+			Status(http.StatusCreated).
+			JSON().Object()
+		tok := inv.Value("token").String().Raw()
+
+		devE.POST("/api/invites/{token}/join", tok).
+			Expect().
+			Status(http.StatusOK)
+
+		// dev can see this space
+		devE.GET("/api/spaces/{id}", sid).
+			Expect().
+			Status(http.StatusOK).
+			JSON().Object().Value("name").IsEqual("小明的讀書會")
+	})
+
 	t.Run("remove and leave", func(t *testing.T) {
 		ae := authExpect(t, devToken)
 		mingE := authExpect(t, mingToken)

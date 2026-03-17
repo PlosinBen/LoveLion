@@ -172,9 +172,8 @@
           </div>
         </div>
 
-        <!-- Splits (only for shared spaces) -->
+        <!-- Splits -->
         <SplitEditor
-          v-if="splits.length > 1"
           :splits="splits"
           :total-amount="totalAmount"
           @update:splits="splits = $event"
@@ -317,13 +316,10 @@ const handleSubmit = async () => {
       billing_amount: form.value.currency === baseCurrency.value ? totalAmount.value : form.value.billing_amount,
       handling_fee: form.value.currency === baseCurrency.value ? 0 : form.value.handling_fee,
       total_amount: totalAmount.value,
-      splits: splits.value.length > 1
-        ? splits.value.map(s => ({
-            member_id: s.member_id,
-            name: s.name,
-            amount: s.amount,
-            is_payer: s.is_payer,
-          }))
+      splits: splits.value.length > 0
+        ? splits.value
+            .filter(s => s.name)
+            .map(s => ({ name: s.name, amount: s.amount, is_payer: s.is_payer }))
         : undefined,
     }
 
@@ -377,17 +373,6 @@ onMounted(async () => {
         { label: 'JPY', value: 'JPY' },
         { label: 'USD', value: 'USD' }
       ]
-    }
-
-    // Load members for splits
-    const membersData = await api.get<any[]>(`/api/spaces/${route.params.id}/members`)
-    if (membersData && membersData.length > 1) {
-      splits.value = membersData.map(m => ({
-        member_id: m.user_id,
-        name: m.alias || m.user?.display_name || m.user?.username || '',
-        amount: 0,
-        is_payer: false,
-      }))
     }
 
     // Set default category

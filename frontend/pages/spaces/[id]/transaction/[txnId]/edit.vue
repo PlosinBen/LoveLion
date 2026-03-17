@@ -174,9 +174,8 @@
           </div>
         </div>
 
-        <!-- Splits (only for shared spaces) -->
+        <!-- Splits -->
         <SplitEditor
-          v-if="splits.length > 1"
           :splits="splits"
           :total-amount="totalAmount"
           @update:splits="splits = $event"
@@ -308,10 +307,9 @@ const removeItem = (index: number) => {
 
 const fetchData = async () => {
   try {
-    const [txn, space, membersData] = await Promise.all([
+    const [txn, space] = await Promise.all([
       api.get<any>(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`),
       api.get<any>(`/api/spaces/${route.params.id}`),
-      api.get<any[]>(`/api/spaces/${route.params.id}/members`),
     ])
     
     transaction.value = txn
@@ -355,18 +353,13 @@ const fetchData = async () => {
       handling_fee: txn.handling_fee || 0
     }
 
-    // Populate splits from members, merging with existing split data
-    if (membersData && membersData.length > 1) {
-      const existingSplits = txn.splits || []
-      splits.value = membersData.map((m: any) => {
-        const existing = existingSplits.find((s: any) => s.member_id === m.user_id)
-        return {
-          member_id: m.user_id,
-          name: m.alias || m.user?.display_name || m.user?.username || '',
-          amount: existing ? Number(existing.amount) : 0,
-          is_payer: existing ? existing.is_payer : false,
-        }
-      })
+    // Populate splits from existing transaction data
+    if (txn.splits && txn.splits.length > 0) {
+      splits.value = txn.splits.map((s: any) => ({
+        name: s.name,
+        amount: Number(s.amount),
+        is_payer: s.is_payer,
+      }))
     }
   } catch (e) {
     console.error('Failed to fetch transaction:', e)
@@ -393,13 +386,10 @@ const handleSubmit = async () => {
       billing_amount: form.value.currency === baseCurrency.value ? totalAmount.value : form.value.billing_amount,
       handling_fee: form.value.currency === baseCurrency.value ? 0 : form.value.handling_fee,
       total_amount: totalAmount.value,
-      splits: splits.value.length > 1
-        ? splits.value.map(s => ({
-            member_id: s.member_id,
-            name: s.name,
-            amount: s.amount,
-            is_payer: s.is_payer,
-          }))
+      splits: splits.value.length > 0
+        ? splits.value
+            .filter(s => s.name)
+            .map(s => ({ name: s.name, amount: s.amount, is_payer: s.is_payer }))
         : undefined,
     }
 

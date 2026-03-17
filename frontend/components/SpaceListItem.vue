@@ -16,7 +16,7 @@
       <div class="flex flex-col">
         <div class="flex items-center gap-1.5">
           <h3 class="font-bold text-white transition-none">{{ space.name }}</h3>
-          <Icon v-if="sharingIcon" :icon="sharingIcon" class="text-sm text-neutral-500" />
+          <Icon v-if="sharingIcon" :icon="sharingIcon" class="text-lg text-neutral-500" />
         </div>
         <span class="text-xs text-neutral-500 uppercase font-medium mt-0.5">
             {{ space.base_currency }}
