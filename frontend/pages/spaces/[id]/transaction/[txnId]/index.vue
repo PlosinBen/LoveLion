@@ -70,13 +70,13 @@
 
         <div class="mb-6">
           <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3 px-1">項目明細</h2>
-          <div class="flex flex-col gap-2">
-            <div v-for="item in transaction.items" :key="item.id" class="flex justify-between items-center p-4 bg-neutral-900 rounded-xl border border-neutral-800/60">
-              <div class="flex flex-col gap-0.5">
-                <span class="font-bold text-neutral-100">{{ item.name }}</span>
-                <span class="text-xs text-neutral-500 font-medium">單價 {{ transaction.currency }} {{ formatAmount(item.unit_price) }} × {{ item.quantity }}</span>
+          <div class="bg-neutral-900 rounded-xl border border-neutral-800/60 divide-y divide-neutral-800">
+            <div v-for="item in transaction.items" :key="item.id" class="flex justify-between items-center px-5 py-4">
+              <span class="font-bold text-neutral-100 text-sm">{{ item.name }}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-neutral-500 font-medium">{{ formatAmount(item.unit_price) }}<template v-if="Number(item.discount) > 0"> - {{ formatAmount(item.discount) }}</template> × {{ item.quantity }}</span>
+                <span class="font-bold text-white text-sm">{{ formatAmount(item.amount) }}</span>
               </div>
-              <div class="font-bold text-white">{{ transaction.currency }} {{ formatAmount(item.amount) }}</div>
             </div>
           </div>
         </div>
@@ -85,7 +85,7 @@
         <div v-if="transaction.splits && transaction.splits.length > 0" class="mb-6">
           <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3 px-1">分帳</h2>
           <div class="bg-neutral-900 rounded-xl border border-neutral-800/60 divide-y divide-neutral-800">
-            <div v-for="split in transaction.splits" :key="split.id" class="flex justify-between items-center px-5 py-3">
+            <div v-for="split in transaction.splits" :key="split.id" class="flex justify-between items-center px-5 py-4">
               <div class="flex items-center gap-2">
                 <span class="font-bold text-neutral-100 text-sm">{{ split.name }}</span>
                 <span v-if="split.is_payer" class="text-xs text-indigo-400 font-bold">付款人</span>
