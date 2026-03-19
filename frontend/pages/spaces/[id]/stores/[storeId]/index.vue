@@ -2,7 +2,6 @@
   <div class="store-detail-page">
     <PageTitle
       :title="store?.name || '載入中...'"
-      :show-back="true"
       :back-to="backTo"
       :breadcrumbs="breadcrumbs"
     >

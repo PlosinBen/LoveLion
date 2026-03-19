@@ -2,7 +2,6 @@
   <div class="settings-page">
     <PageTitle
       title="個人設定"
-      :show-back="true"
       :breadcrumbs="[{ label: '空間列表', to: '/' }]"
     />
 

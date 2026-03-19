@@ -2,7 +2,6 @@
   <div class="product-view-page">
     <PageTitle
       :title="productName"
-      :show-back="true"
       :back-to="`/spaces/${route.params.id}/products`"
       :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/stats` }, { label: '商品', to: `/spaces/${route.params.id}/products` }]"
     />

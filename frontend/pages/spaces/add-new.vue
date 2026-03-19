@@ -2,7 +2,6 @@
   <div class="add-space-page">
     <PageTitle
       title="建立新空間"
-      :show-back="true"
       :breadcrumbs="[{ label: '空間列表', to: '/' }]"
     />
 

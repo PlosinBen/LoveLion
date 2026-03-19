@@ -2,7 +2,6 @@
   <div class="store-edit-page">
     <PageTitle
       title="編輯商店"
-      :show-back="true"
       :back-to="`/spaces/${spaceId}/stores/${storeId}`"
       :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/stats` }, { label: '商店', to: `/spaces/${route.params.id}/stores` }, { label: storeName || '店家', to: `/spaces/${spaceId}/stores/${storeId}` }]"
       />

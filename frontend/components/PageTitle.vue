@@ -56,14 +56,16 @@ interface Breadcrumb {
   to?: string
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   title: string
   showBack?: boolean
   showSwitcher?: boolean
   backTo?: string
   settingsTo?: string
   breadcrumbs?: Breadcrumb[]
-}>()
+}>(), {
+  showBack: true
+})
 
 // Sync browser tab title
 const documentTitle = computed(() => {
