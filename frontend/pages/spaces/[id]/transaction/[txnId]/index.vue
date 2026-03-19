@@ -81,6 +81,21 @@
           </div>
         </div>
 
+        <!-- Splits -->
+        <div v-if="transaction.splits && transaction.splits.length > 0" class="mb-6">
+          <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3 px-1">分帳</h2>
+          <div class="flex flex-col gap-2">
+            <div v-for="split in transaction.splits" :key="split.id" class="flex justify-between items-center p-4 bg-neutral-900 rounded-xl border border-neutral-800/60">
+              <div class="flex items-center gap-2">
+                <Icon v-if="split.is_payer" icon="mdi:cash" class="text-indigo-400 text-lg" />
+                <span class="font-bold text-neutral-100">{{ split.name }}</span>
+                <span v-if="split.is_payer" class="text-xs text-indigo-400 font-bold">付款人</span>
+              </div>
+              <div class="font-bold text-white">{{ formatAmount(split.amount) }}</div>
+            </div>
+          </div>
+        </div>
+
         <div v-if="transaction.note" class="mb-6">
           <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3 px-1">備註</h2>
           <div class="p-4 bg-neutral-900 rounded-xl border border-neutral-800/60 text-neutral-400 text-sm leading-relaxed">{{ transaction.note }}</div>

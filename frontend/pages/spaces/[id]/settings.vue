@@ -79,6 +79,7 @@
           <ListEditor v-model="form.categories" label="交易分類" placeholder="新增分類..." />
           <ListEditor v-model="form.currencies" label="支援幣別" placeholder="例如: JPY, USD..." />
           <ListEditor v-model="form.payment_methods" label="付款方式" placeholder="例如: 現金, 信用卡..." />
+          <ListEditor v-model="form.split_members" label="拆帳人員" placeholder="新增人員..." />
 
           <BaseButton
             @click="handleUpdateLists"
@@ -252,7 +253,8 @@ const form = ref({
   is_pinned: false,
   currencies: [] as string[],
   categories: [] as string[],
-  payment_methods: [] as string[]
+  payment_methods: [] as string[],
+  split_members: [] as string[]
 })
 
 // Modal States
@@ -301,7 +303,8 @@ const fetchData = async () => {
       is_pinned: s.is_pinned || false,
       currencies: parseJSON(s.currencies),
       categories: parseJSON(s.categories),
-      payment_methods: parseJSON(s.payment_methods)
+      payment_methods: parseJSON(s.payment_methods),
+      split_members: parseJSON(s.split_members)
     }
   } catch (e) {
     console.error('Failed to fetch data:', e)
@@ -337,7 +340,8 @@ const handleUpdateLists = async () => {
     await api.patch(`/api/spaces/${spaceId}`, {
       currencies: form.value.currencies,
       categories: form.value.categories,
-      payment_methods: form.value.payment_methods
+      payment_methods: form.value.payment_methods,
+      split_members: form.value.split_members
     })
     await detailStore.fetchSpace(true)
     alert('分類設定已儲存')
