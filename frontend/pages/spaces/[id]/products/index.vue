@@ -30,12 +30,12 @@
         @click="router.push(`/spaces/${route.params.id}/products/${encodeURIComponent(p.name)}`)"
         class="flex items-center justify-between cursor-pointer hover:bg-neutral-800 transition-colors"
       >
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-neutral-800 flex items-center justify-center text-indigo-400 border border-neutral-700">
-              <Icon icon="mdi:tag-outline" class="text-2xl" />
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center text-indigo-400 border border-neutral-700">
+              <Icon icon="mdi:tag-outline" class="text-xl" />
             </div>
             <div class="flex flex-col">
-              <span class="font-bold text-white">{{ p.name }}</span>
+              <span class="font-bold text-white text-sm">{{ p.name }}</span>
               <div class="flex items-center gap-2 mt-0.5">
                 <span class="text-xs text-neutral-500 font-medium">{{ p.count }} 個店面</span>
                 <span class="text-xs text-indigo-400 font-bold">{{ p.priceRange }}</span>

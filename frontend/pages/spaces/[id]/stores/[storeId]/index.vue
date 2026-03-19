@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-6 pb-24">
+  <div class="store-detail-page">
     <PageTitle
       :title="store?.name || '載入中...'"
       :show-back="true"
@@ -31,7 +31,7 @@
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
     </div>
 
-    <div v-else class="px-2">
+    <div v-else>
       <!-- Empty State -->
       <div v-if="!store?.products || store?.products?.length === 0" class="flex flex-col items-center justify-center py-20 bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed text-neutral-500">
         <Icon icon="mdi:package-variant" class="text-5xl mb-4 opacity-20" />
@@ -44,17 +44,17 @@
         <BaseCard v-for="product in store?.products" :key="product.id"
              padding="" class="transition-all duration-300">
             
-            <div class="p-5 flex items-center gap-4 cursor-pointer" @click="toggleProductExpand(product.id)">
+            <div class="p-4 flex items-center gap-3 cursor-pointer" @click="toggleProductExpand(product.id)">
                 <!-- Thumbnail/Icon -->
-                <div class="w-12 h-12 rounded-xl bg-neutral-800 flex-none flex items-center justify-center text-neutral-500 border border-neutral-700">
-                   <Icon icon="mdi:tag-outline" class="text-2xl" />
+                <div class="w-10 h-10 rounded-xl bg-neutral-800 flex-none flex items-center justify-center text-neutral-500 border border-neutral-700">
+                   <Icon icon="mdi:tag-outline" class="text-xl" />
                 </div>
 
                 <!-- Content -->
                 <div class="flex-1 min-w-0">
-                   <h3 class="font-bold truncate text-neutral-100">{{ product.name }}</h3>
-                   <div class="flex items-center gap-2 mt-0.5">
-                       <span class="text-indigo-400 font-bold text-lg">
+                   <h3 class="font-bold truncate text-neutral-100 text-sm">{{ product.name }}</h3>
+                   <div class="flex items-center gap-1.5 mt-0.5">
+                       <span class="text-indigo-400 font-bold text-sm">
                            {{ product.currency }} {{ formatPrice(product.price) }}
                        </span>
                        <span v-if="product.unit" class="text-xs text-neutral-500 font-bold uppercase tracking-wider">

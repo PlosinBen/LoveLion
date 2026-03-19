@@ -30,7 +30,7 @@
         >
           <!-- Ranking Ribbon for the cheapest -->
           <div v-if="index === 0" class="absolute top-0 right-0">
-             <div class="bg-emerald-500 text-white text-[10px] font-black px-3 py-1 uppercase tracking-tighter rounded-bl-xl shadow-sm">
+             <div class="bg-indigo-500 text-white text-xs font-black px-3 py-1 uppercase tracking-tighter rounded-bl-xl shadow-sm">
                最便宜
              </div>
           </div>
@@ -41,13 +41,13 @@
                 <Icon icon="mdi:store-outline" class="text-xl" />
               </div>
               <div class="flex flex-col">
-                <span class="font-bold text-white">{{ p.store?.name || '未知商店' }}</span>
+                <span class="font-bold text-white text-sm">{{ p.store?.name || '未知商店' }}</span>
                 <span v-if="p.unit" class="text-xs text-neutral-500 font-medium">單位：{{ p.unit }}</span>
               </div>
             </div>
-            
+
             <div class="text-right">
-              <div class="text-xl font-black text-indigo-400">
+              <div class="text-sm font-bold text-indigo-400">
                 <span class="text-xs font-bold mr-0.5">{{ p.currency }}</span>
                 {{ formatPrice(p.price) }}
               </div>

@@ -32,12 +32,12 @@
         @click="router.push(`/spaces/${route.params.id}/stores/${s.id}`)"
         class="flex items-center justify-between cursor-pointer hover:bg-neutral-800 transition-colors"
       >
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-neutral-800 flex items-center justify-center text-indigo-400 border border-neutral-700">
-              <Icon icon="mdi:store-outline" class="text-2xl" />
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center text-indigo-400 border border-neutral-700">
+              <Icon icon="mdi:store-outline" class="text-xl" />
             </div>
             <div class="flex flex-col">
-              <span class="font-bold text-white">{{ s.name }}</span>
+              <span class="font-bold text-white text-sm">{{ s.name }}</span>
               <span class="text-xs text-neutral-500 font-medium mt-0.5">{{ s.products?.length || 0 }} 個商品</span>
             </div>
         </div>
