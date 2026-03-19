@@ -298,6 +298,14 @@ const handleSubmit = async () => {
     alert('請至少填寫一個項目名稱與金額')
     return
   }
+
+  if (splits.value.length > 0) {
+    const splitTotal = splits.value.reduce((s, item) => s + Number(item.amount || 0), 0)
+    if (Math.round((totalAmount.value - splitTotal) * 100) !== 0) {
+      alert('分帳總額與交易總額不一致')
+      return
+    }
+  }
   
   showLoading()
   try {

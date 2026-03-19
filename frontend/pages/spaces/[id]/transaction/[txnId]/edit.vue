@@ -369,6 +369,14 @@ const fetchData = async () => {
 }
 
 const handleSubmit = async () => {
+  if (splits.value.length > 0) {
+    const splitTotal = splits.value.reduce((s, item) => s + Number(item.amount || 0), 0)
+    if (Math.round((totalAmount.value - splitTotal) * 100) !== 0) {
+      alert('分帳總額與交易總額不一致')
+      return
+    }
+  }
+
   showLoading()
   try {
     const payload = {
