@@ -23,7 +23,6 @@
     <SpaceStats
       v-else
       :transactions="store.transactions"
-      :members="store.members"
       :base-currency="store.space?.base_currency || 'TWD'"
     />
 

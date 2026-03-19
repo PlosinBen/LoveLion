@@ -9,26 +9,26 @@
         </div>
     </BaseCard>
 
-    <!-- Members / Split Summary -->
-    <section class="flex flex-col gap-4">
-        <h2 class="text-sm font-bold text-neutral-400 uppercase tracking-wider px-1">成員分攤摘要</h2>
-        <div class="flex flex-col gap-3">
-            <BaseCard v-for="member in stats" :key="member.user_id" class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center border border-neutral-700">
-                        <Icon icon="mdi:account-outline" class="text-xl text-neutral-400" />
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="font-bold text-neutral-100 text-sm">{{ member.name || '未知使用者' }}</span>
-                        <span class="text-xs text-neutral-500 font-medium mt-0.5">{{ member.percentage }}% 權重</span>
-                    </div>
-                </div>
+    <!-- Settlement Summary (應收應付) -->
+    <section v-if="settlement.items.length > 0" class="flex flex-col gap-4">
+        <h2 class="text-sm font-bold text-neutral-400 uppercase tracking-wider px-1">應收應付</h2>
+        <BaseCard padding="p-0" class="divide-y divide-neutral-800">
+            <div v-for="person in settlement.items" :key="person.name" class="flex justify-between items-center px-5 py-4">
+                <span class="font-bold text-neutral-100 text-sm">{{ person.name }}</span>
                 <div class="text-right">
-                    <div class="font-bold text-white">{{ member.spent.toLocaleString() }}</div>
-                    <div class="text-xs text-neutral-500 uppercase">{{ baseCurrency }}</div>
+                    <div class="font-bold text-sm" :class="person.baseAmount >= 0 ? 'text-indigo-400' : 'text-red-500'">
+                        {{ person.baseAmount >= 0 ? '+' : '-' }}{{ baseCurrency }} {{ Math.abs(person.baseAmount).toLocaleString() }}
+                    </div>
+                    <div v-for="(amount, currency) in person.foreignAmounts" :key="currency" class="text-xs text-neutral-500 font-medium">
+                        {{ amount >= 0 ? '+' : '-' }}{{ currency }} {{ Math.abs(amount).toLocaleString() }}
+                    </div>
                 </div>
-            </BaseCard>
-        </div>
+            </div>
+            <div v-if="settlement.unsettledCount > 0" class="px-5 py-3 flex items-center gap-1 text-xs text-neutral-500 font-medium">
+                <Icon icon="mdi:information-outline" class="text-sm" />
+                有 {{ settlement.unsettledCount }} 筆外幣拆帳交易尚未結算
+            </div>
+        </BaseCard>
     </section>
 
     <!-- Spending Categories -->
@@ -62,11 +62,10 @@
 import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import BaseCard from '~/components/BaseCard.vue'
-import type { Transaction, Member } from '~/types'
+import type { Transaction } from '~/types'
 
 const props = defineProps<{
   transactions: Transaction[]
-  members: Member[]
   baseCurrency: string
 }>()
 
@@ -74,16 +73,70 @@ const totalAmount = computed(() => {
     return props.transactions.reduce((sum, t) => sum + (Number(t.billing_amount) || Number(t.total_amount) || 0), 0)
 })
 
-const stats = computed(() => {
-    return (props.members || []).map(m => {
-        const name = m.alias || m.user?.display_name || m.user?.username || '未知使用者'
-        return {
-            user_id: m.user_id,
-            name: name,
-            spent: totalAmount.value * ((m.weight || 0) / 100),
-            percentage: m.weight || 0
+const settlement = computed(() => {
+    const baseNet: Record<string, number> = {}
+    const foreignNet: Record<string, Record<string, number>> = {}
+    let unsettledCount = 0
+
+    for (const t of props.transactions) {
+        if (!t.splits || t.splits.length === 0) continue
+
+        const totalAmount = Number(t.total_amount) || 0
+        const billingAmount = Number(t.billing_amount) || 0
+        const handlingFee = Number(t.handling_fee) || 0
+        const isBaseCurrency = t.currency === props.baseCurrency
+        const isSettled = isBaseCurrency || billingAmount > 0
+
+        if (!isSettled) {
+            unsettledCount++
+            // Track in original currency
+            for (const split of t.splits) {
+                if (!foreignNet[split.name]) foreignNet[split.name] = {}
+                if (!foreignNet[split.name][t.currency]) foreignNet[split.name][t.currency] = 0
+
+                if (split.is_payer) {
+                    foreignNet[split.name][t.currency] += totalAmount - Number(split.amount)
+                } else {
+                    foreignNet[split.name][t.currency] -= Number(split.amount)
+                }
+            }
+            continue
         }
-    })
+
+        // Settled: calculate in base currency
+        // Non-payer shares use ceiling (應付無條件進位)
+        const payer = t.splits.find(s => s.is_payer)
+        if (!payer) continue
+
+        let nonPayerTotal = 0
+
+        for (const split of t.splits) {
+            if (!split.is_payer) {
+                const share = isBaseCurrency
+                    ? Number(split.amount)
+                    : Math.ceil(Number(split.amount) / totalAmount * billingAmount)
+                if (!(split.name in baseNet)) baseNet[split.name] = 0
+                baseNet[split.name] -= share
+                nonPayerTotal += share
+            }
+        }
+
+        // Payer's receivable = sum of all non-payer shares
+        if (!(payer.name in baseNet)) baseNet[payer.name] = 0
+        baseNet[payer.name] += nonPayerTotal
+    }
+
+    // Build sorted result
+    const allNames = new Set([...Object.keys(baseNet), ...Object.keys(foreignNet)])
+    const items = Array.from(allNames).map(name => ({
+        name,
+        baseAmount: baseNet[name] || 0,
+        foreignAmounts: Object.fromEntries(
+            Object.entries(foreignNet[name] || {}).filter(([, v]) => v !== 0)
+        )
+    })).sort((a, b) => b.baseAmount - a.baseAmount)
+
+    return { items, unsettledCount }
 })
 
 const categoryStats = computed(() => {
