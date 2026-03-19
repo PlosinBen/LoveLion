@@ -50,8 +50,8 @@ type UpdateProductRequest struct {
 
 // Helper to verify space access
 func (h *ComparisonHandler) verifySpaceAccess(spaceID uuid.UUID, userID uuid.UUID) error {
-	var member models.LedgerMember
-	if err := h.db.Where("ledger_id = ? AND user_id = ?", spaceID, userID).First(&member).Error; err != nil {
+	var member models.SpaceMember
+	if err := h.db.Where("space_id = ? AND user_id = ?", spaceID, userID).First(&member).Error; err != nil {
 		return err
 	}
 	return nil
@@ -72,7 +72,7 @@ func (h *ComparisonHandler) ListStores(c *gin.Context) {
 	}
 
 	var stores []models.ComparisonStore
-	if err := h.db.Where("ledger_id = ?", spaceID).Preload("Products").Find(&stores).Error; err != nil {
+	if err := h.db.Where("space_id = ?", spaceID).Preload("Products").Find(&stores).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch stores"})
 		return
 	}
@@ -108,7 +108,7 @@ func (h *ComparisonHandler) CreateStore(c *gin.Context) {
 
 	store := &models.ComparisonStore{
 		ID:           storeID,
-		LedgerID:     spaceID,
+		SpaceID:      spaceID,
 		Name:         req.Name,
 		GoogleMapURL: req.GoogleMapURL,
 		Location:     req.Location,
@@ -138,7 +138,7 @@ func (h *ComparisonHandler) UpdateStore(c *gin.Context) {
 	}
 
 	var store models.ComparisonStore
-	if err := h.db.Where("id = ? AND ledger_id = ?", storeID, spaceID).First(&store).Error; err != nil {
+	if err := h.db.Where("id = ? AND space_id = ?", storeID, spaceID).First(&store).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Store not found"})
 		return
 	}
@@ -179,7 +179,7 @@ func (h *ComparisonHandler) GetStore(c *gin.Context) {
 	}
 
 	var store models.ComparisonStore
-	if err := h.db.Where("id = ? AND ledger_id = ?", storeID, spaceID).Preload("Products").First(&store).Error; err != nil {
+	if err := h.db.Where("id = ? AND space_id = ?", storeID, spaceID).Preload("Products").First(&store).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Store not found"})
 		return
 	}
@@ -202,7 +202,7 @@ func (h *ComparisonHandler) DeleteStore(c *gin.Context) {
 		return
 	}
 
-	result := h.db.Where("id = ? AND ledger_id = ?", storeID, spaceID).Delete(&models.ComparisonStore{})
+	result := h.db.Where("id = ? AND space_id = ?", storeID, spaceID).Delete(&models.ComparisonStore{})
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete store"})
 		return
@@ -233,7 +233,7 @@ func (h *ComparisonHandler) ListAllProducts(c *gin.Context) {
 	var products []models.ComparisonProduct
 	if err := h.db.
 		Joins("JOIN comparison_stores ON comparison_stores.id = comparison_products.store_id").
-		Where("comparison_stores.ledger_id = ?", spaceID).
+		Where("comparison_stores.space_id = ?", spaceID).
 		Preload("Store").
 		Find(&products).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch products"})
@@ -259,7 +259,7 @@ func (h *ComparisonHandler) CreateProduct(c *gin.Context) {
 	}
 
 	var store models.ComparisonStore
-	if err := h.db.Where("id = ? AND ledger_id = ?", storeID, spaceID).First(&store).Error; err != nil {
+	if err := h.db.Where("id = ? AND space_id = ?", storeID, spaceID).First(&store).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Store not found"})
 		return
 	}

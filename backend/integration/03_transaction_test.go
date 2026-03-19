@@ -71,7 +71,7 @@ func TestTransactions(t *testing.T) {
 	t.Run("trip transactions", func(t *testing.T) {
 		ae := authExpect(t, token)
 
-		// 利木津巴士
+		// 利木津巴士（三人均分）
 		txn := ae.POST("/api/spaces/{id}/transactions", tripID).
 			WithJSON(map[string]interface{}{
 				"title":          "利木津巴士",
@@ -86,19 +86,25 @@ func TestTransactions(t *testing.T) {
 				"items": []map[string]interface{}{
 					{"name": "成人票", "unit_price": 3000, "quantity": 3},
 				},
+				"splits": []map[string]interface{}{
+					{"name": "我", "amount": 3000, "is_payer": true},
+					{"name": "老婆", "amount": 3000, "is_payer": false},
+					{"name": "老媽", "amount": 3000, "is_payer": false},
+				},
 			}).
 			Expect().
 			Status(http.StatusCreated).
 			JSON().Object()
 
 		txn.Value("total_amount").IsEqual("9000") // 3000*3
+		txn.Value("splits").Array().Length().IsEqual(3)
 		txnID := txn.Value("id").String().Raw()
 
-		// 一蘭拉麵
-		ae.POST("/api/spaces/{id}/transactions", tripID).
+		// 一蘭拉麵（老婆先付，不均分）
+		ramen := ae.POST("/api/spaces/{id}/transactions", tripID).
 			WithJSON(map[string]interface{}{
 				"title":          "一蘭拉麵",
-				"payer":          "Antigravity",
+				"payer":          "老婆",
 				"date":           now.AddDate(0, 1, 1).Format(time.RFC3339),
 				"currency":       "JPY",
 				"exchange_rate":  0.216,
@@ -112,10 +118,18 @@ func TestTransactions(t *testing.T) {
 					{"name": "生啤酒", "unit_price": 580, "quantity": 3},
 					{"name": "半熟鹽味蛋", "unit_price": 140, "quantity": 5},
 				},
+				"splits": []map[string]interface{}{
+					{"name": "老婆", "amount": 2500, "is_payer": true},
+					{"name": "我", "amount": 2060},
+					{"name": "老媽", "amount": 1600},
+				},
 			}).
 			Expect().
 			Status(http.StatusCreated).
-			JSON().Object().Value("items").Array().Length().IsEqual(4)
+			JSON().Object()
+
+		ramen.Value("items").Array().Length().IsEqual(4)
+		ramen.Value("splits").Array().Length().IsEqual(3)
 
 		// get single
 		ae.GET("/api/spaces/{id}/transactions/{txn_id}", tripID, txnID).

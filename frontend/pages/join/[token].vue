@@ -1,5 +1,5 @@
 <template>
-  <div class="join-space-page flex flex-col items-center justify-center p-6 text-neutral-50">
+  <div class="join-space-page flex flex-col items-center justify-center px-6 py-4 text-neutral-50">
     <div v-if="loading" class="text-neutral-400 animate-pulse font-bold">
       正在驗證邀請連結...
     </div>
@@ -38,7 +38,7 @@
         接受邀請並加入
       </BaseButton>
 
-      <NuxtLink to="/" class="mt-6 text-sm text-neutral-500 hover:text-neutral-300 no-underline font-bold transition-colors">
+      <NuxtLink to="/" class="block mt-2 py-4 text-sm text-neutral-500 hover:text-neutral-300 no-underline font-bold transition-colors">
         暫時不要
       </NuxtLink>
     </BaseCard>

@@ -44,7 +44,7 @@ func (r *TransactionRepo) Create(ctx context.Context, txn *models.Transaction) e
 func (r *TransactionRepo) FindBySpace(ctx context.Context, spaceID uuid.UUID) ([]models.Transaction, error) {
 	var transactions []models.Transaction
 	err := r.db.WithContext(ctx).
-		Where("ledger_id = ?", spaceID).
+		Where("space_id = ?", spaceID).
 		Preload("Items").
 		Preload("Splits").
 		Preload("Images", "entity_type = ?", "transaction").
@@ -56,7 +56,7 @@ func (r *TransactionRepo) FindBySpace(ctx context.Context, spaceID uuid.UUID) ([
 func (r *TransactionRepo) FindByID(ctx context.Context, id string, spaceID uuid.UUID) (*models.Transaction, error) {
 	var txn models.Transaction
 	err := r.db.WithContext(ctx).
-		Where("id = ? AND ledger_id = ?", id, spaceID).
+		Where("id = ? AND space_id = ?", id, spaceID).
 		Preload("Items").
 		Preload("Splits").
 		Preload("Images", "entity_type = ?", "transaction").
@@ -112,6 +112,6 @@ func (r *TransactionRepo) Update(ctx context.Context, id string, params Transact
 }
 
 func (r *TransactionRepo) Delete(ctx context.Context, id string, spaceID uuid.UUID) (int64, error) {
-	result := r.db.WithContext(ctx).Where("id = ? AND ledger_id = ?", id, spaceID).Delete(&models.Transaction{})
+	result := r.db.WithContext(ctx).Where("id = ? AND space_id = ?", id, spaceID).Delete(&models.Transaction{})
 	return result.RowsAffected, result.Error
 }

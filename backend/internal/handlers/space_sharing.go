@@ -34,7 +34,7 @@ type CreateInviteRequest struct {
 func (h *SpaceSharingHandler) CreateInvite(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 	spaceVal, _ := c.Get("space")
-	space := spaceVal.(*models.Ledger)
+	space := spaceVal.(*models.Space)
 
 	var req CreateInviteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -84,7 +84,7 @@ func (h *SpaceSharingHandler) JoinSpace(c *gin.Context) {
 // List all members of a space
 func (h *SpaceSharingHandler) ListMembers(c *gin.Context) {
 	spaceVal, _ := c.Get("space")
-	space := spaceVal.(*models.Ledger)
+	space := spaceVal.(*models.Space)
 
 	members, err := h.memberRepo.FindBySpace(c.Request.Context(), space.ID)
 	if err != nil {
@@ -102,7 +102,7 @@ type UpdateMemberRequest struct {
 // Update a member's alias
 func (h *SpaceSharingHandler) UpdateMemberAlias(c *gin.Context) {
 	spaceVal, _ := c.Get("space")
-	space := spaceVal.(*models.Ledger)
+	space := spaceVal.(*models.Space)
 	targetUserID, err := uuid.Parse(c.Param("user_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid User ID"})
@@ -133,9 +133,9 @@ func (h *SpaceSharingHandler) UpdateMemberAlias(c *gin.Context) {
 func (h *SpaceSharingHandler) RemoveMember(c *gin.Context) {
 	requestorID := c.MustGet("userID").(uuid.UUID)
 	spaceVal, _ := c.Get("space")
-	space := spaceVal.(*models.Ledger)
+	space := spaceVal.(*models.Space)
 	memberVal, _ := c.Get("member")
-	requestorMember := memberVal.(*models.LedgerMember)
+	requestorMember := memberVal.(*models.SpaceMember)
 
 	targetUserID, err := uuid.Parse(c.Param("user_id"))
 	if err != nil {
@@ -173,7 +173,7 @@ func (h *SpaceSharingHandler) RemoveMember(c *gin.Context) {
 // List all active invites for a space
 func (h *SpaceSharingHandler) ListInvites(c *gin.Context) {
 	spaceVal, _ := c.Get("space")
-	space := spaceVal.(*models.Ledger)
+	space := spaceVal.(*models.Space)
 
 	invites, err := h.inviteService.ListActive(c.Request.Context(), space.ID)
 	if err != nil {
@@ -187,7 +187,7 @@ func (h *SpaceSharingHandler) ListInvites(c *gin.Context) {
 // Revoke an invite link
 func (h *SpaceSharingHandler) RevokeInvite(c *gin.Context) {
 	spaceVal, _ := c.Get("space")
-	space := spaceVal.(*models.Ledger)
+	space := spaceVal.(*models.Space)
 	inviteID, err := uuid.Parse(c.Param("invite_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Invite ID"})

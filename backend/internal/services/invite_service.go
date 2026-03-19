@@ -46,7 +46,7 @@ func generateToken() string {
 	return hex.EncodeToString(b)
 }
 
-func validateInvite(invite *models.LedgerInvite) error {
+func validateInvite(invite *models.SpaceInvite) error {
 	if invite.ExpiresAt != nil && invite.ExpiresAt.Before(time.Now()) {
 		return errorx.Wrap(errorx.ErrExpired, "Invite link has expired")
 	}
@@ -56,10 +56,10 @@ func validateInvite(invite *models.LedgerInvite) error {
 	return nil
 }
 
-func (s *InviteService) Create(ctx context.Context, spaceID uuid.UUID, userID uuid.UUID, params CreateInviteParams) (*models.LedgerInvite, error) {
-	invite := &models.LedgerInvite{
+func (s *InviteService) Create(ctx context.Context, spaceID uuid.UUID, userID uuid.UUID, params CreateInviteParams) (*models.SpaceInvite, error) {
+	invite := &models.SpaceInvite{
 		ID:        uuid.New(),
-		LedgerID:  spaceID,
+		SpaceID:   spaceID,
 		Token:     generateToken(),
 		IsOneTime: params.IsOneTime,
 		MaxUses:   params.MaxUses,
@@ -89,7 +89,7 @@ func (s *InviteService) GetInfo(ctx context.Context, token string) (*InviteInfo,
 	}
 
 	return &InviteInfo{
-		SpaceName:   invite.Ledger.Name,
+		SpaceName:   invite.Space.Name,
 		CreatorName: invite.Creator.DisplayName,
 		IsOneTime:   invite.IsOneTime,
 	}, nil
@@ -110,15 +110,15 @@ func (s *InviteService) Join(ctx context.Context, token string, userID uuid.UUID
 		}
 
 		// Check if already a member
-		if _, err := memberRepo.FindBySpaceAndUser(ctx, invite.LedgerID, userID); err == nil {
+		if _, err := memberRepo.FindBySpaceAndUser(ctx, invite.SpaceID, userID); err == nil {
 			return nil // Already a member, no-op
 		}
 
-		member := &models.LedgerMember{
-			ID:       uuid.New(),
-			LedgerID: invite.LedgerID,
-			UserID:   userID,
-			Role:     "member",
+		member := &models.SpaceMember{
+			ID:      uuid.New(),
+			SpaceID: invite.SpaceID,
+			UserID:  userID,
+			Role:    "member",
 		}
 
 		if err := memberRepo.Create(ctx, member); err != nil {
@@ -133,7 +133,7 @@ func (s *InviteService) Join(ctx context.Context, token string, userID uuid.UUID
 	})
 }
 
-func (s *InviteService) ListActive(ctx context.Context, spaceID uuid.UUID) ([]models.LedgerInvite, error) {
+func (s *InviteService) ListActive(ctx context.Context, spaceID uuid.UUID) ([]models.SpaceInvite, error) {
 	invites, err := s.inviteRepo.FindActiveBySpace(ctx, spaceID)
 	if err != nil {
 		return nil, errorx.Wrap(errorx.ErrInternal, "Failed to fetch invites")

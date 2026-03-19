@@ -23,15 +23,15 @@ func (r *InviteRepo) WithTx(tx *gorm.DB) *InviteRepo {
 	return &InviteRepo{db: tx}
 }
 
-func (r *InviteRepo) Create(ctx context.Context, invite *models.LedgerInvite) error {
+func (r *InviteRepo) Create(ctx context.Context, invite *models.SpaceInvite) error {
 	return r.db.WithContext(ctx).Create(invite).Error
 }
 
-func (r *InviteRepo) FindByToken(ctx context.Context, token string) (*models.LedgerInvite, error) {
-	var invite models.LedgerInvite
+func (r *InviteRepo) FindByToken(ctx context.Context, token string) (*models.SpaceInvite, error) {
+	var invite models.SpaceInvite
 	err := r.db.WithContext(ctx).
 		Where("token = ?", token).
-		Preload("Ledger").
+		Preload("Space").
 		Preload("Creator").
 		First(&invite).Error
 	if err != nil {
@@ -40,8 +40,8 @@ func (r *InviteRepo) FindByToken(ctx context.Context, token string) (*models.Led
 	return &invite, nil
 }
 
-func (r *InviteRepo) FindByTokenForUpdate(ctx context.Context, token string) (*models.LedgerInvite, error) {
-	var invite models.LedgerInvite
+func (r *InviteRepo) FindByTokenForUpdate(ctx context.Context, token string) (*models.SpaceInvite, error) {
+	var invite models.SpaceInvite
 	err := r.db.WithContext(ctx).
 		Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("token = ?", token).
@@ -52,10 +52,10 @@ func (r *InviteRepo) FindByTokenForUpdate(ctx context.Context, token string) (*m
 	return &invite, nil
 }
 
-func (r *InviteRepo) FindActiveBySpace(ctx context.Context, spaceID uuid.UUID) ([]models.LedgerInvite, error) {
-	var invites []models.LedgerInvite
+func (r *InviteRepo) FindActiveBySpace(ctx context.Context, spaceID uuid.UUID) ([]models.SpaceInvite, error) {
+	var invites []models.SpaceInvite
 	err := r.db.WithContext(ctx).
-		Where("ledger_id = ? AND (expires_at IS NULL OR expires_at > ?) AND (max_uses = 0 OR use_count < max_uses)", spaceID, time.Now()).
+		Where("space_id = ? AND (expires_at IS NULL OR expires_at > ?) AND (max_uses = 0 OR use_count < max_uses)", spaceID, time.Now()).
 		Order("created_at DESC").
 		Find(&invites).Error
 	return invites, err
@@ -63,13 +63,13 @@ func (r *InviteRepo) FindActiveBySpace(ctx context.Context, spaceID uuid.UUID) (
 
 func (r *InviteRepo) IncrementUseCount(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).
-		Model(&models.LedgerInvite{}).
+		Model(&models.SpaceInvite{}).
 		Where("id = ?", id).
 		UpdateColumn("use_count", gorm.Expr("use_count + 1")).
 		Error
 }
 
 func (r *InviteRepo) Delete(ctx context.Context, id uuid.UUID, spaceID uuid.UUID) (int64, error) {
-	result := r.db.WithContext(ctx).Where("id = ? AND ledger_id = ?", id, spaceID).Delete(&models.LedgerInvite{})
+	result := r.db.WithContext(ctx).Where("id = ? AND space_id = ?", id, spaceID).Delete(&models.SpaceInvite{})
 	return result.RowsAffected, result.Error
 }

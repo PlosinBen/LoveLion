@@ -83,7 +83,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		defaultCurrencies := []string{"TWD"}
 		currenciesJSON, _ := json.Marshal(defaultCurrencies)
 
-		space := &models.Ledger{
+		space := &models.Space{
 			ID:             uuid.New(),
 			UserID:         user.ID,
 			Name:           "我的帳本",
@@ -91,7 +91,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 			BaseCurrency:   "TWD",
 			Currencies:     datatypes.JSON(currenciesJSON),
 			Categories:     datatypes.JSON(categoriesJSON),
-			MemberNames:    datatypes.JSON("[]"),
+			SplitMembers:   datatypes.JSON("[]"),
 			PaymentMethods: datatypes.JSON("[]"),
 		}
 
@@ -103,11 +103,11 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		c.Set("registeredUser", user)
 
 		// Add user to the members table of their own space
-		member := &models.LedgerMember{
-			ID:       uuid.New(),
-			LedgerID: space.ID,
-			UserID:   user.ID,
-			Role:     "owner",
+		member := &models.SpaceMember{
+			ID:      uuid.New(),
+			SpaceID: space.ID,
+			UserID:  user.ID,
+			Role:    "owner",
 		}
 
 		if err := tx.Create(member).Error; err != nil {

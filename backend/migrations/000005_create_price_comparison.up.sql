@@ -1,7 +1,7 @@
--- Create comparison_stores table (now associated with ledgers/spaces)
+-- Create comparison_stores table
 CREATE TABLE IF NOT EXISTS comparison_stores (
     id VARCHAR(21) PRIMARY KEY,
-    ledger_id UUID NOT NULL REFERENCES ledgers (id) ON DELETE CASCADE,
+    space_id UUID NOT NULL REFERENCES spaces (id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     google_map_url TEXT,
     location TEXT,
@@ -23,6 +23,6 @@ CREATE TABLE IF NOT EXISTS comparison_products (
 );
 
 -- Create indexes
-CREATE INDEX IF NOT EXISTS idx_comparison_stores_ledger_id ON comparison_stores (ledger_id);
+CREATE INDEX IF NOT EXISTS idx_comparison_stores_space_id ON comparison_stores (space_id);
 CREATE INDEX IF NOT EXISTS idx_comparison_products_store_id ON comparison_products (store_id);
 CREATE INDEX IF NOT EXISTS idx_comparison_products_name ON comparison_products (name);

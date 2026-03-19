@@ -1,7 +1,7 @@
 -- Create transactions table
 CREATE TABLE IF NOT EXISTS transactions (
     id VARCHAR(21) PRIMARY KEY,
-    ledger_id UUID NOT NULL REFERENCES ledgers (id) ON DELETE CASCADE,
+    space_id UUID NOT NULL REFERENCES spaces (id) ON DELETE CASCADE,
     title VARCHAR(100),
     payer VARCHAR(50),
     date TIMESTAMPTZ NOT NULL DEFAULT NOW (),
@@ -31,6 +31,6 @@ CREATE TABLE IF NOT EXISTS transaction_items (
 );
 
 -- Create indexes
-CREATE INDEX IF NOT EXISTS idx_transactions_ledger_id ON transactions (ledger_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_space_id ON transactions (space_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions (date);
 CREATE INDEX IF NOT EXISTS idx_transaction_items_transaction_id ON transaction_items (transaction_id);

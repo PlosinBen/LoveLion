@@ -1,6 +1,6 @@
 export interface ComparisonStore {
   id: string
-  ledger_id: string
+  space_id: string
   name: string
   google_map_url: string
   location: string

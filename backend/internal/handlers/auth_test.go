@@ -64,7 +64,7 @@ func TestAuthHandler_Register(t *testing.T) {
 				db.Where("username = ?", tt.body["username"]).First(&user)
 				assert.NotEqual(t, uuid.Nil, user.ID)
 
-				var space models.Ledger
+				var space models.Space
 				err := db.Where("user_id = ? AND type = 'personal'", user.ID).First(&space).Error
 				assert.NoError(t, err, "A default personal space should be created for the new user")
 				assert.Equal(t, "我的帳本", space.Name)

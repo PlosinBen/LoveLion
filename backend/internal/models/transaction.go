@@ -9,7 +9,7 @@ import (
 
 type Transaction struct {
 	ID            string          `gorm:"type:varchar(21);primary_key" json:"id"`
-	LedgerID      uuid.UUID       `gorm:"type:uuid;not null" json:"ledger_id"`
+	SpaceID       uuid.UUID       `gorm:"type:uuid;not null" json:"space_id"`
 	Title         string          `gorm:"type:varchar(100)" json:"title"`
 	Payer         string          `gorm:"type:varchar(50)" json:"payer"`
 	Date          time.Time       `gorm:"not null;default:NOW()" json:"date"`
@@ -25,7 +25,7 @@ type Transaction struct {
 	UpdatedAt     time.Time       `gorm:"autoUpdateTime" json:"updated_at"`
 
 	// Associations
-	Ledger *Ledger            `gorm:"foreignKey:LedgerID" json:"ledger,omitempty"`
+	Space  *Space             `gorm:"foreignKey:SpaceID" json:"space,omitempty"`
 	Items  []TransactionItem  `gorm:"foreignKey:TransactionID" json:"items,omitempty"`
 	Splits []TransactionSplit `gorm:"foreignKey:TransactionID" json:"splits,omitempty"`
 	Images []Image            `gorm:"polymorphic:Entity;polymorphicValue:transaction" json:"images,omitempty"`

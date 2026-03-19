@@ -11,7 +11,7 @@ import (
 )
 
 // SpaceAccess verifies if the user is a member of the space.
-// It preloads the Space and the User's LedgerMember record into the context.
+// It preloads the Space and the User's SpaceMember record into the context.
 func SpaceAccess(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, exists := c.Get("userID")
@@ -23,7 +23,6 @@ func SpaceAccess(db *gorm.DB) gin.HandlerFunc {
 
 		spaceIDStr := c.Param("id")
 		if spaceIDStr == "" {
-			// Try to get from txn_id parent if needed, but standard is :id
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Space ID is required"})
 			c.Abort()
 			return
@@ -37,8 +36,8 @@ func SpaceAccess(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		// Verify membership
-		var member models.LedgerMember
-		if err := db.Where("ledger_id = ? AND user_id = ?", spaceID, userID.(uuid.UUID)).First(&member).Error; err != nil {
+		var member models.SpaceMember
+		if err := db.Where("space_id = ? AND user_id = ?", spaceID, userID.(uuid.UUID)).First(&member).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				c.JSON(http.StatusForbidden, gin.H{"error": "You do not have access to this space"})
 			} else {
@@ -49,7 +48,7 @@ func SpaceAccess(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		// Fetch space to ensure it exists and provide it to handlers
-		var space models.Ledger
+		var space models.Space
 		if err := db.Preload("Images", "entity_type = ?", "space").First(&space, "id = ?", spaceID).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Space not found"})
 			c.Abort()
@@ -75,7 +74,7 @@ func SpaceOwnerOnly() gin.HandlerFunc {
 			return
 		}
 
-		member := memberVal.(*models.LedgerMember)
+		member := memberVal.(*models.SpaceMember)
 		if member.Role != "owner" {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Only the space owner can perform this action"})
 			c.Abort()

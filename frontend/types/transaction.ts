@@ -1,9 +1,8 @@
 import type { Image } from './image'
-import type { Member } from './space'
 
 export interface Transaction {
   id: string
-  ledger_id: string
+  space_id: string
   title: string
   payer: string
   date: string
@@ -37,10 +36,8 @@ export interface TransactionItem {
 export interface TransactionSplit {
   id: string
   transaction_id: string
-  member_id: string | null
   name: string
   amount: string
   is_payer: boolean
   created_at: string
-  member?: Member
 }

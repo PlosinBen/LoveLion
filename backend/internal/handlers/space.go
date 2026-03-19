@@ -27,7 +27,7 @@ type CreateSpaceRequest struct {
 	Type           string     `json:"type"` // personal, trip, group
 	BaseCurrency   string     `json:"base_currency"`
 	Currencies     []string   `json:"currencies"`
-	Members        []string   `json:"members"` // legacy member names
+	SplitMembers   []string   `json:"split_members"`
 	Categories     []string   `json:"categories"`
 	PaymentMethods []string   `json:"payment_methods"`
 	StartDate      *time.Time `json:"start_date"`
@@ -40,7 +40,7 @@ type UpdateSpaceRequest struct {
 	Description    *string    `json:"description"`
 	BaseCurrency   string     `json:"base_currency"`
 	Currencies     []string   `json:"currencies"`
-	Members        []string   `json:"members"`
+	SplitMembers   []string   `json:"split_members"`
 	Categories     []string   `json:"categories"`
 	PaymentMethods []string   `json:"payment_methods"`
 	StartDate      *time.Time `json:"start_date"`
@@ -65,18 +65,18 @@ func (h *SpaceHandler) List(c *gin.Context) {
 	spaceType := c.Query("type")
 
 	query := h.db.
-		Joins("JOIN ledger_members ON ledger_members.ledger_id = ledgers.id").
-		Where("ledger_members.user_id = ?", userID).
+		Joins("JOIN space_members ON space_members.space_id = spaces.id").
+		Where("space_members.user_id = ?", userID).
 		Preload("User").
 		Preload("Images", "entity_type = ?", "space").
 		Preload("Members")
 
 	if spaceType != "" {
-		query = query.Where("ledgers.type = ?", spaceType)
+		query = query.Where("spaces.type = ?", spaceType)
 	}
 
-	var spaces []models.Ledger
-	err := query.Order("ledgers.is_pinned DESC, ledgers.created_at DESC").
+	var spaces []models.Space
+	err := query.Order("spaces.is_pinned DESC, spaces.created_at DESC").
 		Find(&spaces).Error
 
 	if err != nil {
@@ -85,7 +85,7 @@ func (h *SpaceHandler) List(c *gin.Context) {
 	}
 
 	type spaceResponse struct {
-		models.Ledger
+		models.Space
 		MyRole      string `json:"my_role"`
 		MemberCount int    `json:"member_count"`
 	}
@@ -105,7 +105,7 @@ func (h *SpaceHandler) List(c *gin.Context) {
 
 		spaces[i].Members = nil // don't leak full member list
 		results = append(results, spaceResponse{
-			Ledger:      spaces[i],
+			Space:       spaces[i],
 			MyRole:      role,
 			MemberCount: memberCount,
 		})
@@ -124,7 +124,7 @@ func (h *SpaceHandler) Create(c *gin.Context) {
 		return
 	}
 
-	space := &models.Ledger{
+	space := &models.Space{
 		ID:           uuid.New(),
 		UserID:       userID,
 		Name:         req.Name,
@@ -154,7 +154,7 @@ func (h *SpaceHandler) Create(c *gin.Context) {
 		value  interface{}
 	}{
 		{&space.Currencies, currencies},
-		{&space.MemberNames, req.Members},
+		{&space.SplitMembers, req.SplitMembers},
 		{&space.Categories, req.Categories},
 		{&space.PaymentMethods, req.PaymentMethods},
 	}
@@ -174,11 +174,11 @@ func (h *SpaceHandler) Create(c *gin.Context) {
 		}
 
 		// Add owner to members table
-		member := &models.LedgerMember{
-			ID:       uuid.New(),
-			LedgerID: space.ID,
-			UserID:   userID,
-			Role:     "owner",
+		member := &models.SpaceMember{
+			ID:      uuid.New(),
+			SpaceID: space.ID,
+			UserID:  userID,
+			Role:    "owner",
 		}
 
 		if err := tx.Create(member).Error; err != nil {
@@ -205,7 +205,7 @@ func (h *SpaceHandler) Get(c *gin.Context) {
 // Update a space
 func (h *SpaceHandler) Update(c *gin.Context) {
 	spaceVal, _ := c.Get("space")
-	space := spaceVal.(*models.Ledger)
+	space := spaceVal.(*models.Space)
 
 	var req UpdateSpaceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -227,7 +227,7 @@ func (h *SpaceHandler) Update(c *gin.Context) {
 		value  interface{}
 	}{
 		{&space.Currencies, req.Currencies},
-		{&space.MemberNames, req.Members},
+		{&space.SplitMembers, req.SplitMembers},
 		{&space.Categories, req.Categories},
 		{&space.PaymentMethods, req.PaymentMethods},
 	}
@@ -267,7 +267,7 @@ func (h *SpaceHandler) Update(c *gin.Context) {
 // Delete a space
 func (h *SpaceHandler) Delete(c *gin.Context) {
 	spaceVal, _ := c.Get("space")
-	space := spaceVal.(*models.Ledger)
+	space := spaceVal.(*models.Space)
 
 	if err := h.db.Delete(space).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete space"})
@@ -281,18 +281,18 @@ func (h *SpaceHandler) Delete(c *gin.Context) {
 func (h *SpaceHandler) Leave(c *gin.Context) {
 	userID := c.MustGet("userID").(uuid.UUID)
 	spaceVal, _ := c.Get("space")
-	space := spaceVal.(*models.Ledger)
+	space := spaceVal.(*models.Space)
 
 	// Check if user is a member
-	var member models.LedgerMember
-	if err := h.db.Where("ledger_id = ? AND user_id = ?", space.ID, userID).First(&member).Error; err != nil {
+	var member models.SpaceMember
+	if err := h.db.Where("space_id = ? AND user_id = ?", space.ID, userID).First(&member).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Member not found in this space"})
 		return
 	}
 
 	// Count total members
 	var memberCount int64
-	h.db.Model(&models.LedgerMember{}).Where("ledger_id = ?", space.ID).Count(&memberCount)
+	h.db.Model(&models.SpaceMember{}).Where("space_id = ?", space.ID).Count(&memberCount)
 
 	// If owner and only member, suggest deleting instead
 	if member.Role == "owner" && memberCount == 1 {

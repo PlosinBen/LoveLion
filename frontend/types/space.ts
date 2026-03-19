@@ -9,7 +9,7 @@ export interface Space {
   type: 'personal' | 'trip' | 'group'
   base_currency: string
   currencies: string[]
-  member_names: string[]
+  split_members: string[]
   categories: string[]
   payment_methods: string[]
   start_date: string | null
@@ -28,7 +28,7 @@ export interface Space {
 
 export interface Member {
   id: string
-  ledger_id: string
+  space_id: string
   user_id: string
   role: 'owner' | 'member'
   alias: string
@@ -46,7 +46,7 @@ export interface InviteInfo {
 
 export interface Invite {
   id: string
-  ledger_id: string
+  space_id: string
   token: string
   is_one_time: boolean
   max_uses: number

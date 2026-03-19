@@ -8,7 +8,6 @@ import (
 	"lovelion/internal/services"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
 
@@ -28,10 +27,9 @@ type TransactionItemRequest struct {
 }
 
 type TransactionSplitRequest struct {
-	MemberID *uuid.UUID      `json:"member_id"`
-	Name     string          `json:"name" binding:"required"`
-	Amount   decimal.Decimal `json:"amount"`
-	IsPayer  bool            `json:"is_payer"`
+	Name    string          `json:"name" binding:"required"`
+	Amount  decimal.Decimal `json:"amount"`
+	IsPayer bool            `json:"is_payer"`
 }
 
 type CreateTransactionRequest struct {
@@ -89,10 +87,9 @@ func toSplitInputs(reqs []TransactionSplitRequest) []services.TransactionSplitIn
 	inputs := make([]services.TransactionSplitInput, len(reqs))
 	for i, r := range reqs {
 		inputs[i] = services.TransactionSplitInput{
-			MemberID: r.MemberID,
-			Name:     r.Name,
-			Amount:   r.Amount,
-			IsPayer:  r.IsPayer,
+			Name:    r.Name,
+			Amount:  r.Amount,
+			IsPayer: r.IsPayer,
 		}
 	}
 	return inputs
@@ -101,7 +98,7 @@ func toSplitInputs(reqs []TransactionSplitRequest) []services.TransactionSplitIn
 // List transactions for a space
 func (h *TransactionHandler) List(c *gin.Context) {
 	spaceVal, _ := c.Get("space")
-	space := spaceVal.(*models.Ledger)
+	space := spaceVal.(*models.Space)
 
 	transactions, err := h.svc.List(c.Request.Context(), space.ID)
 	if err != nil {
@@ -115,7 +112,7 @@ func (h *TransactionHandler) List(c *gin.Context) {
 // Create a new transaction with items
 func (h *TransactionHandler) Create(c *gin.Context) {
 	spaceVal, _ := c.Get("space")
-	space := spaceVal.(*models.Ledger)
+	space := spaceVal.(*models.Space)
 
 	var req CreateTransactionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -149,7 +146,7 @@ func (h *TransactionHandler) Create(c *gin.Context) {
 // Get a single transaction
 func (h *TransactionHandler) Get(c *gin.Context) {
 	spaceVal, _ := c.Get("space")
-	space := spaceVal.(*models.Ledger)
+	space := spaceVal.(*models.Space)
 	txnID := c.Param("txn_id")
 
 	txn, err := h.svc.GetByID(c.Request.Context(), txnID, space.ID)
@@ -164,7 +161,7 @@ func (h *TransactionHandler) Get(c *gin.Context) {
 // Update a transaction
 func (h *TransactionHandler) Update(c *gin.Context) {
 	spaceVal, _ := c.Get("space")
-	space := spaceVal.(*models.Ledger)
+	space := spaceVal.(*models.Space)
 	txnID := c.Param("txn_id")
 
 	var req UpdateTransactionRequest
@@ -199,7 +196,7 @@ func (h *TransactionHandler) Update(c *gin.Context) {
 // Delete a transaction
 func (h *TransactionHandler) Delete(c *gin.Context) {
 	spaceVal, _ := c.Get("space")
-	space := spaceVal.(*models.Ledger)
+	space := spaceVal.(*models.Space)
 	txnID := c.Param("txn_id")
 
 	if err := h.svc.Delete(c.Request.Context(), txnID, space.ID); err != nil {

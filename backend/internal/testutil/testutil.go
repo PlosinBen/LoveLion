@@ -67,7 +67,7 @@ func TestDB(t *testing.T) *gorm.DB {
 	}
 
 	// Auto-migrate Image first to establish entity_id as varchar before
-	// polymorphic associations in Ledger/Transaction try to override it.
+	// polymorphic associations in Space/Transaction try to override it.
 	err = db.AutoMigrate(&models.Image{})
 	if err != nil {
 		t.Fatalf("Failed to migrate Image model: %v", err)
@@ -75,9 +75,9 @@ func TestDB(t *testing.T) *gorm.DB {
 
 	err = db.AutoMigrate(
 		&models.User{},
-		&models.Ledger{},
-		&models.LedgerMember{},
-		&models.LedgerInvite{},
+		&models.Space{},
+		&models.SpaceMember{},
+		&models.SpaceInvite{},
 		&models.Transaction{},
 		&models.TransactionItem{},
 		&models.TransactionSplit{},

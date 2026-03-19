@@ -38,10 +38,9 @@ type TransactionItemInput struct {
 }
 
 type TransactionSplitInput struct {
-	MemberID *uuid.UUID
-	Name     string
-	Amount   decimal.Decimal
-	IsPayer  bool
+	Name    string
+	Amount  decimal.Decimal
+	IsPayer bool
 }
 
 type CreateTransactionInput struct {
@@ -109,7 +108,6 @@ func buildSplits(txnID string, inputs []TransactionSplitInput) []models.Transact
 		splits = append(splits, models.TransactionSplit{
 			ID:            uuid.New(),
 			TransactionID: txnID,
-			MemberID:      inp.MemberID,
 			Name:          inp.Name,
 			Amount:        inp.Amount,
 			IsPayer:       inp.IsPayer,
@@ -145,7 +143,7 @@ func (s *TransactionService) Create(ctx context.Context, spaceID uuid.UUID, inpu
 
 	txn := &models.Transaction{
 		ID:            txnID,
-		LedgerID:      spaceID,
+		SpaceID:       spaceID,
 		Payer:         input.Payer,
 		Currency:      input.Currency,
 		ExchangeRate:  input.ExchangeRate,

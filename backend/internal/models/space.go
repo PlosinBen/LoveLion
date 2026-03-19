@@ -7,8 +7,7 @@ import (
 	"gorm.io/datatypes"
 )
 
-// Ledger represents a "Space" in the application (e.g., Personal, Trip, Group)
-type Ledger struct {
+type Space struct {
 	ID             uuid.UUID      `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
 	UserID         uuid.UUID      `gorm:"type:uuid;not null" json:"user_id"`
 	Name           string         `gorm:"type:varchar(100);not null" json:"name"`
@@ -16,7 +15,7 @@ type Ledger struct {
 	Type           string         `gorm:"type:varchar(20);not null;default:'personal'" json:"type"` // personal, trip, group
 	BaseCurrency   string         `gorm:"type:varchar(3);default:'TWD'" json:"base_currency"`
 	Currencies     datatypes.JSON `gorm:"type:jsonb;default:'[\"TWD\"]'" json:"currencies"`
-	MemberNames    datatypes.JSON `gorm:"type:jsonb;default:'[]';column:members" json:"member_names"` // Deprecated but kept for compatibility
+	SplitMembers   datatypes.JSON `gorm:"type:jsonb;default:'[]';column:split_members" json:"split_members"`
 	Categories     datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"categories"`
 	PaymentMethods datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"payment_methods"`
 	StartDate      *time.Time     `gorm:"type:date" json:"start_date"`
@@ -27,45 +26,45 @@ type Ledger struct {
 	UpdatedAt      time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 
 	// Associations
-	User         *User          `gorm:"foreignKey:UserID" json:"user,omitempty"`
-	Transactions []Transaction  `gorm:"foreignKey:LedgerID" json:"transactions,omitempty"`
-	Members      []LedgerMember `gorm:"foreignKey:LedgerID;constraint:OnDelete:CASCADE" json:"members,omitempty"`
-	Invites      []LedgerInvite `gorm:"foreignKey:LedgerID;constraint:OnDelete:CASCADE" json:"invites,omitempty"`
-	Images       []Image        `gorm:"polymorphic:Entity;polymorphicValue:space" json:"images,omitempty"`
+	User         *User         `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	Transactions []Transaction `gorm:"foreignKey:SpaceID" json:"transactions,omitempty"`
+	Members      []SpaceMember `gorm:"foreignKey:SpaceID;constraint:OnDelete:CASCADE" json:"members,omitempty"`
+	Invites      []SpaceInvite `gorm:"foreignKey:SpaceID;constraint:OnDelete:CASCADE" json:"invites,omitempty"`
+	Images       []Image       `gorm:"polymorphic:Entity;polymorphicValue:space" json:"images,omitempty"`
 }
 
 // PopulateCoverImage sets CoverImage from the first associated image.
-func (l *Ledger) PopulateCoverImage() {
-	if len(l.Images) > 0 {
-		l.CoverImage = l.Images[0].FilePath
+func (s *Space) PopulateCoverImage() {
+	if len(s.Images) > 0 {
+		s.CoverImage = s.Images[0].FilePath
 	}
 }
 
-func (Ledger) TableName() string {
-	return "ledgers"
+func (Space) TableName() string {
+	return "spaces"
 }
 
-type LedgerMember struct {
+type SpaceMember struct {
 	ID        uuid.UUID `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
-	LedgerID  uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_ledger_user" json:"ledger_id"`
-	UserID    uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_ledger_user" json:"user_id"`
+	SpaceID   uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_space_user" json:"space_id"`
+	UserID    uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_space_user" json:"user_id"`
 	Role      string    `gorm:"type:varchar(20);not null;default:'member'" json:"role"`
 	Alias     string    `gorm:"type:varchar(50)" json:"alias"`
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 
 	// Associations
-	User   *User   `gorm:"foreignKey:UserID" json:"user,omitempty"`
-	Ledger *Ledger `gorm:"foreignKey:LedgerID" json:"ledger,omitempty"`
+	User  *User  `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	Space *Space `gorm:"foreignKey:SpaceID" json:"space,omitempty"`
 }
 
-func (LedgerMember) TableName() string {
-	return "ledger_members"
+func (SpaceMember) TableName() string {
+	return "space_members"
 }
 
-type LedgerInvite struct {
+type SpaceInvite struct {
 	ID        uuid.UUID  `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
-	LedgerID  uuid.UUID  `gorm:"type:uuid;not null" json:"ledger_id"`
+	SpaceID   uuid.UUID  `gorm:"type:uuid;not null" json:"space_id"`
 	Token     string     `gorm:"type:varchar(50);not null;uniqueIndex" json:"token"`
 	IsOneTime bool       `gorm:"type:boolean;not null;default:true" json:"is_one_time"`
 	MaxUses   int        `gorm:"type:integer;not null;default:1" json:"max_uses"`
@@ -76,10 +75,10 @@ type LedgerInvite struct {
 	UpdatedAt time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
 
 	// Associations
-	Ledger  *Ledger `gorm:"foreignKey:LedgerID" json:"ledger,omitempty"`
-	Creator *User   `gorm:"foreignKey:CreatedBy" json:"creator,omitempty"`
+	Space   *Space `gorm:"foreignKey:SpaceID" json:"space,omitempty"`
+	Creator *User  `gorm:"foreignKey:CreatedBy" json:"creator,omitempty"`
 }
 
-func (LedgerInvite) TableName() string {
-	return "ledger_invites"
+func (SpaceInvite) TableName() string {
+	return "space_invites"
 }

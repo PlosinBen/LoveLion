@@ -86,7 +86,7 @@ docker compose exec postgres psql -U postgres -d lovelion
 - 所有變更端點需經 `SpaceAccess` 中介層；僅擁有者操作使用 `SpaceOwnerOnly`
 
 ### 安全規則
-- PUT/POST/DELETE 必須驗證 `LedgerMember` 權限
+- PUT/POST/DELETE 必須驗證 `SpaceMember` 權限
 - 僅 `owner` 可修改設定、管理成員、撤銷邀請
 - 禁止在 API 回應中暴露 `PasswordHash`
 - 多表更新必須使用資料庫交易（DB Transaction）

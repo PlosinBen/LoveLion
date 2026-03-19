@@ -45,6 +45,7 @@ func TestSpaces(t *testing.T) {
 				"currencies":      []string{"TWD", "JPY"},
 				"categories":      []string{"住宿", "交通", "飲食", "購物", "娛樂"},
 				"payment_methods": []string{"現金", "信用卡"},
+				"split_members":   []string{"我", "老婆", "老媽"},
 				"start_date":      now.AddDate(0, 1, 0).Format(time.RFC3339),
 				"end_date":        now.AddDate(0, 1, 5).Format(time.RFC3339),
 				"is_pinned":       true,
