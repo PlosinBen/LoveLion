@@ -18,12 +18,13 @@ func New(code, message string) *AppError {
 
 // Sentinel errors for common cases.
 var (
-	ErrNotFound  = New("NOT_FOUND", "Resource not found")
-	ErrExpired   = New("EXPIRED", "Resource has expired")
-	ErrExhausted = New("EXHAUSTED", "Resource has reached its usage limit")
-	ErrForbidden = New("FORBIDDEN", "You do not have permission")
-	ErrConflict  = New("CONFLICT", "Resource already exists")
-	ErrInternal  = New("INTERNAL", "Internal server error")
+	ErrNotFound   = New("NOT_FOUND", "Resource not found")
+	ErrExpired    = New("EXPIRED", "Resource has expired")
+	ErrExhausted  = New("EXHAUSTED", "Resource has reached its usage limit")
+	ErrForbidden  = New("FORBIDDEN", "You do not have permission")
+	ErrConflict   = New("CONFLICT", "Resource already exists")
+	ErrBadRequest = New("BAD_REQUEST", "Invalid request")
+	ErrInternal   = New("INTERNAL", "Internal server error")
 )
 
 // Is checks whether the target is an AppError with the same code.

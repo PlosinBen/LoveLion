@@ -69,8 +69,14 @@ const props = defineProps<{
   baseCurrency: string
 }>()
 
+// Only count expenses for total spending (exclude payments)
+const expenseTransactions = computed(() => props.transactions.filter(t => t.type === 'expense'))
+
 const totalAmount = computed(() => {
-    return props.transactions.reduce((sum, t) => sum + (Number(t.billing_amount) || Number(t.total_amount) || 0), 0)
+    return expenseTransactions.value.reduce((sum, t) => {
+        const billing = t.expense?.billing_amount ? Number(t.expense.billing_amount) : 0
+        return sum + (billing || Number(t.total_amount) || 0)
+    }, 0)
 })
 
 const settlement = computed(() => {
@@ -79,54 +85,27 @@ const settlement = computed(() => {
     let unsettledCount = 0
 
     for (const t of props.transactions) {
-        if (!t.splits || t.splits.length === 0) continue
+        if (!t.debts || t.debts.length === 0) continue
 
-        const totalAmount = Number(t.total_amount) || 0
-        const billingAmount = Number(t.billing_amount) || 0
-        const handlingFee = Number(t.handling_fee) || 0
-        const isBaseCurrency = t.currency === props.baseCurrency
-        const isSettled = isBaseCurrency || billingAmount > 0
+        for (const debt of t.debts) {
+            const settledAmount = Number(debt.settled_amount) || 0
 
-        if (!isSettled) {
-            unsettledCount++
-            // Track in original currency
-            for (const split of t.splits) {
-                if (!foreignNet[split.name]) foreignNet[split.name] = {}
-                if (!foreignNet[split.name][t.currency]) foreignNet[split.name][t.currency] = 0
-
-                if (split.is_payer) {
-                    foreignNet[split.name][t.currency] += totalAmount - Number(split.amount)
-                } else {
-                    foreignNet[split.name][t.currency] -= Number(split.amount)
-                }
+            if (settledAmount > 0) {
+                // Settled debt: use settled_amount (base currency)
+                baseNet[debt.payer_name] = (baseNet[debt.payer_name] || 0) - settledAmount
+                baseNet[debt.payee_name] = (baseNet[debt.payee_name] || 0) + settledAmount
+            } else if (!debt.is_spot_paid) {
+                // Unsettled foreign currency debt
+                unsettledCount++
+                const payerForeign = foreignNet[debt.payer_name] ??= {}
+                const payeeForeign = foreignNet[debt.payee_name] ??= {}
+                payerForeign[t.currency] = (payerForeign[t.currency] || 0) - Number(debt.amount)
+                payeeForeign[t.currency] = (payeeForeign[t.currency] || 0) + Number(debt.amount)
             }
-            continue
+            // is_spot_paid debts are excluded from receivables/payables
         }
-
-        // Settled: calculate in base currency
-        // Non-payer shares use ceiling (應付無條件進位)
-        const payer = t.splits.find(s => s.is_payer)
-        if (!payer) continue
-
-        let nonPayerTotal = 0
-
-        for (const split of t.splits) {
-            if (!split.is_payer) {
-                const share = isBaseCurrency
-                    ? Number(split.amount)
-                    : Math.ceil(Number(split.amount) / totalAmount * billingAmount)
-                if (!(split.name in baseNet)) baseNet[split.name] = 0
-                baseNet[split.name] -= share
-                nonPayerTotal += share
-            }
-        }
-
-        // Payer's receivable = sum of all non-payer shares
-        if (!(payer.name in baseNet)) baseNet[payer.name] = 0
-        baseNet[payer.name] += nonPayerTotal
     }
 
-    // Build sorted result
     const allNames = new Set([...Object.keys(baseNet), ...Object.keys(foreignNet)])
     const items = Array.from(allNames).map(name => ({
         name,
@@ -141,9 +120,10 @@ const settlement = computed(() => {
 
 const categoryStats = computed(() => {
     const cats: Record<string, number> = {}
-    props.transactions.forEach(t => {
-        const name = t.category || '其他'
-        const amount = Number(t.billing_amount) || Number(t.total_amount) || 0
+    expenseTransactions.value.forEach(t => {
+        const name = t.expense?.category || '其他'
+        const billing = t.expense?.billing_amount ? Number(t.expense.billing_amount) : 0
+        const amount = billing || Number(t.total_amount) || 0
         cats[name] = (cats[name] || 0) + amount
     })
 

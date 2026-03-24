@@ -21,34 +21,45 @@
       <div v-if="loading" class="text-center text-neutral-400 p-10">載入中...</div>
 
       <div v-else-if="transaction" class="content">
+        <!-- Header Card -->
         <BaseCard padding="py-8 px-5" class="text-center mb-6">
-          <div class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-800 rounded-2xl mb-4">
-            <Icon :icon="getCategoryIcon(transaction.category)" class="text-xl text-indigo-500" />
-            <span class="font-bold text-sm">{{ transaction.category || '未分類' }}</span>
+          <!-- Type badge -->
+          <div v-if="transaction.type === 'payment'" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 rounded-2xl mb-4">
+            <Icon icon="mdi:swap-horizontal" class="text-xl text-emerald-400" />
+            <span class="font-bold text-sm text-emerald-400">補款</span>
           </div>
-          
+          <div v-else-if="transaction.expense" class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-800 rounded-2xl mb-4">
+            <Icon :icon="getCategoryIcon(transaction.expense.category)" class="text-xl text-indigo-500" />
+            <span class="font-bold text-sm">{{ transaction.expense.category || '未分類' }}</span>
+          </div>
+
           <h2 v-if="transaction.title" class="text-lg font-bold text-white mb-1">{{ transaction.title }}</h2>
-          
+
           <div class="text-4xl font-bold mb-2 tracking-tight">
             <span class="text-neutral-500 text-lg mr-1 font-bold">{{ transaction.currency }}</span>
             {{ formatAmount(transaction.total_amount) }}
           </div>
           <div class="text-neutral-400 text-sm font-medium">{{ formatDate(transaction.date) }}</div>
 
-          <!-- Foreign Currency Details -->
-          <div v-if="transaction.currency !== 'TWD'" class="mt-6 pt-6 border-t border-neutral-800/50 flex flex-col gap-3 text-sm">
-              <div class="flex justify-between items-center text-neutral-400">
-                  <span>匯率</span>
-                  <span class="font-mono bg-neutral-800 px-2 py-0.5 rounded text-neutral-200">{{ transaction.exchange_rate }}</span>
-              </div>
-              <div class="flex justify-between items-center text-neutral-400">
-                  <span>折合台幣</span>
-                  <span class="text-white font-bold text-base">TWD {{ formatAmount(transaction.billing_amount) }}</span>
-              </div>
-              <div v-if="parseFloat(transaction.handling_fee) > 0" class="flex justify-between items-center text-neutral-400">
-                  <span>手續費</span>
-                  <span class="text-neutral-200">TWD {{ formatAmount(transaction.handling_fee) }}</span>
-              </div>
+          <!-- Payment Method -->
+          <div v-if="transaction.expense?.payment_method" class="mt-4 text-sm text-neutral-500">
+            {{ transaction.expense.payment_method }}
+          </div>
+
+          <!-- Foreign Currency Details (expense only) -->
+          <div v-if="transaction.expense && transaction.currency !== detailStore.space?.base_currency" class="mt-6 pt-6 border-t border-neutral-800/50 flex flex-col gap-3 text-sm">
+            <div class="flex justify-between items-center text-neutral-400">
+              <span>匯率</span>
+              <span class="font-mono bg-neutral-800 px-2 py-0.5 rounded text-neutral-200">{{ transaction.expense.exchange_rate }}</span>
+            </div>
+            <div class="flex justify-between items-center text-neutral-400">
+              <span>折合 {{ detailStore.space?.base_currency }}</span>
+              <span class="text-white font-bold text-base">{{ detailStore.space?.base_currency }} {{ formatAmount(transaction.expense.billing_amount) }}</span>
+            </div>
+            <div v-if="parseFloat(transaction.expense.handling_fee) > 0" class="flex justify-between items-center text-neutral-400">
+              <span>手續費</span>
+              <span class="text-neutral-200">{{ detailStore.space?.base_currency }} {{ formatAmount(transaction.expense.handling_fee) }}</span>
+            </div>
           </div>
         </BaseCard>
 
@@ -67,10 +78,11 @@
           </div>
         </div>
 
-        <div class="mb-6">
+        <!-- Expense Items -->
+        <div v-if="transaction.expense?.items && transaction.expense.items.length > 0" class="mb-6">
           <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3 px-1">項目明細</h2>
           <div class="bg-neutral-900 rounded-xl border border-neutral-800/60 divide-y divide-neutral-800">
-            <div v-for="item in transaction.items" :key="item.id" class="flex justify-between items-center px-5 py-4">
+            <div v-for="item in transaction.expense.items" :key="item.id" class="flex justify-between items-center px-5 py-4">
               <span class="font-bold text-neutral-100 text-sm">{{ item.name }}</span>
               <div class="flex items-center gap-2">
                 <span class="text-xs text-neutral-500 font-medium">{{ formatAmount(item.unit_price) }}<template v-if="Number(item.discount) > 0"> - {{ formatAmount(item.discount) }}</template> × {{ item.quantity }}</span>
@@ -80,16 +92,25 @@
           </div>
         </div>
 
-        <!-- Splits -->
-        <div v-if="transaction.splits && transaction.splits.length > 0" class="mb-6">
-          <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3 px-1">分帳</h2>
+        <!-- Debts -->
+        <div v-if="transaction.debts && transaction.debts.length > 0" class="mb-6">
+          <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3 px-1">
+            {{ transaction.type === 'payment' ? '補款詳情' : '分帳' }}
+          </h2>
           <div class="bg-neutral-900 rounded-xl border border-neutral-800/60 divide-y divide-neutral-800">
-            <div v-for="split in transaction.splits" :key="split.id" class="flex justify-between items-center px-5 py-4">
+            <div v-for="debt in transaction.debts" :key="debt.id" class="flex justify-between items-center px-5 py-4">
               <div class="flex items-center gap-2">
-                <span class="font-bold text-neutral-100 text-sm">{{ split.name }}</span>
-                <span v-if="split.is_payer" class="text-xs text-indigo-400 font-bold">付款人</span>
+                <span class="font-bold text-neutral-100 text-sm">{{ debt.payer_name }}</span>
+                <span class="text-neutral-600 text-xs">→</span>
+                <span class="font-bold text-neutral-100 text-sm">{{ debt.payee_name }}</span>
+                <span v-if="debt.is_spot_paid" class="text-xs text-emerald-400 font-bold">已結清</span>
               </div>
-              <div class="font-bold text-white text-sm">{{ transaction.currency }} {{ formatAmount(split.amount) }}</div>
+              <div class="text-right">
+                <div class="font-bold text-white text-sm">{{ transaction.currency }} {{ formatAmount(debt.amount) }}</div>
+                <div v-if="Number(debt.settled_amount) > 0 && Number(debt.settled_amount) !== Number(debt.amount)" class="text-xs text-neutral-500">
+                  ≈ {{ detailStore.space?.base_currency }} {{ formatAmount(debt.settled_amount) }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -167,7 +188,7 @@ const formatDateTime = (dateStr: string) => {
 
 const fetchData = async () => {
   try {
-    transaction.value = await api.get<any>(
+    transaction.value = await api.get<Transaction>(
       `/api/spaces/${route.params.id}/transactions/${route.params.txnId}`
     )
   } catch (e) {

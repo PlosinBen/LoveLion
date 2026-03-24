@@ -24,17 +24,11 @@ func (r *TransactionRepo) WithTx(tx *gorm.DB) *TransactionRepo {
 }
 
 type TransactionUpdateParams struct {
-	Payer         *string
-	Date          *time.Time
-	Currency      *string
-	TotalAmount   *decimal.Decimal
-	ExchangeRate  *decimal.Decimal
-	BillingAmount *decimal.Decimal
-	HandlingFee   *decimal.Decimal
-	Category      *string
-	Title         *string
-	PaymentMethod *string
-	Note          *string
+	Date        *time.Time
+	Currency    *string
+	TotalAmount *decimal.Decimal
+	Title       *string
+	Note        *string
 }
 
 func (r *TransactionRepo) Create(ctx context.Context, txn *models.Transaction) error {
@@ -45,8 +39,9 @@ func (r *TransactionRepo) FindBySpace(ctx context.Context, spaceID uuid.UUID) ([
 	var transactions []models.Transaction
 	err := r.db.WithContext(ctx).
 		Where("space_id = ?", spaceID).
-		Preload("Items").
-		Preload("Splits").
+		Preload("Expense").
+		Preload("Expense.Items").
+		Preload("Debts").
 		Preload("Images", "entity_type = ?", "transaction").
 		Order("date DESC").
 		Find(&transactions).Error
@@ -57,8 +52,9 @@ func (r *TransactionRepo) FindByID(ctx context.Context, id string, spaceID uuid.
 	var txn models.Transaction
 	err := r.db.WithContext(ctx).
 		Where("id = ? AND space_id = ?", id, spaceID).
-		Preload("Items").
-		Preload("Splits").
+		Preload("Expense").
+		Preload("Expense.Items").
+		Preload("Debts").
 		Preload("Images", "entity_type = ?", "transaction").
 		First(&txn).Error
 	if err != nil {
@@ -70,9 +66,6 @@ func (r *TransactionRepo) FindByID(ctx context.Context, id string, spaceID uuid.
 func (r *TransactionRepo) Update(ctx context.Context, id string, params TransactionUpdateParams) error {
 	updates := map[string]interface{}{}
 
-	if params.Payer != nil {
-		updates["payer"] = *params.Payer
-	}
 	if params.Date != nil {
 		updates["date"] = *params.Date
 	}
@@ -82,23 +75,8 @@ func (r *TransactionRepo) Update(ctx context.Context, id string, params Transact
 	if params.TotalAmount != nil {
 		updates["total_amount"] = *params.TotalAmount
 	}
-	if params.ExchangeRate != nil {
-		updates["exchange_rate"] = *params.ExchangeRate
-	}
-	if params.BillingAmount != nil {
-		updates["billing_amount"] = *params.BillingAmount
-	}
-	if params.HandlingFee != nil {
-		updates["handling_fee"] = *params.HandlingFee
-	}
-	if params.Category != nil {
-		updates["category"] = *params.Category
-	}
 	if params.Title != nil {
 		updates["title"] = *params.Title
-	}
-	if params.PaymentMethod != nil {
-		updates["payment_method"] = *params.PaymentMethod
 	}
 	if params.Note != nil {
 		updates["note"] = *params.Note

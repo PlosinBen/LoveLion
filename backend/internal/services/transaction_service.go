@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"math"
 	"time"
 
 	"lovelion/internal/models"
@@ -15,69 +16,96 @@ import (
 )
 
 type TransactionService struct {
-	db        *gorm.DB
-	txnRepo   *repositories.TransactionRepo
-	itemRepo  *repositories.TransactionItemRepo
-	splitRepo *repositories.TransactionSplitRepo
+	db          *gorm.DB
+	txnRepo     *repositories.TransactionRepo
+	expenseRepo *repositories.TransactionExpenseRepo
+	itemRepo    *repositories.TransactionExpenseItemRepo
+	debtRepo    *repositories.TransactionDebtRepo
 }
 
-func NewTransactionService(db *gorm.DB, txnRepo *repositories.TransactionRepo, itemRepo *repositories.TransactionItemRepo, splitRepo *repositories.TransactionSplitRepo) *TransactionService {
+func NewTransactionService(
+	db *gorm.DB,
+	txnRepo *repositories.TransactionRepo,
+	expenseRepo *repositories.TransactionExpenseRepo,
+	itemRepo *repositories.TransactionExpenseItemRepo,
+	debtRepo *repositories.TransactionDebtRepo,
+) *TransactionService {
 	return &TransactionService{
-		db:        db,
-		txnRepo:   txnRepo,
-		itemRepo:  itemRepo,
-		splitRepo: splitRepo,
+		db:          db,
+		txnRepo:     txnRepo,
+		expenseRepo: expenseRepo,
+		itemRepo:    itemRepo,
+		debtRepo:    debtRepo,
 	}
 }
 
-type TransactionItemInput struct {
+// --- Input types ---
+
+type ExpenseItemInput struct {
 	Name      string
 	UnitPrice decimal.Decimal
 	Quantity  decimal.Decimal
 	Discount  decimal.Decimal
 }
 
-type TransactionSplitInput struct {
-	Name    string
-	Amount  decimal.Decimal
-	IsPayer bool
-}
-
-type CreateTransactionInput struct {
-	Payer         string
-	Date          *time.Time
-	Currency      string
-	TotalAmount   decimal.Decimal
+type ExpenseInput struct {
+	Category      string
 	ExchangeRate  decimal.Decimal
 	BillingAmount decimal.Decimal
 	HandlingFee   decimal.Decimal
-	Category      string
-	Title         string
 	PaymentMethod string
-	Note          string
-	Items         []TransactionItemInput
-	Splits        []TransactionSplitInput
+	Items         []ExpenseItemInput
 }
 
-type UpdateTransactionInput struct {
-	Payer         string
-	Date          *time.Time
-	Currency      string
-	TotalAmount   *decimal.Decimal
-	ExchangeRate  *decimal.Decimal
-	BillingAmount *decimal.Decimal
-	HandlingFee   *decimal.Decimal
-	Category      string
-	Title         string
-	PaymentMethod string
-	Note          string
-	Items         []TransactionItemInput
-	Splits        []TransactionSplitInput
+type DebtInput struct {
+	PayerName  string
+	PayeeName  string
+	Amount     decimal.Decimal
+	IsSpotPaid bool
 }
 
-func buildItems(txnID string, inputs []TransactionItemInput) ([]models.TransactionItem, decimal.Decimal) {
+type CreateExpenseInput struct {
+	Date     *time.Time
+	Currency string
+	Title    string
+	Note     string
+	Expense  ExpenseInput
+	Debts    []DebtInput
+}
+
+type UpdateExpenseInput struct {
+	Date        *time.Time
+	Currency    string
+	TotalAmount *decimal.Decimal
+	Title       string
+	Note        string
+	Expense     ExpenseInput
+	Debts       []DebtInput
+}
+
+type CreatePaymentInput struct {
+	Date        *time.Time
+	Title       string
+	Note        string
+	TotalAmount decimal.Decimal
+	PayerName   string
+	PayeeName   string
+}
+
+type UpdatePaymentInput struct {
+	Date        *time.Time
+	Title       string
+	Note        string
+	TotalAmount *decimal.Decimal
+	PayerName   string
+	PayeeName   string
+}
+
+// --- Helpers ---
+
+func buildExpenseItems(expenseID uuid.UUID, inputs []ExpenseItemInput) ([]models.TransactionExpenseItem, decimal.Decimal) {
 	totalAmount := decimal.Zero
-	var items []models.TransactionItem
+	var items []models.TransactionExpenseItem
 
 	for _, inp := range inputs {
 		quantity := inp.Quantity
@@ -87,14 +115,14 @@ func buildItems(txnID string, inputs []TransactionItemInput) ([]models.Transacti
 
 		amount := inp.UnitPrice.Sub(inp.Discount).Mul(quantity)
 
-		items = append(items, models.TransactionItem{
-			ID:            uuid.New(),
-			TransactionID: txnID,
-			Name:          inp.Name,
-			UnitPrice:     inp.UnitPrice,
-			Quantity:      quantity,
-			Discount:      inp.Discount,
-			Amount:        amount,
+		items = append(items, models.TransactionExpenseItem{
+			ID:        uuid.New(),
+			ExpenseID: expenseID,
+			Name:      inp.Name,
+			UnitPrice: inp.UnitPrice,
+			Quantity:  quantity,
+			Discount:  inp.Discount,
+			Amount:    amount,
 		})
 		totalAmount = totalAmount.Add(amount)
 	}
@@ -102,19 +130,52 @@ func buildItems(txnID string, inputs []TransactionItemInput) ([]models.Transacti
 	return items, totalAmount
 }
 
-func buildSplits(txnID string, inputs []TransactionSplitInput) []models.TransactionSplit {
-	var splits []models.TransactionSplit
+func calcSettledAmount(debt DebtInput, totalAmount decimal.Decimal, expense ExpenseInput, currency string) decimal.Decimal {
+	if debt.IsSpotPaid {
+		return decimal.Zero
+	}
+
+	billingAmount := expense.BillingAmount
+
+	// Base currency: settled = amount
+	isBaseCurrency := currency == "TWD" || billingAmount.IsZero()
+	if isBaseCurrency {
+		return debt.Amount
+	}
+
+	// Foreign currency with billing: ceiling(amount / totalAmount * billingAmount)
+	if totalAmount.IsPositive() && billingAmount.IsPositive() {
+		ratio := debt.Amount.Div(totalAmount).Mul(billingAmount)
+		// Ceiling: round up to integer
+		f, _ := ratio.Float64()
+		return decimal.NewFromFloat(math.Ceil(f))
+	}
+
+	return decimal.Zero
+}
+
+func buildDebts(txnID string, inputs []DebtInput, totalAmount decimal.Decimal, expense *ExpenseInput, currency string) []models.TransactionDebt {
+	var debts []models.TransactionDebt
 	for _, inp := range inputs {
-		splits = append(splits, models.TransactionSplit{
+		settled := inp.Amount // default for base currency / payment
+		if expense != nil {
+			settled = calcSettledAmount(inp, totalAmount, *expense, currency)
+		}
+
+		debts = append(debts, models.TransactionDebt{
 			ID:            uuid.New(),
 			TransactionID: txnID,
-			Name:          inp.Name,
+			PayerName:     inp.PayerName,
+			PayeeName:     inp.PayeeName,
 			Amount:        inp.Amount,
-			IsPayer:       inp.IsPayer,
+			SettledAmount: settled,
+			IsSpotPaid:    inp.IsSpotPaid,
 		})
 	}
-	return splits
+	return debts
 }
+
+// --- Read operations (shared) ---
 
 func (s *TransactionService) List(ctx context.Context, spaceID uuid.UUID) ([]models.Transaction, error) {
 	transactions, err := s.txnRepo.FindBySpace(ctx, spaceID)
@@ -135,133 +196,6 @@ func (s *TransactionService) GetByID(ctx context.Context, txnID string, spaceID 
 	return txn, nil
 }
 
-func (s *TransactionService) Create(ctx context.Context, spaceID uuid.UUID, input CreateTransactionInput) (*models.Transaction, error) {
-	txnID, err := utils.NewShortID(s.db, "transactions", "id")
-	if err != nil {
-		return nil, errorx.Wrap(errorx.ErrInternal, "Failed to generate ID")
-	}
-
-	txn := &models.Transaction{
-		ID:            txnID,
-		SpaceID:       spaceID,
-		Payer:         input.Payer,
-		Currency:      input.Currency,
-		ExchangeRate:  input.ExchangeRate,
-		BillingAmount: input.BillingAmount,
-		HandlingFee:   input.HandlingFee,
-		Category:      input.Category,
-		Title:         input.Title,
-		PaymentMethod: input.PaymentMethod,
-		Note:          input.Note,
-	}
-
-	if input.Date != nil {
-		txn.Date = *input.Date
-	} else {
-		txn.Date = time.Now()
-	}
-
-	if txn.Currency == "" {
-		txn.Currency = "TWD"
-	}
-
-	if txn.ExchangeRate.IsZero() {
-		txn.ExchangeRate = decimal.NewFromInt(1)
-	}
-
-	if len(input.Items) > 0 {
-		items, totalAmount := buildItems(txnID, input.Items)
-		txn.Items = items
-		txn.TotalAmount = totalAmount
-	} else {
-		txn.TotalAmount = input.TotalAmount
-	}
-
-	txn.Splits = buildSplits(txnID, input.Splits)
-
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		txnRepo := s.txnRepo.WithTx(tx)
-		return txnRepo.Create(ctx, txn)
-	}); err != nil {
-		return nil, errorx.Wrap(errorx.ErrInternal, "Failed to create transaction")
-	}
-
-	return txn, nil
-}
-
-func (s *TransactionService) Update(ctx context.Context, txnID string, spaceID uuid.UUID, input UpdateTransactionInput) (*models.Transaction, error) {
-	// Verify existence
-	if _, err := s.txnRepo.FindByID(ctx, txnID, spaceID); err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, errorx.Wrap(errorx.ErrNotFound, "Transaction not found")
-		}
-		return nil, errorx.Wrap(errorx.ErrInternal, "Failed to fetch transaction")
-	}
-
-	// Build update params
-	params := repositories.TransactionUpdateParams{
-		Date:          input.Date,
-		TotalAmount:   input.TotalAmount,
-		ExchangeRate:  input.ExchangeRate,
-		BillingAmount: input.BillingAmount,
-		HandlingFee:   input.HandlingFee,
-		Note:          &input.Note,
-	}
-	if input.Payer != "" {
-		params.Payer = &input.Payer
-	}
-	if input.Currency != "" {
-		params.Currency = &input.Currency
-	}
-	if input.Category != "" {
-		params.Category = &input.Category
-	}
-	if input.Title != "" {
-		params.Title = &input.Title
-	}
-	if input.PaymentMethod != "" {
-		params.PaymentMethod = &input.PaymentMethod
-	}
-
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		txnRepo := s.txnRepo.WithTx(tx)
-		itemRepo := s.itemRepo.WithTx(tx)
-		splitRepo := s.splitRepo.WithTx(tx)
-
-		// Replace items if provided
-		if input.Items != nil {
-			if err := itemRepo.DeleteByTransaction(ctx, txnID); err != nil {
-				return err
-			}
-			if len(input.Items) > 0 {
-				items, totalAmount := buildItems(txnID, input.Items)
-				if err := itemRepo.BatchCreate(ctx, items); err != nil {
-					return err
-				}
-				params.TotalAmount = &totalAmount
-			}
-		}
-
-		// Replace splits if provided
-		if input.Splits != nil {
-			if err := splitRepo.DeleteByTransaction(ctx, txnID); err != nil {
-				return err
-			}
-			splits := buildSplits(txnID, input.Splits)
-			if err := splitRepo.BatchCreate(ctx, splits); err != nil {
-				return err
-			}
-		}
-
-		return txnRepo.Update(ctx, txnID, params)
-	}); err != nil {
-		return nil, errorx.Wrap(errorx.ErrInternal, "Failed to update transaction")
-	}
-
-	// Reload with associations
-	return s.txnRepo.FindByID(ctx, txnID, spaceID)
-}
-
 func (s *TransactionService) Delete(ctx context.Context, txnID string, spaceID uuid.UUID) error {
 	rows, err := s.txnRepo.Delete(ctx, txnID, spaceID)
 	if err != nil {
@@ -271,4 +205,300 @@ func (s *TransactionService) Delete(ctx context.Context, txnID string, spaceID u
 		return errorx.Wrap(errorx.ErrNotFound, "Transaction not found")
 	}
 	return nil
+}
+
+// --- Expense operations ---
+
+func (s *TransactionService) CreateExpense(ctx context.Context, spaceID uuid.UUID, input CreateExpenseInput) (*models.Transaction, error) {
+	txnID, err := utils.NewShortID(s.db, "transactions", "id")
+	if err != nil {
+		return nil, errorx.Wrap(errorx.ErrInternal, "Failed to generate ID")
+	}
+
+	expenseID := uuid.New()
+
+	// Build items and calculate total
+	items, totalAmount := buildExpenseItems(expenseID, input.Expense.Items)
+
+	currency := input.Currency
+	if currency == "" {
+		currency = "TWD"
+	}
+
+	exchangeRate := input.Expense.ExchangeRate
+	if exchangeRate.IsZero() {
+		exchangeRate = decimal.NewFromInt(1)
+	}
+
+	txn := &models.Transaction{
+		ID:          txnID,
+		SpaceID:     spaceID,
+		Type:        "expense",
+		Title:       input.Title,
+		Currency:    currency,
+		TotalAmount: totalAmount,
+		Note:        input.Note,
+	}
+
+	if input.Date != nil {
+		txn.Date = *input.Date
+	} else {
+		txn.Date = time.Now()
+	}
+
+	expense := &models.TransactionExpense{
+		ID:            expenseID,
+		TransactionID: txnID,
+		Category:      input.Expense.Category,
+		ExchangeRate:  exchangeRate,
+		BillingAmount: input.Expense.BillingAmount,
+		HandlingFee:   input.Expense.HandlingFee,
+		PaymentMethod: input.Expense.PaymentMethod,
+	}
+
+	debts := buildDebts(txnID, input.Debts, totalAmount, &input.Expense, currency)
+
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		txnRepo := s.txnRepo.WithTx(tx)
+		expenseRepo := s.expenseRepo.WithTx(tx)
+		itemRepo := s.itemRepo.WithTx(tx)
+		debtRepo := s.debtRepo.WithTx(tx)
+
+		if err := txnRepo.Create(ctx, txn); err != nil {
+			return err
+		}
+		if err := expenseRepo.Create(ctx, expense); err != nil {
+			return err
+		}
+		if len(items) > 0 {
+			if err := itemRepo.BatchCreate(ctx, items); err != nil {
+				return err
+			}
+		}
+		if len(debts) > 0 {
+			if err := debtRepo.BatchCreate(ctx, debts); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, errorx.Wrap(errorx.ErrInternal, "Failed to create expense")
+	}
+
+	return s.txnRepo.FindByID(ctx, txnID, spaceID)
+}
+
+func (s *TransactionService) UpdateExpense(ctx context.Context, txnID string, spaceID uuid.UUID, input UpdateExpenseInput) (*models.Transaction, error) {
+	existing, err := s.txnRepo.FindByID(ctx, txnID, spaceID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errorx.Wrap(errorx.ErrNotFound, "Transaction not found")
+		}
+		return nil, errorx.Wrap(errorx.ErrInternal, "Failed to fetch transaction")
+	}
+
+	if existing.Type != "expense" {
+		return nil, errorx.Wrap(errorx.ErrBadRequest, "Cannot update non-expense transaction as expense")
+	}
+
+	if existing.Expense == nil {
+		return nil, errorx.Wrap(errorx.ErrInternal, "Expense data not found")
+	}
+
+	expenseID := existing.Expense.ID
+
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		txnRepo := s.txnRepo.WithTx(tx)
+		expenseRepo := s.expenseRepo.WithTx(tx)
+		itemRepo := s.itemRepo.WithTx(tx)
+		debtRepo := s.debtRepo.WithTx(tx)
+
+		// Update transaction base fields
+		params := repositories.TransactionUpdateParams{
+			Date: input.Date,
+			Note: &input.Note,
+		}
+		if input.Currency != "" {
+			params.Currency = &input.Currency
+		}
+		if input.Title != "" {
+			params.Title = &input.Title
+		}
+
+		// Replace items
+		if err := itemRepo.DeleteByExpense(ctx, expenseID); err != nil {
+			return err
+		}
+		items, totalAmount := buildExpenseItems(expenseID, input.Expense.Items)
+		if len(items) > 0 {
+			if err := itemRepo.BatchCreate(ctx, items); err != nil {
+				return err
+			}
+		}
+		params.TotalAmount = &totalAmount
+
+		// Update expense fields
+		exchangeRate := input.Expense.ExchangeRate
+		if exchangeRate.IsZero() {
+			exchangeRate = decimal.NewFromInt(1)
+		}
+		expenseParams := repositories.ExpenseUpdateParams{
+			Category:      &input.Expense.Category,
+			ExchangeRate:  &exchangeRate,
+			BillingAmount: &input.Expense.BillingAmount,
+			HandlingFee:   &input.Expense.HandlingFee,
+			PaymentMethod: &input.Expense.PaymentMethod,
+		}
+		if err := expenseRepo.Update(ctx, txnID, expenseParams); err != nil {
+			return err
+		}
+
+		// Replace debts with recalculated settled_amount
+		currency := input.Currency
+		if currency == "" {
+			currency = existing.Currency
+		}
+		if err := debtRepo.DeleteByTransaction(ctx, txnID); err != nil {
+			return err
+		}
+		debts := buildDebts(txnID, input.Debts, totalAmount, &input.Expense, currency)
+		if len(debts) > 0 {
+			if err := debtRepo.BatchCreate(ctx, debts); err != nil {
+				return err
+			}
+		}
+
+		return txnRepo.Update(ctx, txnID, params)
+	}); err != nil {
+		return nil, errorx.Wrap(errorx.ErrInternal, "Failed to update expense")
+	}
+
+	return s.txnRepo.FindByID(ctx, txnID, spaceID)
+}
+
+// --- Payment operations ---
+
+func (s *TransactionService) CreatePayment(ctx context.Context, spaceID uuid.UUID, baseCurrency string, input CreatePaymentInput) (*models.Transaction, error) {
+	if input.PayerName == "" || input.PayeeName == "" {
+		return nil, errorx.Wrap(errorx.ErrBadRequest, "Payer and payee are required")
+	}
+	if input.PayerName == input.PayeeName {
+		return nil, errorx.Wrap(errorx.ErrBadRequest, "Payer and payee must be different")
+	}
+	if !input.TotalAmount.IsPositive() {
+		return nil, errorx.Wrap(errorx.ErrBadRequest, "Amount must be positive")
+	}
+
+	txnID, err := utils.NewShortID(s.db, "transactions", "id")
+	if err != nil {
+		return nil, errorx.Wrap(errorx.ErrInternal, "Failed to generate ID")
+	}
+
+	if baseCurrency == "" {
+		baseCurrency = "TWD"
+	}
+
+	txn := &models.Transaction{
+		ID:          txnID,
+		SpaceID:     spaceID,
+		Type:        "payment",
+		Title:       input.Title,
+		Currency:    baseCurrency,
+		TotalAmount: input.TotalAmount,
+		Note:        input.Note,
+	}
+
+	if input.Date != nil {
+		txn.Date = *input.Date
+	} else {
+		txn.Date = time.Now()
+	}
+
+	debt := models.TransactionDebt{
+		ID:            uuid.New(),
+		TransactionID: txnID,
+		PayerName:     input.PayerName,
+		PayeeName:     input.PayeeName,
+		Amount:        input.TotalAmount,
+		SettledAmount: input.TotalAmount,
+		IsSpotPaid:    false,
+	}
+
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		txnRepo := s.txnRepo.WithTx(tx)
+		debtRepo := s.debtRepo.WithTx(tx)
+
+		if err := txnRepo.Create(ctx, txn); err != nil {
+			return err
+		}
+		return debtRepo.BatchCreate(ctx, []models.TransactionDebt{debt})
+	}); err != nil {
+		return nil, errorx.Wrap(errorx.ErrInternal, "Failed to create payment")
+	}
+
+	return s.txnRepo.FindByID(ctx, txnID, spaceID)
+}
+
+func (s *TransactionService) UpdatePayment(ctx context.Context, txnID string, spaceID uuid.UUID, input UpdatePaymentInput) (*models.Transaction, error) {
+	existing, err := s.txnRepo.FindByID(ctx, txnID, spaceID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errorx.Wrap(errorx.ErrNotFound, "Transaction not found")
+		}
+		return nil, errorx.Wrap(errorx.ErrInternal, "Failed to fetch transaction")
+	}
+
+	if existing.Type != "payment" {
+		return nil, errorx.Wrap(errorx.ErrBadRequest, "Cannot update non-payment transaction as payment")
+	}
+
+	if input.PayerName == "" || input.PayeeName == "" {
+		return nil, errorx.Wrap(errorx.ErrBadRequest, "Payer and payee are required")
+	}
+	if input.PayerName == input.PayeeName {
+		return nil, errorx.Wrap(errorx.ErrBadRequest, "Payer and payee must be different")
+	}
+
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		txnRepo := s.txnRepo.WithTx(tx)
+		debtRepo := s.debtRepo.WithTx(tx)
+
+		params := repositories.TransactionUpdateParams{
+			Date:        input.Date,
+			TotalAmount: input.TotalAmount,
+			Note:        &input.Note,
+		}
+		if input.Title != "" {
+			params.Title = &input.Title
+		}
+
+		// Replace debt
+		if err := debtRepo.DeleteByTransaction(ctx, txnID); err != nil {
+			return err
+		}
+
+		amount := existing.TotalAmount
+		if input.TotalAmount != nil {
+			amount = *input.TotalAmount
+		}
+
+		debt := models.TransactionDebt{
+			ID:            uuid.New(),
+			TransactionID: txnID,
+			PayerName:     input.PayerName,
+			PayeeName:     input.PayeeName,
+			Amount:        amount,
+			SettledAmount: amount,
+			IsSpotPaid:    false,
+		}
+		if err := debtRepo.BatchCreate(ctx, []models.TransactionDebt{debt}); err != nil {
+			return err
+		}
+
+		return txnRepo.Update(ctx, txnID, params)
+	}); err != nil {
+		return nil, errorx.Wrap(errorx.ErrInternal, "Failed to update payment")
+	}
+
+	return s.txnRepo.FindByID(ctx, txnID, spaceID)
 }

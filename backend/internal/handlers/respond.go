@@ -20,6 +20,8 @@ func respondError(c *gin.Context, err error) {
 		status = http.StatusForbidden
 	} else if errorx.Is(err, errorx.ErrConflict) {
 		status = http.StatusConflict
+	} else if errorx.Is(err, errorx.ErrBadRequest) {
+		status = http.StatusBadRequest
 	}
 
 	c.JSON(status, gin.H{"error": err.Error()})

@@ -93,7 +93,7 @@
               </div>
               <div class="flex flex-col">
                 <span class="text-sm font-bold text-white">{{ space.name }}</span>
-                <span class="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">{{ space.type === 'trip' ? '旅行' : '個人' }}</span>
+                <span class="text-xs text-neutral-500 uppercase font-bold tracking-wider">{{ space.type === 'trip' ? '旅行' : '個人' }}</span>
               </div>
             </div>
             
@@ -120,7 +120,7 @@
       </section>
 
       <!-- App Info -->
-      <p class="text-center text-[10px] text-neutral-700 font-bold uppercase tracking-[0.2em] mt-6 flex flex-col gap-2">
+      <p class="text-center text-xs text-neutral-700 font-bold uppercase tracking-widest mt-6 flex flex-col gap-2">
         <span>LoveLion v1.2.0-stable</span>
         <span>Crafted with Passion © 2026 Antigravity</span>
       </p>

@@ -50,12 +50,13 @@ func main() {
 		inviteRepo := repositories.NewInviteRepo(db)
 		memberRepo := repositories.NewMemberRepo(db)
 		txnRepo := repositories.NewTransactionRepo(db)
-		itemRepo := repositories.NewTransactionItemRepo(db)
-		splitRepo := repositories.NewTransactionSplitRepo(db)
+		expenseRepo := repositories.NewTransactionExpenseRepo(db)
+		expenseItemRepo := repositories.NewTransactionExpenseItemRepo(db)
+		debtRepo := repositories.NewTransactionDebtRepo(db)
 
 		// Services
 		inviteService := services.NewInviteService(db, inviteRepo, memberRepo)
-		txnService := services.NewTransactionService(db, txnRepo, itemRepo, splitRepo)
+		txnService := services.NewTransactionService(db, txnRepo, expenseRepo, expenseItemRepo, debtRepo)
 
 		// Sharing routes (Public Info)
 		sharingHandler := handlers.NewSpaceSharingHandler(inviteService, memberRepo)
@@ -109,13 +110,21 @@ func main() {
 				spaceGroup.PUT("/stores/:store_id/products/:product_id", comparisonHandler.UpdateProduct)
 				spaceGroup.DELETE("/stores/:store_id/products/:product_id", comparisonHandler.DeleteProduct)
 
-				// Transaction routes nested under space
+				// Transaction routes (shared: list, get, delete)
 				transactionHandler := handlers.NewTransactionHandler(txnService)
 				spaceGroup.GET("/transactions", transactionHandler.List)
-				spaceGroup.POST("/transactions", transactionHandler.Create)
 				spaceGroup.GET("/transactions/:txn_id", transactionHandler.Get)
-				spaceGroup.PUT("/transactions/:txn_id", transactionHandler.Update)
 				spaceGroup.DELETE("/transactions/:txn_id", transactionHandler.Delete)
+
+				// Expense routes
+				expenseHandler := handlers.NewExpenseHandler(txnService)
+				spaceGroup.POST("/expenses", expenseHandler.Create)
+				spaceGroup.PUT("/expenses/:txn_id", expenseHandler.Update)
+
+				// Payment routes
+				paymentHandler := handlers.NewPaymentHandler(txnService)
+				spaceGroup.POST("/payments", paymentHandler.Create)
+				spaceGroup.PUT("/payments/:txn_id", paymentHandler.Update)
 			}
 		}
 

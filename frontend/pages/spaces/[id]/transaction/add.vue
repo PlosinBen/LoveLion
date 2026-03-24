@@ -7,181 +7,40 @@
     />
 
     <div>
-      <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
-        <!-- Date & Time -->
-        <div class="flex flex-col gap-2">
-          <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">日期與時間</label>
-          <VueDatePicker 
-            v-model="form.date" 
-            :dark="true"
-            :formats="{input: 'yyyy-MM-dd HH:mm'}"
-            :enable-seconds="false"
-            time-picker-inline
-            cancel-text="取消"
-            select-text="確定"
-            placeholder="點擊選擇時間"
-          />
-        </div>
+      <!-- Type Selector -->
+      <div class="flex bg-neutral-900 rounded-xl p-1 border border-neutral-800 mb-6">
+        <button
+          type="button"
+          @click="transactionType = 'expense'"
+          class="flex-1 py-2.5 text-sm font-bold rounded-lg border-0 cursor-pointer transition-all"
+          :class="transactionType === 'expense' ? 'bg-indigo-500 text-white' : 'bg-transparent text-neutral-500 hover:text-neutral-300'"
+        >
+          消費
+        </button>
+        <button
+          type="button"
+          @click="transactionType = 'payment'"
+          class="flex-1 py-2.5 text-sm font-bold rounded-lg border-0 cursor-pointer transition-all"
+          :class="transactionType === 'payment' ? 'bg-indigo-500 text-white' : 'bg-transparent text-neutral-500 hover:text-neutral-300'"
+        >
+          補款
+        </button>
+      </div>
 
-        <!-- Currency & Category -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="flex flex-col gap-2">
-            <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">幣別</label>
-            <BaseSelect
-              v-model="form.currency"
-              :options="availableCurrencies"
-            />
-          </div>
-          <div class="flex flex-col gap-2">
-            <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">類別</label>
-            <BaseSelect
-              v-model="form.category"
-              :options="categories"
-            />
-          </div>
-        </div>
-
-        <!-- Items Section -->
-        <div class="flex flex-col gap-3">
-          <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1 flex justify-between">
-            <span>項目明細 ({{ form.currency }})</span>
-            <span class="text-indigo-400">總計 {{ totalAmount.toLocaleString() }}</span>
-          </label>
-          
-          <div class="flex flex-col gap-3">
-            <div v-for="(item, index) in form.items" :key="index" class="bg-neutral-900 rounded-xl p-4 border border-neutral-800 flex flex-col gap-4 relative">
-              <BaseInput
-                v-model="item.name"
-                placeholder="項目名稱"
-                input-class="font-bold"
-              />
-              
-              <!-- Row 1: Price Factors (Unit Price - Discount) -->
-              <div class="grid grid-cols-2 gap-3">
-                <div class="flex flex-col gap-1">
-                  <label class="text-[10px] font-bold text-neutral-500 uppercase px-1">單價</label>
-                  <BaseInput
-                    v-model.number="item.unit_price"
-                    type="number"
-                    placeholder="單價"
-                  />
-                </div>
-                <div class="flex flex-col gap-1">
-                  <label class="text-[10px] font-bold text-neutral-500 uppercase px-1">折扣</label>
-                  <BaseInput
-                    v-model.number="item.discount"
-                    type="number"
-                    placeholder="折扣"
-                  />
-                </div>
-              </div>
-              
-              <!-- Row 2: Result Factors (Quantity & Subtotal) -->
-              <div class="flex items-end gap-3">
-                <div class="w-24 flex flex-col gap-1">
-                  <label class="text-[10px] font-bold text-neutral-500 uppercase px-1">數量</label>
-                  <BaseInput
-                    v-model.number="item.quantity"
-                    type="number"
-                    placeholder="數量"
-                    min="1"
-                  />
-                </div>
-                
-                <div class="flex-1 text-right pb-3">
-                  <div class="text-[10px] font-bold text-neutral-500 uppercase px-1 mb-1">項目小計</div>
-                  <div class="text-xl font-bold text-indigo-400">
-                    {{ ((Number(item.unit_price) - Number(item.discount || 0)) * Number(item.quantity)).toLocaleString() }}
-                  </div>
-                </div>
-
-                <button
-                  v-if="form.items.length > 1"
-                  type="button"
-                  @click="removeItem(index)"
-                  class="flex justify-center items-center w-10 h-10 rounded bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 cursor-pointer transition-colors active:scale-95 mb-1"
-                >
-                  <Icon icon="mdi:close" class="text-xl" />
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <button type="button" @click="addItem" class="flex justify-center items-center w-full py-2.5 text-sm rounded font-bold bg-transparent text-neutral-500 hover:text-indigo-400 border border-dashed border-neutral-700 cursor-pointer transition-all active:scale-95 gap-2">
-            <Icon icon="mdi:plus" class="text-xl" /> 新增項目
-          </button>
-        </div>
-
-        <!-- Foreign Currency Settlement (Conditional) -->
-        <div v-if="form.currency !== baseCurrency" class="bg-indigo-500/5 rounded-xl p-5 border border-indigo-500/10 flex flex-col gap-5">
-          <div class="flex justify-between items-center">
-            <h3 class="font-bold text-xs text-indigo-400 uppercase tracking-wider">外幣結算</h3>
-            <label class="flex items-center gap-2 cursor-pointer select-none">
-              <input type="checkbox" v-model="form.manual_rate" class="w-4 h-4 rounded text-indigo-500 bg-neutral-800 border-neutral-700">
-              <span class="text-xs font-bold text-neutral-400">手動輸入匯率</span>
-            </label>
-          </div>
-
-          <!-- Manual Rate Mode -->
-          <div v-if="form.manual_rate" class="flex flex-col gap-4">
-             <div class="flex flex-col gap-2">
-               <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">匯率 (1 TWD = ? 外幣)</label>
-               <BaseInput
-                  v-model.number="form.exchange_rate"
-                  type="number"
-                  step="0.0001"
-               />
-             </div>
-             <div class="flex flex-col gap-2">
-               <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">銀行手續費 (TWD)</label>
-               <BaseInput
-                  v-model.number="form.handling_fee"
-                  type="number"
-               />
-             </div>
-             <div class="flex flex-col gap-2">
-                <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">折合台幣 (含手續費)</label>
-                <div class="w-full bg-neutral-800/50 border border-neutral-700 border-dashed text-white py-3 px-4 rounded-xl text-xl font-bold">
-                   TWD {{ (calculatedBillingAmount + Number(form.handling_fee)).toLocaleString() }}
-                </div>
-             </div>
-          </div>
-
-          <!-- Billing Amount Mode -->
-          <div v-else class="flex flex-col gap-4">
-             <div class="flex flex-col gap-2">
-               <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">銀行入帳金額 (TWD，不含手續費)</label>
-               <BaseInput
-                  v-model.number="form.billing_amount"
-                  type="number"
-               />
-             </div>
-             <div class="flex flex-col gap-2">
-               <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">銀行手續費 (TWD)</label>
-               <BaseInput
-                  v-model.number="form.handling_fee"
-                  type="number"
-               />
-             </div>
-             <div class="flex flex-col gap-2">
-                <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">換算匯率</label>
-                <div class="w-full bg-neutral-800/50 border border-neutral-700 border-dashed text-indigo-400 py-3 px-4 rounded-xl text-xl font-bold">
-                   {{ calculatedExchangeRate }}
-                </div>
-             </div>
-          </div>
-        </div>
-
-        <!-- Splits -->
-        <SplitEditor
-          :splits="splits"
-          :total-amount="totalAmount"
-          @update:splits="splits = $event"
-        />
-
-        <!-- Images -->
-        <div class="flex flex-col gap-2">
-          <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">收據 / 照片</label>
+      <!-- Expense Form -->
+      <ExpenseForm
+        v-if="transactionType === 'expense'"
+        v-model:form="expenseForm"
+        :base-currency="baseCurrency"
+        :categories="categories"
+        :available-currencies="availableCurrencies"
+        :payment-methods="paymentMethods"
+        :debts="debts"
+        :member-options="memberOptions"
+        @update:debts="debts = $event"
+        @submit="handleExpenseSubmit"
+      >
+        <template #images>
           <ImageManager
             entity-id="pending"
             entity-type="transaction"
@@ -189,40 +48,32 @@
             :instant-delete="false"
             ref="imageManagerRef"
           />
-        </div>
+        </template>
+      </ExpenseForm>
 
-        <!-- Note -->
-        <div class="flex flex-col gap-2">
-          <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">備註</label>
-          <BaseTextarea
-            v-model="form.note"
-            placeholder="選填"
-            rows="3"
-          />
-        </div>
-
-        <!-- Submit -->
-        <BaseButton type="submit" variant="primary" class="w-full mt-4">
-          儲存交易
-        </BaseButton>
-      </form>
+      <!-- Payment Form -->
+      <PaymentForm
+        v-else
+        v-model:form="paymentForm"
+        :base-currency="baseCurrency"
+        :member-options="memberOptions"
+        @submit="handlePaymentSubmit"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { Icon } from '@iconify/vue'
-import { VueDatePicker } from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
+import { ref, onMounted } from 'vue'
 import { useLoading } from '~/composables/useLoading'
-import BaseInput from '~/components/BaseInput.vue'
-import BaseSelect from '~/components/BaseSelect.vue'
-import BaseTextarea from '~/components/BaseTextarea.vue'
 import PageTitle from '~/components/PageTitle.vue'
 import ImageManager from '~/components/ImageManager.vue'
-import SplitEditor from '~/components/SplitEditor.vue'
-import type { SplitItem } from '~/components/SplitEditor.vue'
+import ExpenseForm from '~/components/ExpenseForm.vue'
+import PaymentForm from '~/components/PaymentForm.vue'
+import type { ExpenseFormData } from '~/components/ExpenseForm.vue'
+import type { PaymentFormData } from '~/components/PaymentForm.vue'
+import type { DebtItem } from '~/components/DebtEditor.vue'
+import type { TransactionType } from '~/types'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 
 definePageMeta({
@@ -236,105 +87,114 @@ const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
 const detailStore = useSpaceDetailStore()
 
+const transactionType = ref<TransactionType>('expense')
 const categories = ref<{label: string, value: string}[]>([])
 const availableCurrencies = ref<{label: string, value: string}[]>([])
-
+const paymentMethods = ref<{label: string, value: string}[]>([])
 const baseCurrency = ref('TWD')
+const memberOptions = ref<string[]>([])
 const { showLoading, hideLoading } = useLoading()
 const imageManagerRef = ref<InstanceType<typeof ImageManager> | null>(null)
-const splits = ref<SplitItem[]>([])
+const debts = ref<DebtItem[]>([])
 
-const form = ref({
+const expenseForm = ref<ExpenseFormData>({
   date: new Date(),
+  title: '',
+  total_amount: 0,
   category: '其他',
+  payment_method: '',
   note: '',
   items: [{ name: '', unit_price: 0, quantity: 1, discount: 0 }],
   currency: 'TWD',
-  manual_rate: true, 
+  manual_rate: true,
   exchange_rate: 0,
   billing_amount: 0,
   handling_fee: 0
 })
 
-const totalAmount = computed(() => {
-  return form.value.items.reduce((sum, item) => {
-    const subtotal = (Number(item.unit_price) - Number(item.discount || 0)) * Number(item.quantity)
-    return sum + subtotal
-  }, 0)
+const paymentForm = ref<PaymentFormData>({
+  date: new Date(),
+  title: '',
+  payer_name: '',
+  payee_name: '',
+  total_amount: 0,
+  note: ''
 })
 
-const calculatedBillingAmount = computed(() => {
-    if (form.value.manual_rate && form.value.exchange_rate > 0) {
-        return Math.round(totalAmount.value * form.value.exchange_rate)
-    }
-    return 0
-})
+const handleExpenseSubmit = async () => {
+  const form = expenseForm.value
 
-const calculatedExchangeRate = computed(() => {
-    if (!form.value.manual_rate && totalAmount.value > 0 && form.value.billing_amount > 0) {
-        return (form.value.billing_amount / totalAmount.value).toFixed(4)
-    }
-    return 0
-})
-
-watch(calculatedBillingAmount, (newVal) => {
-    if (form.value.manual_rate) form.value.billing_amount = newVal
-})
-
-watch(calculatedExchangeRate, (newVal) => {
-    if (!form.value.manual_rate) form.value.exchange_rate = Number(newVal)
-})
-
-const addItem = () => {
-  form.value.items.push({ name: '', unit_price: 0, quantity: 1, discount: 0 })
-}
-
-const removeItem = (index: number) => {
-  form.value.items.splice(index, 1)
-}
-
-const handleSubmit = async () => {
-  if (!form.value.items.some(item => item.name && Number(item.unit_price) > 0)) {
-    alert('請至少填寫一個項目名稱與金額')
+  if (form.total_amount <= 0) {
+    alert('請填寫總額')
     return
   }
 
-  if (splits.value.length > 0) {
-    const splitTotal = splits.value.reduce((s, item) => s + Number(item.amount || 0), 0)
-    if (Math.round((totalAmount.value - splitTotal) * 100) !== 0) {
-      alert('分帳總額與交易總額不一致')
-      return
-    }
-  }
-  
   showLoading()
   try {
     const payload = {
-      date: form.value.date.toISOString(),
-      category: form.value.category,
-      note: form.value.note,
-      currency: form.value.currency,
-      items: form.value.items
-        .filter(item => item.name && Number(item.unit_price) > 0)
-        .map(item => ({
-          ...item,
-          amount: (Number(item.unit_price) - Number(item.discount || 0)) * Number(item.quantity)
-        })),
-      exchange_rate: form.value.currency === baseCurrency.value ? 1 : form.value.exchange_rate,
-      billing_amount: form.value.currency === baseCurrency.value ? totalAmount.value : form.value.billing_amount,
-      handling_fee: form.value.currency === baseCurrency.value ? 0 : form.value.handling_fee,
-      total_amount: totalAmount.value,
-      splits: splits.value.length > 0
-        ? splits.value
-            .filter(s => s.name)
-            .map(s => ({ name: s.name, amount: s.amount, is_payer: s.is_payer }))
+      title: form.title,
+      total_amount: form.total_amount,
+      date: form.date.toISOString(),
+      currency: form.currency,
+      note: form.note,
+      expense: {
+        category: form.category,
+        exchange_rate: form.currency === baseCurrency.value ? 1 : form.exchange_rate,
+        billing_amount: form.currency === baseCurrency.value ? form.total_amount : form.billing_amount,
+        handling_fee: form.currency === baseCurrency.value ? 0 : form.handling_fee,
+        payment_method: form.payment_method,
+        items: form.items
+          .filter(item => item.name && Number(item.unit_price) > 0)
+          .map(item => ({
+            name: item.name,
+            unit_price: item.unit_price,
+            quantity: item.quantity,
+            discount: item.discount || 0,
+          })),
+      },
+      debts: debts.value.length > 0
+        ? debts.value
+            .filter(d => d.payer_name && d.payee_name && d.amount > 0)
+            .map(d => ({ payer_name: d.payer_name, payee_name: d.payee_name, amount: d.amount, is_spot_paid: d.is_spot_paid }))
         : undefined,
     }
 
-    const created = await api.post<any>(`/api/spaces/${route.params.id}/transactions`, payload)
+    const created = await api.post<any>(`/api/spaces/${route.params.id}/expenses`, payload)
     if (imageManagerRef.value) {
       await imageManagerRef.value.commit(created.id)
     }
+    detailStore.invalidate('transactions')
+    router.push(`/spaces/${route.params.id}/ledger`)
+  } catch (e: any) {
+    alert(e.message || '儲存失敗')
+  } finally {
+    hideLoading()
+  }
+}
+
+const handlePaymentSubmit = async () => {
+  const form = paymentForm.value
+  if (!form.payer_name || !form.payee_name) {
+    alert('請填寫付款人與收款人')
+    return
+  }
+  if (form.total_amount <= 0) {
+    alert('請填寫金額')
+    return
+  }
+
+  showLoading()
+  try {
+    const payload = {
+      date: form.date.toISOString(),
+      title: form.title,
+      note: form.note,
+      total_amount: form.total_amount,
+      payer_name: form.payer_name,
+      payee_name: form.payee_name,
+    }
+
+    await api.post(`/api/spaces/${route.params.id}/payments`, payload)
     detailStore.invalidate('transactions')
     router.push(`/spaces/${route.params.id}/ledger`)
   } catch (e: any) {
@@ -350,16 +210,16 @@ onMounted(async () => {
     router.push('/login')
     return
   }
-  
+
   detailStore.setSpaceId(route.params.id as string)
   detailStore.fetchSpace()
 
   try {
     const space = await api.get<any>(`/api/spaces/${route.params.id}`)
     baseCurrency.value = space.base_currency || 'TWD'
-    form.value.currency = baseCurrency.value
+    expenseForm.value.currency = baseCurrency.value
+    memberOptions.value = space.split_members || []
 
-    // Load dynamic options from space
     if (space.categories) {
       categories.value = space.categories.map((c: string) => ({ label: c, value: c }))
     } else {
@@ -383,12 +243,13 @@ onMounted(async () => {
       ]
     }
 
-    // Set default category
-    if (categories.value && categories.value.length > 0 && !form.value.category) {
+    if (space.payment_methods) {
+      paymentMethods.value = space.payment_methods.map((m: string) => ({ label: m, value: m }))
+    }
+
+    if (categories.value.length > 0 && !expenseForm.value.category) {
       const firstCat = categories.value[0]
-      if (firstCat) {
-        form.value.category = firstCat.value
-      }
+      if (firstCat) expenseForm.value.category = firstCat.value
     }
   } catch (e) {
     console.error('Failed to fetch space data', e)

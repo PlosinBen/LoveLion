@@ -73,36 +73,38 @@ func main() {
 	personalSpaceID := personalSpace["id"].(string)
 	fmt.Printf("✓ Created space: 日常開銷 (%s)\n", personalSpaceID)
 
-	// === Step 4: Create personal transactions ===
+	// === Step 4: Create personal expenses ===
 	now := time.Now()
-	apiPost(devToken, fmt.Sprintf("/spaces/%s/transactions", personalSpaceID), map[string]any{
-		"title":          "星巴克",
-		"payer":          "Antigravity",
-		"date":           now.Add(-2 * time.Hour).Format(time.RFC3339),
-		"currency":       "TWD",
-		"exchange_rate":  1,
-		"category":       "餐飲",
-		"payment_method": "信用卡",
-		"note":           "跟同事下午茶",
-		"items": []map[string]any{
-			{"name": "特大杯拿鐵", "unit_price": 155, "quantity": 2},
+	apiPost(devToken, fmt.Sprintf("/spaces/%s/expenses", personalSpaceID), map[string]any{
+		"title":    "星巴克",
+		"date":     now.Add(-2 * time.Hour).Format(time.RFC3339),
+		"currency": "TWD",
+		"note":     "跟同事下午茶",
+		"expense": map[string]any{
+			"category":       "餐飲",
+			"exchange_rate":  1,
+			"payment_method": "信用卡",
+			"items": []map[string]any{
+				{"name": "特大杯拿鐵", "unit_price": 155, "quantity": 2},
+			},
 		},
 	})
-	fmt.Println("✓ Created transaction: 星巴克")
+	fmt.Println("✓ Created expense: 星巴克")
 
-	apiPost(devToken, fmt.Sprintf("/spaces/%s/transactions", personalSpaceID), map[string]any{
-		"title":          "捷運定期票",
-		"payer":          "Antigravity",
-		"date":           now.Add(-24 * time.Hour).Format(time.RFC3339),
-		"currency":       "TWD",
-		"exchange_rate":  1,
-		"category":       "交通",
-		"payment_method": "現金",
-		"items": []map[string]any{
-			{"name": "捷運定期票", "unit_price": 1200, "quantity": 1},
+	apiPost(devToken, fmt.Sprintf("/spaces/%s/expenses", personalSpaceID), map[string]any{
+		"title":    "捷運定期票",
+		"date":     now.Add(-24 * time.Hour).Format(time.RFC3339),
+		"currency": "TWD",
+		"expense": map[string]any{
+			"category":       "交通",
+			"exchange_rate":  1,
+			"payment_method": "現金",
+			"items": []map[string]any{
+				{"name": "捷運定期票", "unit_price": 1200, "quantity": 1},
+			},
 		},
 	})
-	fmt.Println("✓ Created transaction: 捷運定期票")
+	fmt.Println("✓ Created expense: 捷運定期票")
 
 	// === Step 5: Create trip space via API ===
 	tripSpace := apiPost(devToken, "/spaces", map[string]any{
@@ -113,6 +115,7 @@ func main() {
 		"currencies":      []string{"TWD", "JPY"},
 		"categories":      []string{"住宿", "交通", "飲食", "購物", "娛樂"},
 		"payment_methods": []string{"現金", "信用卡"},
+		"split_members":   []string{"Antigravity", "小明", "小美"},
 		"start_date":      now.AddDate(0, 1, 0).Format(time.RFC3339),
 		"end_date":        now.AddDate(0, 1, 5).Format(time.RFC3339),
 		"is_pinned":       true,
@@ -163,41 +166,61 @@ func main() {
 	})
 	fmt.Println("✓ Created comparison products")
 
-	// === Step 9: Create trip transactions ===
-	apiPost(devToken, fmt.Sprintf("/spaces/%s/transactions", tripSpaceID), map[string]any{
-		"title":          "利木津巴士",
-		"payer":          "Antigravity",
-		"date":           now.AddDate(0, 1, 0).Format(time.RFC3339),
-		"currency":       "JPY",
-		"exchange_rate":  0.216,
-		"billing_amount": 1944,
-		"handling_fee":   29.16,
-		"category":       "交通",
-		"payment_method": "信用卡",
-		"items": []map[string]any{
-			{"name": "成人票", "unit_price": 3000, "quantity": 3},
+	// === Step 9: Create trip expenses ===
+	apiPost(devToken, fmt.Sprintf("/spaces/%s/expenses", tripSpaceID), map[string]any{
+		"title":    "利木津巴士",
+		"date":     now.AddDate(0, 1, 0).Format(time.RFC3339),
+		"currency": "JPY",
+		"expense": map[string]any{
+			"category":       "交通",
+			"exchange_rate":  0.216,
+			"billing_amount": 1944,
+			"handling_fee":   29.16,
+			"payment_method": "信用卡",
+			"items": []map[string]any{
+				{"name": "成人票", "unit_price": 3000, "quantity": 3},
+			},
+		},
+		"debts": []map[string]any{
+			{"payer_name": "小明", "payee_name": "Antigravity", "amount": 3000},
+			{"payer_name": "小美", "payee_name": "Antigravity", "amount": 3000},
 		},
 	})
-	fmt.Println("✓ Created transaction: 利木津巴士")
+	fmt.Println("✓ Created expense: 利木津巴士")
 
-	apiPost(devToken, fmt.Sprintf("/spaces/%s/transactions", tripSpaceID), map[string]any{
-		"title":          "一蘭拉麵",
-		"payer":          "Antigravity",
-		"date":           now.AddDate(0, 1, 1).Format(time.RFC3339),
-		"currency":       "JPY",
-		"exchange_rate":  0.216,
-		"billing_amount": 1253,
-		"handling_fee":   0,
-		"category":       "飲食",
-		"payment_method": "現金",
-		"items": []map[string]any{
-			{"name": "天然豚骨拉麵", "unit_price": 980, "quantity": 3},
-			{"name": "加麵", "unit_price": 210, "quantity": 2},
-			{"name": "生啤酒", "unit_price": 580, "quantity": 3},
-			{"name": "半熟鹽味蛋", "unit_price": 140, "quantity": 5},
+	apiPost(devToken, fmt.Sprintf("/spaces/%s/expenses", tripSpaceID), map[string]any{
+		"title":    "一蘭拉麵",
+		"date":     now.AddDate(0, 1, 1).Format(time.RFC3339),
+		"currency": "JPY",
+		"expense": map[string]any{
+			"category":       "飲食",
+			"exchange_rate":  0.216,
+			"billing_amount": 1253,
+			"handling_fee":   0,
+			"payment_method": "現金",
+			"items": []map[string]any{
+				{"name": "天然豚骨拉麵", "unit_price": 980, "quantity": 3},
+				{"name": "加麵", "unit_price": 210, "quantity": 2},
+				{"name": "生啤酒", "unit_price": 580, "quantity": 3},
+				{"name": "半熟鹽味蛋", "unit_price": 140, "quantity": 5},
+			},
+		},
+		"debts": []map[string]any{
+			{"payer_name": "小明", "payee_name": "Antigravity", "amount": 1580, "is_spot_paid": true},
+			{"payer_name": "小美", "payee_name": "Antigravity", "amount": 1580},
 		},
 	})
-	fmt.Println("✓ Created transaction: 一蘭拉麵")
+	fmt.Println("✓ Created expense: 一蘭拉麵")
+
+	// === Step 9b: Create trip payment (settling debt) ===
+	apiPost(mingToken, fmt.Sprintf("/spaces/%s/payments", tripSpaceID), map[string]any{
+		"title":        "小明補款給 Antigravity",
+		"date":         now.AddDate(0, 1, 2).Format(time.RFC3339),
+		"total_amount": 500,
+		"payer_name":   "小明",
+		"payee_name":   "Antigravity",
+	})
+	fmt.Println("✓ Created payment: 小明補款給 Antigravity")
 
 	// === Step 10: Test Update Profile API ===
 	fmt.Println("\n🧪 Testing Update Profile API...")

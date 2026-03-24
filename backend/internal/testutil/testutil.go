@@ -79,8 +79,9 @@ func TestDB(t *testing.T) *gorm.DB {
 		&models.SpaceMember{},
 		&models.SpaceInvite{},
 		&models.Transaction{},
-		&models.TransactionItem{},
-		&models.TransactionSplit{},
+		&models.TransactionExpense{},
+		&models.TransactionExpenseItem{},
+		&models.TransactionDebt{},
 		&models.ComparisonStore{},
 		&models.ComparisonProduct{},
 	)

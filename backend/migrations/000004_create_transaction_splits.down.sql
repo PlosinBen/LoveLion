@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS transaction_splits;
+DROP TABLE IF EXISTS transaction_debts;
