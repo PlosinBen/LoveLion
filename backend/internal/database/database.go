@@ -2,6 +2,7 @@ package database
 
 import (
 	"log"
+	"os"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -9,8 +10,13 @@ import (
 )
 
 func Connect(dsn string) (*gorm.DB, error) {
+	logLevel := logger.Info
+	if os.Getenv("GIN_MODE") == "release" {
+		logLevel = logger.Warn
+	}
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: logger.Default.LogMode(logLevel),
 	})
 	if err != nil {
 		return nil, err
