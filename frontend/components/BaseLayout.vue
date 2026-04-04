@@ -22,6 +22,9 @@
       </div>
     </footer>
 
+    <!-- Global UI overlays -->
+    <AppToast />
+    <AppConfirm />
   </div>
 </template>
 

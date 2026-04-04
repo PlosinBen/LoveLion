@@ -76,6 +76,8 @@ import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useLoading } from '~/composables/useLoading'
+import { useToast } from '~/composables/useToast'
+import { useConfirm } from '~/composables/useConfirm'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseInput from '~/components/BaseInput.vue'
@@ -90,6 +92,8 @@ const router = useRouter()
 const route = useRoute()
 const api = useApi()
 const { showLoading, hideLoading } = useLoading()
+const toast = useToast()
+const confirm = useConfirm()
 const detailStore = useSpaceDetailStore()
 
 const spaceId = route.params.id as string
@@ -133,14 +137,14 @@ const handleSubmit = async () => {
     detailStore.invalidate('stores')
     router.push(`/spaces/${spaceId}/stores/${storeId}`)
   } catch (e: any) {
-    alert(e.message || '儲存失敗')
+    toast.error(e.message || '儲存失敗')
   } finally {
     hideLoading()
   }
 }
 
 const handleDelete = async () => {
-  if (!confirm('確定要刪除此商品嗎？')) return
+  if (!await confirm({ message: '確定要刪除此商品嗎？', destructive: true })) return
 
   showLoading()
   try {
@@ -148,7 +152,7 @@ const handleDelete = async () => {
     detailStore.invalidate('stores')
     router.push(`/spaces/${spaceId}/stores/${storeId}`)
   } catch (e: any) {
-    alert(e.message || '刪除失敗')
+    toast.error(e.message || '刪除失敗')
   } finally {
     hideLoading()
   }

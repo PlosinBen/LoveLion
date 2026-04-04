@@ -171,6 +171,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useAuth } from '~/composables/useAuth'
 import { useSpace } from '~/composables/useSpace'
+import { useToast } from '~/composables/useToast'
 import PageTitle from '~/components/PageTitle.vue'
 import { useLoading } from '~/composables/useLoading'
 import BaseCard from '~/components/BaseCard.vue'
@@ -186,6 +187,7 @@ const router = useRouter()
 const { user, logout: authLogout, updateProfile } = useAuth()
 const { allSpaces, fetchSpaces, leaveSpace } = useSpace()
 const { showLoading, hideLoading } = useLoading()
+const toast = useToast()
 
 // Profile Edit Logic
 const isEditProfileOpen = ref(false)
@@ -206,7 +208,7 @@ const handleUpdateProfile = async () => {
     await updateProfile({ display_name: editForm.displayName })
     isEditProfileOpen.value = false
   } catch (e: any) {
-    alert(e.error || '更新失敗')
+    toast.error(e.error || '更新失敗')
   } finally {
     hideLoading()
   }
@@ -274,7 +276,7 @@ const handleLeaveSpace = async () => {
     isLeaveModalOpen.value = false
     spaceToLeave.value = null
   } catch (e: any) {
-    alert(e.error || '無法退出空間')
+    toast.error(e.error || '無法退出空間')
   } finally {
     hideLoading()
   }

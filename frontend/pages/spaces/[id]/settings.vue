@@ -222,6 +222,8 @@
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
+import { useToast } from '~/composables/useToast'
+import { useConfirm } from '~/composables/useConfirm'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseInput from '~/components/BaseInput.vue'
@@ -238,6 +240,8 @@ const api = useApi()
 const detailStore = useSpaceDetailStore()
 
 const { showLoading, hideLoading } = useLoading()
+const toast = useToast()
+const confirm = useConfirm()
 const loading = ref(true)
 const spaceId = route.params.id as string
 
@@ -324,9 +328,9 @@ const handleUpdateSpace = async () => {
     })
     // Refresh store so other pages see updated data
     await detailStore.fetchSpace(true)
-    alert('設定已儲存')
+    toast.success('設定已儲存')
   } catch (e: any) {
-    alert(e.message || '儲存失敗')
+    toast.error(e.message || '儲存失敗')
   } finally {
     hideLoading()
   }
@@ -342,9 +346,9 @@ const handleUpdateLists = async () => {
       split_members: form.value.split_members
     })
     await detailStore.fetchSpace(true)
-    alert('分類設定已儲存')
+    toast.success('分類設定已儲存')
   } catch (e: any) {
-    alert(e.message || '儲存失敗')
+    toast.error(e.message || '儲存失敗')
   } finally {
     hideLoading()
   }
@@ -366,7 +370,7 @@ const handleUpdateAlias = async () => {
         showAliasModal.value = false
         await detailStore.fetchMembers(true)
     } catch (e: any) {
-        alert(e.message || '更新失敗')
+        toast.error(e.message || '更新失敗')
     } finally {
         hideLoading()
     }
@@ -381,29 +385,29 @@ const handleCreateInvite = async () => {
         showInviteModal.value = false
         await detailStore.fetchInvites(true)
     } catch (e: any) {
-        alert(e.message || '建立失敗')
+        toast.error(e.message || '建立失敗')
     } finally {
         hideLoading()
     }
 }
 
 const handleRemoveMember = async (member: Member) => {
-  if (!confirm(`確定要移除成員 ${member.alias || member.user?.display_name} 嗎？`)) return
+  if (!await confirm({ message: `確定要移除成員 ${member.alias || member.user?.display_name} 嗎？`, destructive: true })) return
   try {
     await api.del(`/api/spaces/${spaceId}/members/${member.user_id}`)
     await detailStore.fetchMembers(true)
   } catch (e: any) {
-    alert(e.message || '移除失敗')
+    toast.error(e.message || '移除失敗')
   }
 }
 
 const handleDeleteSpace = async () => {
-    if (!confirm('警告：確定要刪除此空間嗎？這將會永久刪除所有交易、比價資料與成員關聯，且無法復原。')) return
+    if (!await confirm({ message: '警告：確定要刪除此空間嗎？這將會永久刪除所有交易、比價資料與成員關聯，且無法復原。', destructive: true })) return
     try {
         await api.del(`/api/spaces/${spaceId}`)
         router.push('/')
     } catch (e: any) {
-        alert(e.message || '刪除失敗')
+        toast.error(e.message || '刪除失敗')
     }
 }
 
@@ -414,16 +418,16 @@ const formatExpiry = (dateStr: string) => {
 const copyInviteLink = (token: string) => {
   const joinUrl = `${window.location.origin}/join/${token}`
   navigator.clipboard.writeText(joinUrl)
-  alert('連結已複製')
+  toast.success('連結已複製')
 }
 
 const handleRevokeInvite = async (invite_id: string) => {
-  if (!confirm('確定要撤銷此邀請連結嗎？')) return
+  if (!await confirm({ message: '確定要撤銷此邀請連結嗎？' })) return
   try {
     await api.del(`/api/spaces/${invite_id}`)
     await detailStore.fetchInvites(true)
   } catch (e: any) {
-    alert('撤銷失敗')
+    toast.error('撤銷失敗')
   }
 }
 

@@ -30,6 +30,8 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
 import { useImages } from '~/composables/useImages'
+import { useToast } from '~/composables/useToast'
+import { useConfirm } from '~/composables/useConfirm'
 import type { Image } from '~/types'
 import ImageGridItem from '~/components/ImageManager/ImageGridItem.vue'
 import ImageUploadArea from '~/components/ImageManager/ImageUploadArea.vue'
@@ -65,6 +67,8 @@ const emit = defineEmits(['change'])
 defineExpose({ commit })
 
 const { getImages, uploadImage, deleteImage, reorderImages, getImageUrl } = useImages()
+const toast = useToast()
+const confirmDialog = useConfirm()
 
 const images = ref<Image[]>([])
 const pendingDeletes = ref<string[]>([])
@@ -125,7 +129,7 @@ const handleFileSelect = async (event: Event) => {
             await loadImages()
         }
     } catch (e: any) {
-        alert("Upload failed: " + (e.message || "Unknown error"))
+        toast.error("上傳失敗: " + (e.message || "未知錯誤"))
     } finally {
         uploading.value = false
         target.value = '' 
@@ -133,7 +137,7 @@ const handleFileSelect = async (event: Event) => {
 }
 
 async function handleDelete(index: number) {
-    if (!confirm("Confirm remove?")) return
+    if (!await confirmDialog({ message: '確定要移除此圖片嗎？' })) return
     
     // Check if it's a pending upload
     // If index is within images array (existing images)
@@ -146,7 +150,7 @@ async function handleDelete(index: number) {
                 await deleteImage(image.id)
                 images.value.splice(index, 1)
             } catch (e) {
-                alert("Delete failed")
+                toast.error("刪除失敗")
             }
         } else {
             images.value.splice(index, 1)

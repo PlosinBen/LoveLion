@@ -51,6 +51,7 @@ import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 import { useLoading } from '~/composables/useLoading'
+import { useToast } from '~/composables/useToast'
 import BaseCard from '~/components/BaseCard.vue'
 import type { InviteInfo } from '~/types'
 
@@ -63,6 +64,7 @@ const router = useRouter()
 const api = useApi()
 const { isAuthenticated, initAuth } = useAuth()
 const { showLoading, hideLoading } = useLoading()
+const toast = useToast()
 
 const loading = ref(true)
 const error = ref('')
@@ -91,7 +93,7 @@ const handleJoin = async () => {
     await api.post(`/api/invites/${route.params.token}/join`, {})
     router.push('/')
   } catch (e: any) {
-    alert(e.message || '加入失敗')
+    toast.error(e.message || '加入失敗')
   } finally {
     hideLoading()
   }

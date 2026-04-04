@@ -45,6 +45,7 @@
 import { ref } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useLoading } from '~/composables/useLoading'
+import { useToast } from '~/composables/useToast'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseCard from '~/components/BaseCard.vue'
 
@@ -56,6 +57,7 @@ definePageMeta({
 const router = useRouter()
 const api = useApi()
 const { showLoading, hideLoading } = useLoading()
+const toast = useToast()
 
 const form = ref({
   name: '',
@@ -84,7 +86,7 @@ const handleSubmit = async () => {
     await api.post('/api/spaces', form.value)
     router.push('/')
   } catch (e: any) {
-    alert(e.message || '建立失敗')
+    toast.error(e.message || '建立失敗')
   } finally {
     hideLoading()
   }

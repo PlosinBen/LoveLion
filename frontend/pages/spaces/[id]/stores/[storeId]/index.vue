@@ -112,6 +112,8 @@ import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useImages } from '~/composables/useImages'
+import { useToast } from '~/composables/useToast'
+import { useConfirm } from '~/composables/useConfirm'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import ImageManager from '~/components/ImageManager.vue'
 import PageTitle from '~/components/PageTitle.vue'
@@ -121,6 +123,8 @@ import type { ComparisonStore, ComparisonProduct } from '~/types'
 
 const router = useRouter()
 const route = useRoute()
+const toast = useToast()
+const confirm = useConfirm()
 
 // Define route for direct access AND for product context entry
 definePageMeta({
@@ -176,10 +180,10 @@ const saveProductImages = async (productId: string) => {
     if (manager) {
         try {
             await manager.commit()
-            alert('相片已更新')
+            toast.success('相片已更新')
         } catch (e) {
             console.error('Failed to save images', e)
-            alert('儲存失敗')
+            toast.error('儲存失敗')
         }
     }
 }
@@ -221,13 +225,13 @@ const fetchStore = async () => {
 }
 
 const deleteProduct = async (productId: string) => {
-  if (!confirm('確定要刪除此商品紀錄嗎？')) return
+  if (!await confirm({ message: '確定要刪除此商品紀錄嗎？', destructive: true })) return
   try {
     await api.del(`/api/spaces/${route.params.id}/stores/${route.params.storeId}/products/${productId}`)
     detailStore.invalidate('stores')
     fetchStore()
   } catch (e: any) {
-    alert(e.message || '刪除失敗')
+    toast.error(e.message || '刪除失敗')
   }
 }
 

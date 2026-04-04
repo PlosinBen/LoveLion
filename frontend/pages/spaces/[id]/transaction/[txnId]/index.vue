@@ -133,6 +133,8 @@
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
+import { useToast } from '~/composables/useToast'
+import { useConfirm } from '~/composables/useConfirm'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseCard from '~/components/BaseCard.vue'
@@ -145,6 +147,8 @@ definePageMeta({
 const router = useRouter()
 const route = useRoute()
 const api = useApi()
+const toast = useToast()
+const confirm = useConfirm()
 const detailStore = useSpaceDetailStore()
 
 const transaction = ref<Transaction | null>(null)
@@ -198,14 +202,14 @@ const fetchData = async () => {
 }
 
 const handleDelete = async () => {
-  if (!confirm('確定要刪除此交易嗎？')) return
+  if (!await confirm({ message: '確定要刪除此交易嗎？', destructive: true })) return
 
   try {
     await api.del(`/api/spaces/${route.params.id}/transactions/${route.params.txnId}`)
     detailStore.invalidate('transactions')
     router.push(`/spaces/${route.params.id}/ledger`)
   } catch (e: any) {
-    alert(e.message || '刪除失敗')
+    toast.error(e.message || '刪除失敗')
   }
 }
 

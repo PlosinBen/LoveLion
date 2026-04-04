@@ -48,6 +48,7 @@
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useLoading } from '~/composables/useLoading'
+import { useToast } from '~/composables/useToast'
 import PageTitle from '~/components/PageTitle.vue'
 import ImageManager from '~/components/ImageManager.vue'
 import ExpenseForm from '~/components/ExpenseForm.vue'
@@ -74,6 +75,7 @@ const categories = ref<{label: string, value: string}[]>([])
 const availableCurrencies = ref<{label: string, value: string}[]>([])
 const paymentMethods = ref<{label: string, value: string}[]>([])
 const { showLoading, hideLoading } = useLoading()
+const toast = useToast()
 const loading = ref(true)
 const baseCurrency = ref('TWD')
 const memberOptions = ref<string[]>([])
@@ -196,7 +198,7 @@ const handleExpenseSubmit = async () => {
   const form = expenseForm.value
 
   if (form.total_amount <= 0) {
-    alert('請填寫總額')
+    toast.error('請填寫總額')
     return
   }
 
@@ -234,7 +236,7 @@ const handleExpenseSubmit = async () => {
     detailStore.invalidate('transactions')
     router.push(`/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}`)
   } catch (e: any) {
-    alert(e.message || '更新失敗')
+    toast.error(e.message || '更新失敗')
   } finally {
     hideLoading()
   }
@@ -243,7 +245,7 @@ const handleExpenseSubmit = async () => {
 const handlePaymentSubmit = async () => {
   const form = paymentForm.value
   if (!form.payer_name || !form.payee_name) {
-    alert('請填寫付款人與收款人')
+    toast.error('請填寫付款人與收款人')
     return
   }
 
@@ -262,7 +264,7 @@ const handlePaymentSubmit = async () => {
     detailStore.invalidate('transactions')
     router.push(`/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}`)
   } catch (e: any) {
-    alert(e.message || '更新失敗')
+    toast.error(e.message || '更新失敗')
   } finally {
     hideLoading()
   }

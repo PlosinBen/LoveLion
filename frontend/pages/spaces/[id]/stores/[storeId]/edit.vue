@@ -58,6 +58,7 @@ import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useLoading } from '~/composables/useLoading'
+import { useToast } from '~/composables/useToast'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import LinkButton from '~/components/LinkButton.vue'
@@ -73,6 +74,7 @@ const route = useRoute()
 const router = useRouter()
 const api = useApi()
 const { showLoading, hideLoading } = useLoading()
+const toast = useToast()
 const detailStore = useSpaceDetailStore()
 
 const loading = ref(true)
@@ -109,7 +111,7 @@ const handleUpdate = async () => {
     await api.patch(`/api/spaces/${spaceId}/stores/${storeId}`, form.value)
     router.push(`/spaces/${spaceId}/stores/${storeId}`)
   } catch (e: any) {
-    alert(e.message || '儲存失敗')
+    toast.error(e.message || '儲存失敗')
   } finally {
     hideLoading()
   }

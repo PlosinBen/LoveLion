@@ -42,6 +42,7 @@
 import { ref, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useLoading } from '~/composables/useLoading'
+import { useToast } from '~/composables/useToast'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseCard from '~/components/BaseCard.vue'
@@ -54,6 +55,7 @@ const router = useRouter()
 const route = useRoute()
 const api = useApi()
 const { showLoading, hideLoading } = useLoading()
+const toast = useToast()
 const detailStore = useSpaceDetailStore()
 
 const form = ref({
@@ -69,7 +71,7 @@ const handleSubmit = async () => {
     detailStore.invalidate('stores')
     router.push(`/spaces/${route.params.id}/stores`)
   } catch (e: any) {
-    alert(e.message || '建立失敗')
+    toast.error(e.message || '建立失敗')
   } finally {
     hideLoading()
   }
