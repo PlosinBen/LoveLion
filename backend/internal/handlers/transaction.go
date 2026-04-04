@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"lovelion/internal/models"
 	"lovelion/internal/services"
@@ -18,16 +19,46 @@ func NewTransactionHandler(svc *services.TransactionService) *TransactionHandler
 }
 
 // List transactions for a space (all types)
+// Supports optional pagination: ?limit=N&offset=M
+// Without limit, returns all transactions (backward compatible).
+// With limit, returns paginated results + X-Total-Count header.
 func (h *TransactionHandler) List(c *gin.Context) {
 	spaceVal, _ := c.Get("space")
 	space := spaceVal.(*models.Space)
 
-	transactions, err := h.svc.List(c.Request.Context(), space.ID)
+	limitStr := c.Query("limit")
+	if limitStr == "" {
+		transactions, err := h.svc.List(c.Request.Context(), space.ID)
+		if err != nil {
+			respondError(c, err)
+			return
+		}
+		c.JSON(http.StatusOK, transactions)
+		return
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid limit parameter"})
+		return
+	}
+
+	offset := 0
+	if offsetStr := c.Query("offset"); offsetStr != "" {
+		offset, err = strconv.Atoi(offsetStr)
+		if err != nil || offset < 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid offset parameter"})
+			return
+		}
+	}
+
+	transactions, total, err := h.svc.ListPaginated(c.Request.Context(), space.ID, limit, offset)
 	if err != nil {
 		respondError(c, err)
 		return
 	}
 
+	c.Header("X-Total-Count", strconv.FormatInt(total, 10))
 	c.JSON(http.StatusOK, transactions)
 }
 

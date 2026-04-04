@@ -48,6 +48,24 @@ func (r *TransactionRepo) FindBySpace(ctx context.Context, spaceID uuid.UUID) ([
 	return transactions, err
 }
 
+func (r *TransactionRepo) FindBySpacePaginated(ctx context.Context, spaceID uuid.UUID, limit, offset int) ([]models.Transaction, int64, error) {
+	var total int64
+	r.db.WithContext(ctx).Model(&models.Transaction{}).Where("space_id = ?", spaceID).Count(&total)
+
+	var transactions []models.Transaction
+	err := r.db.WithContext(ctx).
+		Where("space_id = ?", spaceID).
+		Preload("Expense").
+		Preload("Expense.Items").
+		Preload("Debts").
+		Preload("Images", "entity_type = ?", "transaction").
+		Order("date DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&transactions).Error
+	return transactions, total, err
+}
+
 func (r *TransactionRepo) FindByID(ctx context.Context, id string, spaceID uuid.UUID) (*models.Transaction, error) {
 	var txn models.Transaction
 	err := r.db.WithContext(ctx).
