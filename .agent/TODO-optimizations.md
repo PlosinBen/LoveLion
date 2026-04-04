@@ -29,19 +29,3 @@
 **建議**：建立基本 workflow 執行 `go test ./...` 和 `npm test`。
 
 ---
-
-### 4. 後端缺少 HTTP request logging middleware
-
-沒有統一的 request log，難以追蹤 production 問題。
-
-**建議**：加入 middleware 記錄 method、path、status code、duration、user ID。
-
----
-
-### 5. JWT token 過期時間寫死
-
-`auth.go` 中 token expiry 固定 7 天，無法透過環境變數調整。
-
-**建議**：改為可設定。
-
----
