@@ -15,37 +15,43 @@ echo "✅ go fmt complete"
 echo ""
 
 # Step 2: go test (unit tests)
-echo "🧪 Running unit tests..."
+echo "🧪 Running backend unit tests..."
 docker compose exec backend go test ./...
-echo "✅ All unit tests passed"
+echo "✅ Backend unit tests passed"
 echo ""
 
-# Step 3: Stop backend to release DB connections
+# Step 3: npm test (frontend unit tests)
+echo "🧪 Running frontend unit tests..."
+docker compose exec frontend npm test
+echo "✅ Frontend unit tests passed"
+echo ""
+
+# Step 4: Stop backend to release DB connections
 echo "🛑 Stopping backend..."
 docker compose stop backend
 
-# Step 4: Drop and recreate database
+# Step 5: Drop and recreate database
 echo "🗑️  Dropping existing database..."
 docker compose exec postgres psql -U postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'lovelion' AND pid <> pg_backend_pid();" > /dev/null 2>&1 || true
 docker compose exec postgres psql -U postgres -c "DROP DATABASE IF EXISTS lovelion"
 echo "📦 Creating fresh database..."
 docker compose exec postgres psql -U postgres -c "CREATE DATABASE lovelion"
 
-# Step 5: Clean up R2 bucket
+# Step 6: Clean up R2 bucket
 echo "🧹 Cleaning up R2 bucket..."
 docker compose run --rm backend go run cmd/cleanup-r2/main.go
 
-# Step 6: Start backend
+# Step 7: Start backend
 echo "🚀 Starting backend..."
 docker compose start backend
 echo "⏳ Waiting for backend to be ready..."
 sleep 3
 
-# Step 7: Migrate
+# Step 8: Migrate
 echo "📋 Running migrations..."
 docker compose exec backend go run cmd/migrate/main.go
 
-# Step 8: Integration tests (also seeds dev data)
+# Step 9: Integration tests (also seeds dev data)
 echo ""
 echo "🧪 Running integration tests..."
 docker compose exec backend go test -v -tags integration -count=1 ./integration/...
