@@ -6,6 +6,7 @@ import (
 	"image"
 	_ "image/jpeg"
 	_ "image/png"
+	"log/slog"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -101,7 +102,7 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 		// Log warning but don't fail upload? Or fail?
 		// For now, if not an image we can decode, just skip blurhash or error.
 		// User only uploads jpg/png validated above, so should be fine.
-		fmt.Printf("Failed to decode image for blurhash: %v\n", err)
+		slog.Warn("failed to decode image for blurhash", "error", err)
 	}
 
 	var blurHashStr string
@@ -109,7 +110,7 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 		// Components x=4, y=3 usually good compromise
 		blurHashStr, err = blurhash.Encode(4, 3, imgData)
 		if err != nil {
-			fmt.Printf("Failed to encode blurhash: %v\n", err)
+			slog.Warn("failed to encode blurhash", "error", err)
 		}
 	}
 

@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log"
+	"log/slog"
 	"os"
 	"strings"
 )
@@ -35,10 +35,12 @@ func Load() *Config {
 
 	if isRelease {
 		if cfg.JWTSecret == "dev-secret-key" {
-			log.Fatal("JWT_SECRET must be set in production (GIN_MODE=release)")
+			slog.Error("JWT_SECRET must be set in production (GIN_MODE=release)")
+			os.Exit(1)
 		}
 		if cfg.DatabaseURL == "" {
-			log.Fatal("DATABASE_URL must be set in production (GIN_MODE=release)")
+			slog.Error("DATABASE_URL must be set in production (GIN_MODE=release)")
+			os.Exit(1)
 		}
 	}
 

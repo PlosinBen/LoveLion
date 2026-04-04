@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+	"log/slog"
+	"os"
 	"time"
 
 	"lovelion/internal/config"
@@ -16,13 +17,19 @@ import (
 )
 
 func main() {
+	// Setup structured logging
+	if os.Getenv("GIN_MODE") == "release" {
+		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+	}
+
 	// Load configuration
 	cfg := config.Load()
 
 	// Connect to database
 	db, err := database.Connect(cfg.DatabaseURL)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		slog.Error("failed to connect to database", "error", err)
+		os.Exit(1)
 	}
 
 	// Setup Gin router
@@ -149,7 +156,8 @@ func main() {
 		{
 			imageHandler, err := handlers.NewImageHandler(db)
 			if err != nil {
-				log.Fatalf("Failed to initialize image handler: %v", err)
+				slog.Error("failed to initialize image handler", "error", err)
+				os.Exit(1)
 			}
 			images.POST("", imageHandler.Upload)
 			images.GET("", imageHandler.List)
@@ -163,8 +171,9 @@ func main() {
 		port = "8080"
 	}
 
-	log.Printf("Server starting on port %s", port)
+	slog.Info("server starting", "port", port)
 	if err := r.Run(":" + port); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+		slog.Error("failed to start server", "error", err)
+		os.Exit(1)
 	}
 }
