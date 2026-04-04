@@ -35,6 +35,9 @@ func main() {
 	// Setup Gin router
 	r := gin.Default()
 
+	// Request logging
+	r.Use(middleware.RequestLogger())
+
 	// CORS
 	if len(cfg.CORSOrigins) > 0 {
 		r.Use(cors.New(cors.Config{
@@ -59,7 +62,7 @@ func main() {
 		authRateLimit := middleware.RateLimit(10, time.Minute)
 		users := api.Group("/users")
 		{
-			authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret)
+			authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret, cfg.JWTExpiry)
 			users.POST("/register", authRateLimit, authHandler.Register)
 			users.POST("/login", authRateLimit, authHandler.Login)
 

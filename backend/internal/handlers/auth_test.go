@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"lovelion/internal/models"
 	"lovelion/internal/testutil"
@@ -15,7 +16,7 @@ func TestAuthHandler_Register(t *testing.T) {
 	db := testutil.TestDB(t)
 	router := testutil.TestRouter()
 
-	handler := NewAuthHandler(db, "test-secret")
+	handler := NewAuthHandler(db, "test-secret", 7*24*time.Hour)
 	router.POST("/api/users/register", handler.Register)
 
 	tests := []struct {
@@ -77,7 +78,7 @@ func TestAuthHandler_Register_DuplicateUsername(t *testing.T) {
 	db := testutil.TestDB(t)
 	router := testutil.TestRouter()
 
-	handler := NewAuthHandler(db, "test-secret")
+	handler := NewAuthHandler(db, "test-secret", 7*24*time.Hour)
 	router.POST("/api/users/register", handler.Register)
 
 	// First registration
@@ -102,7 +103,7 @@ func TestAuthHandler_Login(t *testing.T) {
 	db := testutil.TestDB(t)
 	router := testutil.TestRouter()
 
-	handler := NewAuthHandler(db, "test-secret")
+	handler := NewAuthHandler(db, "test-secret", 7*24*time.Hour)
 	router.POST("/api/users/register", handler.Register)
 	router.POST("/api/users/login", handler.Login)
 
@@ -162,7 +163,7 @@ func TestAuthHandler_GetMe(t *testing.T) {
 	user := testutil.CreateTestUser(t, db)
 
 	router := testutil.TestRouter()
-	handler := NewAuthHandler(db, "test-secret")
+	handler := NewAuthHandler(db, "test-secret", 7*24*time.Hour)
 
 	// With auth context
 	router.GET("/api/users/me", testutil.AuthContext(user.ID), handler.GetMe)

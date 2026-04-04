@@ -17,10 +17,11 @@ import (
 type AuthHandler struct {
 	db        *gorm.DB
 	jwtSecret string
+	jwtExpiry time.Duration
 }
 
-func NewAuthHandler(db *gorm.DB, jwtSecret string) *AuthHandler {
-	return &AuthHandler{db: db, jwtSecret: jwtSecret}
+func NewAuthHandler(db *gorm.DB, jwtSecret string, jwtExpiry time.Duration) *AuthHandler {
+	return &AuthHandler{db: db, jwtSecret: jwtSecret, jwtExpiry: jwtExpiry}
 }
 
 type RegisterRequest struct {
@@ -229,7 +230,7 @@ func (h *AuthHandler) UpdateMe(c *gin.Context) {
 func (h *AuthHandler) generateToken(userID uuid.UUID) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID.String(),
-		"exp":     time.Now().Add(time.Hour * 24 * 7).Unix(), // 7 days
+		"exp":     time.Now().Add(h.jwtExpiry).Unix(),
 		"iat":     time.Now().Unix(),
 	}
 

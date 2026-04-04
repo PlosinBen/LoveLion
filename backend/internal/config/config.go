@@ -3,12 +3,15 @@ package config
 import (
 	"log/slog"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type Config struct {
 	DatabaseURL    string
 	JWTSecret      string
+	JWTExpiry      time.Duration
 	Port           string
 	CORSOrigins    []string
 	R2AccountID    string
@@ -24,6 +27,7 @@ func Load() *Config {
 	cfg := &Config{
 		DatabaseURL:    getEnv("DATABASE_URL", "postgres://postgres:postgres@postgres:5432/lovelion?sslmode=disable"),
 		JWTSecret:      getEnv("JWT_SECRET", "dev-secret-key"),
+		JWTExpiry:      parseDurationDays(getEnv("JWT_EXPIRY_DAYS", "7")),
 		Port:           getEnv("PORT", "8080"),
 		CORSOrigins:    parseCORSOrigins(os.Getenv("CORS_ORIGINS")),
 		R2AccountID:    getEnv("R2_ACCOUNT_ID", ""),
@@ -52,6 +56,14 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+func parseDurationDays(s string) time.Duration {
+	days, err := strconv.Atoi(s)
+	if err != nil || days <= 0 {
+		return 7 * 24 * time.Hour
+	}
+	return time.Duration(days) * 24 * time.Hour
 }
 
 // parseCORSOrigins parses comma-separated origins, e.g. "https://lovelion.app,https://www.lovelion.app"
