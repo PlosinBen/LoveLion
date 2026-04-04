@@ -1,15 +1,8 @@
-import { ref } from 'vue'
-
-const isLoading = ref(false)
+import { storeToRefs } from 'pinia'
+import { useLoadingStore } from '~/stores/loading'
 
 export function useLoading() {
-  const showLoading = () => {
-    isLoading.value = true
-  }
-
-  const hideLoading = () => {
-    isLoading.value = false
-  }
-
-  return { isLoading, showLoading, hideLoading }
+  const store = useLoadingStore()
+  const { isLoading } = storeToRefs(store)
+  return { isLoading, showLoading: store.showLoading, hideLoading: store.hideLoading }
 }

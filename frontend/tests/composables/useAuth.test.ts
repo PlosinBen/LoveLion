@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 
 // Mock useApi before importing useAuth
 const mockPost = vi.fn()
@@ -32,11 +33,9 @@ import { useAuth } from '~/composables/useAuth'
 
 describe('useAuth', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     vi.clearAllMocks()
     Object.keys(store).forEach(k => delete store[k])
-    // Reset global refs by logging out
-    const { logout } = useAuth()
-    logout()
   })
 
   it('starts unauthenticated', () => {

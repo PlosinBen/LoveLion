@@ -1,7 +1,12 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 import { useLoading } from '~/composables/useLoading'
 
 describe('useLoading', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
   it('starts with loading false', () => {
     const { isLoading } = useLoading()
     expect(isLoading.value).toBe(false)
