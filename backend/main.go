@@ -49,11 +49,12 @@ func main() {
 	api := r.Group("/api")
 	{
 		// Public routes
+		authRateLimit := middleware.RateLimit(10, time.Minute)
 		users := api.Group("/users")
 		{
 			authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret)
-			users.POST("/register", authHandler.Register)
-			users.POST("/login", authHandler.Login)
+			users.POST("/register", authRateLimit, authHandler.Register)
+			users.POST("/login", authRateLimit, authHandler.Login)
 
 			// Protected routes
 			users.GET("/me", middleware.AuthRequiredWithDB(cfg.JWTSecret, db), authHandler.GetMe)

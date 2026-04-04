@@ -35,14 +35,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useAuth } from '~/composables/useAuth'
 import { useSpace } from '~/composables/useSpace'
 import SpaceListItem from '~/components/SpaceListItem.vue'
 import PageTitle from '~/components/PageTitle.vue'
 
 
 const router = useRouter()
-const { isAuthenticated, initAuth } = useAuth()
 const { allSpaces, fetchSpaces, togglePin } = useSpace()
 
 // Use local loading state to prevent hydration mismatch
@@ -67,12 +65,6 @@ const handleTogglePin = async (id: string) => {
 }
 
 onMounted(async () => {
-  initAuth()
-  if (!isAuthenticated.value) {
-    router.push('/login')
-    return
-  }
-  
   try {
     await fetchSpaces(true)
   } finally {

@@ -15,18 +15,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuth } from '~/composables/useAuth'
 import Header from '~/components/Header.vue'
 import BottomNav from '~/components/BottomNav.vue'
 
-const { isAuthenticated, initAuth } = useAuth()
+const { isAuthenticated } = useAuth()
 const route = useRoute()
-
-onMounted(() => {
-  initAuth()
-})
 
 const shouldShowGlobalNav = computed(() => {
   if (!isAuthenticated.value) return false

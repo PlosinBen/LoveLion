@@ -34,7 +34,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import SpaceStats from '~/components/SpaceStats.vue'
@@ -47,15 +46,9 @@ definePageMeta({
 
 const route = useRoute()
 const router = useRouter()
-const { isAuthenticated, initAuth } = useAuth()
 const store = useSpaceDetailStore()
 
 onMounted(async () => {
-  initAuth()
-  if (!isAuthenticated.value) {
-    router.push('/login')
-    return
-  }
   store.setSpaceId(route.params.id as string)
   try {
     await Promise.all([store.fetchSpace(), store.fetchTransactions()])

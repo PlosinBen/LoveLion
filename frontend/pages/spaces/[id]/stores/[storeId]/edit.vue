@@ -57,7 +57,6 @@
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
-import { useAuth } from '~/composables/useAuth'
 import { useLoading } from '~/composables/useLoading'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
@@ -73,7 +72,6 @@ definePageMeta({
 const route = useRoute()
 const router = useRouter()
 const api = useApi()
-const { isAuthenticated, initAuth } = useAuth()
 const { showLoading, hideLoading } = useLoading()
 const detailStore = useSpaceDetailStore()
 
@@ -118,11 +116,6 @@ const handleUpdate = async () => {
 }
 
 onMounted(() => {
-  initAuth()
-  if (!isAuthenticated.value) {
-    router.push('/login')
-    return
-  }
   detailStore.setSpaceId(spaceId)
   detailStore.fetchSpace()
   fetchData()

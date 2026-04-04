@@ -66,7 +66,6 @@ definePageMeta({
 const router = useRouter()
 const route = useRoute()
 const api = useApi()
-const { isAuthenticated, initAuth } = useAuth()
 const detailStore = useSpaceDetailStore()
 
 const transaction = ref<Transaction | null>(null)
@@ -271,11 +270,6 @@ const handlePaymentSubmit = async () => {
 
 
 onMounted(() => {
-  initAuth()
-  if (!isAuthenticated.value) {
-    router.push('/login')
-    return
-  }
   detailStore.setSpaceId(route.params.id as string)
   detailStore.fetchSpace()
   fetchData()

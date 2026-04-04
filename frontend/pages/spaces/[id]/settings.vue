@@ -222,7 +222,6 @@
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
-import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseInput from '~/components/BaseInput.vue'
@@ -236,7 +235,6 @@ import type { Member } from '~/types'
 const route = useRoute()
 const router = useRouter()
 const api = useApi()
-const { initAuth } = useAuth()
 const detailStore = useSpaceDetailStore()
 
 const { showLoading, hideLoading } = useLoading()
@@ -430,7 +428,6 @@ const handleRevokeInvite = async (invite_id: string) => {
 }
 
 onMounted(() => {
-  initAuth()
   fetchData()
 })
 </script>

@@ -61,7 +61,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
-import { useAuth } from '~/composables/useAuth'
 import { useLoading } from '~/composables/useLoading'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
@@ -76,7 +75,6 @@ definePageMeta({
 const router = useRouter()
 const route = useRoute()
 const api = useApi()
-const { isAuthenticated, initAuth } = useAuth()
 const { showLoading, hideLoading } = useLoading()
 const detailStore = useSpaceDetailStore()
 
@@ -108,11 +106,6 @@ const handleSubmit = async () => {
 }
 
 onMounted(async () => {
-  initAuth()
-  if (!isAuthenticated.value) {
-    router.push('/login')
-    return
-  }
   detailStore.setSpaceId(spaceId)
   detailStore.fetchSpace()
   try {

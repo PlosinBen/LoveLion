@@ -111,7 +111,6 @@
 import { ref, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
-import { useAuth } from '~/composables/useAuth'
 import { useImages } from '~/composables/useImages'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import ImageManager from '~/components/ImageManager.vue'
@@ -130,7 +129,6 @@ definePageMeta({
 })
 
 const api = useApi()
-const { isAuthenticated, initAuth } = useAuth()
 const { getImageUrl } = useImages()
 const detailStore = useSpaceDetailStore()
 
@@ -234,11 +232,6 @@ const deleteProduct = async (productId: string) => {
 }
 
 onMounted(() => {
-  initAuth()
-  if (!isAuthenticated.value) {
-    router.push('/login')
-    return
-  }
   detailStore.setSpaceId(route.params.id as string)
   detailStore.fetchSpace()
   fetchStore()

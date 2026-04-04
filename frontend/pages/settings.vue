@@ -183,7 +183,7 @@ definePageMeta({
 })
 
 const router = useRouter()
-const { user, logout: authLogout, initAuth, isAuthenticated, updateProfile } = useAuth()
+const { user, logout: authLogout, updateProfile } = useAuth()
 const { allSpaces, fetchSpaces, leaveSpace } = useSpace()
 const { showLoading, hideLoading } = useLoading()
 
@@ -286,11 +286,6 @@ const handleLogout = () => {
 }
 
 onMounted(async () => {
-  initAuth()
-  if (!isAuthenticated.value) {
-    router.push('/login')
-    return
-  }
   await fetchSpaces(true)
 })
 </script>

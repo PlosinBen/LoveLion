@@ -42,9 +42,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useApi } from '~/composables/useApi'
-import { useAuth } from '~/composables/useAuth'
 import { useLoading } from '~/composables/useLoading'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseCard from '~/components/BaseCard.vue'
@@ -56,7 +55,6 @@ definePageMeta({
 
 const router = useRouter()
 const api = useApi()
-const { isAuthenticated, initAuth } = useAuth()
 const { showLoading, hideLoading } = useLoading()
 
 const form = ref({
@@ -92,10 +90,4 @@ const handleSubmit = async () => {
   }
 }
 
-onMounted(() => {
-  initAuth()
-  if (!isAuthenticated.value) {
-    router.push('/login')
-  }
-})
 </script>

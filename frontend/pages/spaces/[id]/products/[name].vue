@@ -66,14 +66,12 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useAuth } from '~/composables/useAuth'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseCard from '~/components/BaseCard.vue'
 
 const route = useRoute()
 const router = useRouter()
-const { isAuthenticated, initAuth } = useAuth()
 const detailStore = useSpaceDetailStore()
 
 const productName = computed(() => {
@@ -95,11 +93,6 @@ const formatPrice = (price: number | string) => {
 }
 
 onMounted(async () => {
-  initAuth()
-  if (!isAuthenticated.value) {
-    router.push('/login')
-    return
-  }
   detailStore.setSpaceId(route.params.id as string)
   detailStore.fetchSpace()
   await detailStore.fetchProducts()
