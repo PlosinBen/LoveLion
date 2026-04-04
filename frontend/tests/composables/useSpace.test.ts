@@ -8,7 +8,7 @@ vi.stubGlobal('useState', <T>(key: string, init: () => T) => ref(init()))
 const mockGet = vi.fn()
 const mockPatch = vi.fn()
 const mockPost = vi.fn()
-vi.mock('./useApi', () => ({
+vi.mock('~/composables/useApi', () => ({
   useApi: () => ({
     get: mockGet,
     patch: mockPatch,
@@ -18,7 +18,7 @@ vi.mock('./useApi', () => ({
   }),
 }))
 
-import { useSpace } from './useSpace'
+import { useSpace } from '~/composables/useSpace'
 
 const makeSpace = (overrides: Record<string, unknown> = {}) => ({
   id: 'sp-1',

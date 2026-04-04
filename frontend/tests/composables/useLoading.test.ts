@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { useLoading } from './useLoading'
+import { useLoading } from '~/composables/useLoading'
 
 describe('useLoading', () => {
   it('starts with loading false', () => {

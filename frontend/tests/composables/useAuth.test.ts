@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const mockPost = vi.fn()
 const mockGet = vi.fn()
 const mockPut = vi.fn()
-vi.mock('./useApi', () => ({
+vi.mock('~/composables/useApi', () => ({
   useApi: () => ({
     post: mockPost,
     get: mockGet,
@@ -28,7 +28,7 @@ if (typeof globalThis.window === 'undefined') {
   (globalThis as any).window = globalThis
 }
 
-import { useAuth } from './useAuth'
+import { useAuth } from '~/composables/useAuth'
 
 describe('useAuth', () => {
   beforeEach(() => {

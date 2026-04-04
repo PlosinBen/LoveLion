@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { useButtonStyle } from './useButtonStyle'
+import { useButtonStyle } from '~/composables/useButtonStyle'
 
 describe('useButtonStyle', () => {
   it('returns primary variant by default', () => {
