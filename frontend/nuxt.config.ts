@@ -3,6 +3,19 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: false },
   modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss'],
+
+  app: {
+    head: {
+      title: 'LoveLion',
+      meta: [
+        { name: 'description', content: '共享記帳與比價應用程式' },
+        { name: 'theme-color', content: '#171717' },
+      ],
+      link: [
+        { rel: 'icon', type: 'image/png', href: '/dark-logo.png' },
+      ],
+    },
+  },
   
   // css: ['~/assets/css/main.css'],
 
