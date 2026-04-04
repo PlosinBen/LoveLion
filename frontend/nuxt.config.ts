@@ -31,7 +31,7 @@ export default defineNuxtConfig({
     server: {
       watch: {
         // 在 Docker/Windows 環境下必須開啟輪詢才能即時偵測檔案變動
-        usePolling: true,
+        usePolling: process.env.NODE_ENV !== 'production',
         interval: 100,
       },
     },

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"crypto/rand"
+	"fmt"
 	"math/big"
 
 	"gorm.io/gorm"
@@ -46,7 +47,7 @@ func generateRandomString(length int) (string, error) {
 func NewShortID(db *gorm.DB, table string, column string) (string, error) {
 	length := DefaultIDLength
 
-	for attempts := 0; attempts < MaxRetries; attempts++ {
+	for attempts := 0; attempts <= MaxRetries; attempts++ {
 		id, err := generateRandomString(length)
 		if err != nil {
 			return "", err
@@ -61,16 +62,12 @@ func NewShortID(db *gorm.DB, table string, column string) (string, error) {
 		if count == 0 {
 			return id, nil
 		}
+
+		// Collision: increase length for next attempt
+		length++
 	}
 
-	// After MaxRetries collisions, try with longer length
-	length++
-	id, err := generateRandomString(length)
-	if err != nil {
-		return "", err
-	}
-
-	return id, nil
+	return "", fmt.Errorf("failed to generate unique ID after %d attempts", MaxRetries+1)
 }
 
 // MustNewShortID is like NewShortID but panics on error.
