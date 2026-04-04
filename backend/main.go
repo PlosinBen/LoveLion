@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"lovelion/internal/config"
 	"lovelion/internal/database"
@@ -10,6 +11,7 @@ import (
 	"lovelion/internal/repositories"
 	"lovelion/internal/services"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,6 +27,18 @@ func main() {
 
 	// Setup Gin router
 	r := gin.Default()
+
+	// CORS
+	if len(cfg.CORSOrigins) > 0 {
+		r.Use(cors.New(cors.Config{
+			AllowOrigins:     cfg.CORSOrigins,
+			AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+			AllowHeaders:     []string{"Authorization", "Content-Type"},
+			ExposeHeaders:    []string{"Content-Length"},
+			AllowCredentials: true,
+			MaxAge:           12 * time.Hour,
+		}))
+	}
 
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
