@@ -16,6 +16,7 @@ services:
     restart: unless-stopped
 
   backend:
+    image: lovelion-backend:${VERSION:-latest}
     build: ./backend
     container_name: lovelion-backend
     environment:
@@ -36,6 +37,7 @@ services:
     restart: unless-stopped
 
   frontend:
+    image: lovelion-frontend:${VERSION:-latest}
     build: ./frontend
     container_name: lovelion-frontend
     environment:

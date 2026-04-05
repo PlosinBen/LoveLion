@@ -22,3 +22,8 @@ Thumbs.db
 postgres_data/
 
 .data/
+
+# Deploy
+bin/deploy
+.current-version
+deploy.log
