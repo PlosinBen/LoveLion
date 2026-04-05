@@ -22,9 +22,11 @@
       </div>
     </footer>
 
-    <!-- Global UI overlays -->
-    <AppToast />
-    <AppConfirm />
+    <!-- Global UI overlays (client-only to avoid SSR hydration mismatch from Teleport) -->
+    <ClientOnly>
+      <AppToast />
+      <AppConfirm />
+    </ClientOnly>
   </div>
 </template>
 
