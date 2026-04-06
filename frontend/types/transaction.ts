@@ -26,6 +26,7 @@ export interface TransactionExpense {
   billing_amount: string
   handling_fee: string
   payment_method: string
+  location_url: string
   items?: TransactionExpenseItem[]
 }
 

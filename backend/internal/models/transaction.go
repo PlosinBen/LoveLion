@@ -38,6 +38,7 @@ type TransactionExpense struct {
 	BillingAmount decimal.Decimal `gorm:"type:decimal(10,2);default:0" json:"billing_amount"`
 	HandlingFee   decimal.Decimal `gorm:"type:decimal(10,2);default:0" json:"handling_fee"`
 	PaymentMethod string          `gorm:"type:varchar(50)" json:"payment_method"`
+	LocationURL   string          `gorm:"type:varchar(500);not null;default:''" json:"location_url"`
 
 	// Associations
 	Items []TransactionExpenseItem `gorm:"foreignKey:ExpenseID;constraint:OnDelete:CASCADE" json:"items,omitempty"`

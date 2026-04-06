@@ -34,7 +34,7 @@ func TestBuildExpenseItems_MultipleItems(t *testing.T) {
 
 	assert.Len(t, items, 2)
 	assert.True(t, d("200").Equal(items[0].Amount)) // 100 * 2
-	assert.True(t, d("50").Equal(items[1].Amount))   // 50 * 1
+	assert.True(t, d("50").Equal(items[1].Amount))  // 50 * 1
 	assert.True(t, d("250").Equal(total))
 }
 

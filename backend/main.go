@@ -59,7 +59,7 @@ func main() {
 	api := r.Group("/api")
 	{
 		// Public routes
-		authRateLimit := middleware.RateLimit(10, time.Minute)
+		authRateLimit := middleware.RateLimit(30, time.Minute)
 		users := api.Group("/users")
 		{
 			authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret, cfg.JWTExpiry)

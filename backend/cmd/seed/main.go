@@ -84,6 +84,7 @@ func main() {
 			"category":       "餐飲",
 			"exchange_rate":  1,
 			"payment_method": "信用卡",
+			"location_url":   "https://maps.app.goo.gl/starbucks-example",
 			"items": []map[string]any{
 				{"name": "特大杯拿鐵", "unit_price": 155, "quantity": 2},
 			},
@@ -198,6 +199,7 @@ func main() {
 			"billing_amount": 1253,
 			"handling_fee":   0,
 			"payment_method": "現金",
+			"location_url":   "https://maps.app.goo.gl/ichiran-shibuya",
 			"items": []map[string]any{
 				{"name": "天然豚骨拉麵", "unit_price": 980, "quantity": 3},
 				{"name": "加麵", "unit_price": 210, "quantity": 2},

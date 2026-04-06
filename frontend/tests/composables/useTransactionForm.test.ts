@@ -100,6 +100,7 @@ describe('useTransactionForm', () => {
         billing_amount: '330',
         handling_fee: '10',
         payment_method: '現金',
+        location_url: 'https://maps.google.com/test',
         items: [
           { id: 'i1', expense_id: 'exp-1', name: '拉麵', unit_price: '1500', quantity: '1', discount: '0', amount: '1500' },
         ],
@@ -121,6 +122,7 @@ describe('useTransactionForm', () => {
     expect(form.expenseForm.value.manual_rate).toBe(false) // handling_fee > 0
     expect(form.expenseForm.value.items).toHaveLength(1)
     expect(form.expenseForm.value.items[0]?.name).toBe('拉麵')
+    expect(form.expenseForm.value.location_url).toBe('https://maps.google.com/test')
     expect(form.debts.value).toHaveLength(1)
     expect(form.debts.value[0]?.payer_name).toBe('Alice')
   })
@@ -173,6 +175,7 @@ describe('useTransactionForm', () => {
         billing_amount: '100',
         handling_fee: '0',
         payment_method: '',
+        location_url: '',
         items: [], // empty
       },
     }
@@ -206,6 +209,7 @@ describe('useTransactionForm', () => {
       exchange_rate: 0,
       billing_amount: 0,
       handling_fee: 0,
+      location_url: 'https://maps.google.com/place',
     }
 
     const payload = form.buildExpensePayload()
@@ -236,6 +240,7 @@ describe('useTransactionForm', () => {
       exchange_rate: 0.22,
       billing_amount: 220,
       handling_fee: 5,
+      location_url: '',
     }
 
     const payload = form.buildExpensePayload()

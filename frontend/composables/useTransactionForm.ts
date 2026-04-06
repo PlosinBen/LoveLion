@@ -50,6 +50,7 @@ export function useTransactionForm(spaceId: string) {
     exchange_rate: 0,
     billing_amount: 0,
     handling_fee: 0,
+    location_url: '',
   })
 
   const paymentForm = ref<PaymentFormData>({
@@ -113,6 +114,7 @@ export function useTransactionForm(spaceId: string) {
         exchange_rate: Number(txn.expense.exchange_rate),
         billing_amount: Number(txn.expense.billing_amount),
         handling_fee: Number(txn.expense.handling_fee) || 0,
+        location_url: txn.expense.location_url || '',
       }
 
       if (txn.debts && txn.debts.length > 0) {
@@ -151,6 +153,7 @@ export function useTransactionForm(spaceId: string) {
         billing_amount: form.currency === baseCurrency.value ? form.total_amount : form.billing_amount,
         handling_fee: form.currency === baseCurrency.value ? 0 : form.handling_fee,
         payment_method: form.payment_method,
+        location_url: form.location_url || '',
         items: form.items
           .filter(item => item.name && Number(item.unit_price) > 0)
           .map(item => ({

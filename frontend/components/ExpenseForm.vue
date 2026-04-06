@@ -206,6 +206,16 @@
       <slot name="images" />
     </div>
 
+    <!-- Location URL -->
+    <div class="flex flex-col gap-2">
+      <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">地點連結</label>
+      <BaseInput
+        v-model="form.location_url"
+        placeholder="貼上 Google Maps 連結"
+        type="url"
+      />
+    </div>
+
     <!-- Note -->
     <div class="flex flex-col gap-2">
       <label class="text-xs font-bold text-neutral-500 uppercase tracking-wider px-1">備註</label>
@@ -248,6 +258,7 @@ export interface ExpenseFormData {
   exchange_rate: number
   billing_amount: number
   handling_fee: number
+  location_url: string
 }
 
 const props = defineProps<{

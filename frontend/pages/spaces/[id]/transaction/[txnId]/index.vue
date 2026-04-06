@@ -33,7 +33,19 @@
             <span class="font-bold text-sm">{{ transaction.expense.category || '未分類' }}</span>
           </div>
 
-          <h2 v-if="transaction.title" class="text-lg font-bold text-white mb-1">{{ transaction.title }}</h2>
+          <h2 v-if="transaction.title" class="text-lg font-bold text-white mb-1 flex items-center justify-center gap-2">
+            <a
+              v-if="transaction.expense?.location_url"
+              :href="transaction.expense.location_url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-indigo-400 hover:text-indigo-300 transition-colors"
+              @click.stop
+            >
+              <Icon icon="mdi:map-marker" class="text-xl" />
+            </a>
+            {{ transaction.title }}
+          </h2>
 
           <div class="text-4xl font-bold mb-2 tracking-tight">
             <span class="text-neutral-500 text-lg mr-1 font-bold">{{ transaction.currency }}</span>
