@@ -80,9 +80,11 @@ export interface DebtItem {
 
 const props = defineProps<{
   debts: DebtItem[]
-  totalAmount: number
+  totalAmount: number | string
   memberOptions: string[]
 }>()
+
+const safeTotal = computed(() => Number(props.totalAmount) || 0)
 
 const emit = defineEmits<{
   'update:debts': [debts: DebtItem[]]
@@ -111,7 +113,7 @@ const debtRows = computed(() => {
 
 const remaining = computed(() => {
   const sum = debtRows.value.reduce((s, item) => s + Number(item.amount || 0), 0)
-  return Math.round((props.totalAmount - sum) * 100) / 100
+  return Math.round((safeTotal.value - sum) * 100) / 100
 })
 
 const emitDebts = (rows: DebtItem[]) => {
@@ -152,8 +154,8 @@ const splitEqually = () => {
   const rows = debtRows.value
   const count = rows.length
   if (count === 0) return
-  const each = Math.floor(props.totalAmount / count)
-  const remainder = props.totalAmount - each * count
+  const each = Math.floor(safeTotal.value / count)
+  const remainder = safeTotal.value - each * count
 
   const updated = rows.map((d, i) => ({
     ...d,
