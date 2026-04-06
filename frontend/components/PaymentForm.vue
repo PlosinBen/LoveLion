@@ -22,7 +22,7 @@
         <!-- Title -->
         <div class="flex flex-col gap-2">
           <label class="text-xs font-bold text-neutral-500 uppercase px-1">標題</label>
-          <BaseInput v-model="form.title" placeholder="例如: 小明補款給小美" />
+          <BaseInput v-model="form.title" placeholder="例如: 小明付款給小美" />
         </div>
 
         <!-- Payer & Payee -->
@@ -70,7 +70,7 @@
 
     <slot name="actions">
       <BaseButton type="submit" variant="primary" class="w-full mt-4">
-        儲存補款
+        儲存付款
       </BaseButton>
     </slot>
   </form>

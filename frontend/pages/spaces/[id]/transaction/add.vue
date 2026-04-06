@@ -23,7 +23,7 @@
           class="flex-1 py-2.5 text-sm font-bold rounded-lg border-0 cursor-pointer transition-all"
           :class="transactionType === 'payment' ? 'bg-indigo-500 text-white' : 'bg-transparent text-neutral-500 hover:text-neutral-300'"
         >
-          補款
+            付款
         </button>
       </div>
 

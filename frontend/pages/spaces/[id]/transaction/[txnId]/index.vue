@@ -26,7 +26,7 @@
           <!-- Type badge -->
           <div v-if="transaction.type === 'payment'" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 rounded-2xl mb-4">
             <Icon icon="mdi:swap-horizontal" class="text-xl text-emerald-400" />
-            <span class="font-bold text-sm text-emerald-400">補款</span>
+            <span class="font-bold text-sm text-emerald-400">付款</span>
           </div>
           <div v-else-if="transaction.expense" class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-800 rounded-2xl mb-4">
             <Icon :icon="getCategoryIcon(transaction.expense.category)" class="text-xl text-indigo-500" />
@@ -95,7 +95,7 @@
         <!-- Debts -->
         <div v-if="transaction.debts && transaction.debts.length > 0" class="mb-6">
           <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3 px-1">
-            {{ transaction.type === 'payment' ? '補款詳情' : '分帳' }}
+            {{ transaction.type === 'payment' ? '付款詳情' : '分帳' }}
           </h2>
           <div class="bg-neutral-900 rounded-xl border border-neutral-800/60 divide-y divide-neutral-800">
             <div v-for="debt in transaction.debts" :key="debt.id" class="flex justify-between items-center px-5 py-4">

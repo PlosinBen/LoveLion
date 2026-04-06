@@ -214,13 +214,13 @@ func main() {
 
 	// === Step 9b: Create trip payment (settling debt) ===
 	apiPost(mingToken, fmt.Sprintf("/spaces/%s/payments", tripSpaceID), map[string]any{
-		"title":        "小明補款給 Antigravity",
+		"title":        "小明付款給 Antigravity",
 		"date":         now.AddDate(0, 1, 2).Format(time.RFC3339),
 		"total_amount": 500,
 		"payer_name":   "小明",
 		"payee_name":   "Antigravity",
 	})
-	fmt.Println("✓ Created payment: 小明補款給 Antigravity")
+	fmt.Println("✓ Created payment: 小明付款給 Antigravity")
 
 	// === Step 10: Test Update Profile API ===
 	fmt.Println("\n🧪 Testing Update Profile API...")

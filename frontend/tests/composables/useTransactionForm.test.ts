@@ -131,7 +131,7 @@ describe('useTransactionForm', () => {
       id: 'txn-2',
       space_id: 'space-1',
       type: 'payment',
-      title: '補款',
+      title: '付款',
       date: '2026-04-02T10:00:00Z',
       currency: 'TWD',
       total_amount: '500',
@@ -146,7 +146,7 @@ describe('useTransactionForm', () => {
     form.populateFromTransaction(txn)
 
     expect(form.transactionType.value).toBe('payment')
-    expect(form.paymentForm.value.title).toBe('補款')
+    expect(form.paymentForm.value.title).toBe('付款')
     expect(form.paymentForm.value.total_amount).toBe(500)
     expect(form.paymentForm.value.payer_name).toBe('Bob')
     expect(form.paymentForm.value.payee_name).toBe('Alice')
@@ -267,7 +267,7 @@ describe('useTransactionForm', () => {
     const form = useTransactionForm('space-1')
     form.paymentForm.value = {
       date: new Date('2026-04-02T10:00:00Z'),
-      title: '補款',
+      title: '付款',
       payer_name: 'Bob',
       payee_name: 'Alice',
       total_amount: 500,
@@ -276,7 +276,7 @@ describe('useTransactionForm', () => {
 
     const payload = form.buildPaymentPayload()
 
-    expect(payload.title).toBe('補款')
+    expect(payload.title).toBe('付款')
     expect(payload.total_amount).toBe(500)
     expect(payload.payer_name).toBe('Bob')
     expect(payload.payee_name).toBe('Alice')
