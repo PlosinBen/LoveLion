@@ -13,7 +13,29 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+          cpus: "1.0"
     restart: unless-stopped
+
+  migrate:
+    image: lovelion-backend:${VERSION:-latest}
+    build: ./backend
+    container_name: lovelion-migrate
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["./migrate"]
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.25"
+    restart: "no"
 
   backend:
     image: lovelion-backend:${VERSION:-latest}
@@ -33,7 +55,14 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: sh -c "./migrate && ./server"
+      migrate:
+        condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    stop_grace_period: 15s
     restart: unless-stopped
 
   frontend:
@@ -44,6 +73,11 @@ services:
       NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-}
     ports:
       - "${PORT:-3000}:3000"
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+          cpus: "0.5"
     depends_on:
       - backend
     restart: unless-stopped
