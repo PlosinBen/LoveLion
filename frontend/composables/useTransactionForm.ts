@@ -4,7 +4,7 @@ import { useToast } from '~/composables/useToast'
 import type { ExpenseFormData } from '~/components/ExpenseForm.vue'
 import type { PaymentFormData } from '~/components/PaymentForm.vue'
 import type { DebtItem } from '~/components/DebtEditor.vue'
-import type { Transaction, TransactionType } from '~/types'
+import type { Transaction, TransactionType, ExpenseTemplateData } from '~/types'
 
 const DEFAULT_CATEGORIES = [
   { label: '餐飲', value: '餐飲' },
@@ -138,6 +138,41 @@ export function useTransactionForm(spaceId: string) {
     }
   }
 
+  // Populate forms from template data
+  const populateFromTemplate = (data: ExpenseTemplateData) => {
+    transactionType.value = 'expense'
+    expenseForm.value = {
+      date: new Date(),
+      title: data.title,
+      total_amount: Number(data.total_amount),
+      category: data.category,
+      payment_method: data.payment_method,
+      note: data.note,
+      items: data.items && data.items.length > 0
+        ? data.items.map(i => ({
+            name: i.name,
+            unit_price: Number(i.unit_price),
+            quantity: Number(i.quantity),
+            discount: Number(i.discount),
+          }))
+        : [{ name: '', unit_price: 0, quantity: 1, discount: 0 }],
+      currency: data.currency || baseCurrency.value,
+      manual_rate: true,
+      exchange_rate: 0,
+      billing_amount: 0,
+      handling_fee: 0,
+      location_url: data.location_url || '',
+    }
+    if (data.debts && data.debts.length > 0) {
+      debts.value = data.debts.map(d => ({
+        payer_name: d.payer_name,
+        payee_name: d.payee_name,
+        amount: Number(d.amount),
+        is_spot_paid: d.is_spot_paid,
+      }))
+    }
+  }
+
   // Build expense API payload
   const buildExpensePayload = () => {
     const form = expenseForm.value
@@ -219,6 +254,7 @@ export function useTransactionForm(spaceId: string) {
     paymentForm,
     fetchSpaceConfig,
     populateFromTransaction,
+    populateFromTemplate,
     buildExpensePayload,
     buildPaymentPayload,
     validateExpense,

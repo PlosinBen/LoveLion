@@ -154,6 +154,12 @@ func main() {
 				paymentHandler := handlers.NewPaymentHandler(txnService)
 				spaceGroup.POST("/payments", paymentHandler.Create)
 				spaceGroup.PUT("/payments/:txn_id", paymentHandler.Update)
+
+				// Expense template routes
+				templateHandler := handlers.NewExpenseTemplateHandler(db)
+				spaceGroup.GET("/expense-templates", templateHandler.List)
+				spaceGroup.POST("/expense-templates", templateHandler.Create)
+				spaceGroup.DELETE("/expense-templates/:template_id", templateHandler.Delete)
 			}
 		}
 

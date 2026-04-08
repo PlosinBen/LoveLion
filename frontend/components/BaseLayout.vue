@@ -26,6 +26,7 @@
     <ClientOnly>
       <AppToast />
       <AppConfirm />
+      <AppPrompt />
     </ClientOnly>
   </div>
 </template>

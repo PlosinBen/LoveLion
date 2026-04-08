@@ -7,6 +7,9 @@
     >
       <template #right>
         <div class="flex gap-1">
+          <button v-if="transaction?.type === 'expense'" @click="handleSaveAsTemplate" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-amber-400 border-0 cursor-pointer hover:bg-neutral-800 transition-colors active:scale-95">
+            <Icon icon="mdi:file-document-plus-outline" class="text-xl" />
+          </button>
           <NuxtLink :to="`/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}/edit`" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-indigo-400 hover:bg-neutral-800 transition-colors active:scale-95 no-underline">
             <Icon icon="mdi:pencil-outline" class="text-xl" />
           </NuxtLink>
@@ -147,6 +150,8 @@ import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useToast } from '~/composables/useToast'
 import { useConfirm } from '~/composables/useConfirm'
+import { usePrompt } from '~/composables/usePrompt'
+import { useExpenseTemplates } from '~/composables/useExpenseTemplates'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseCard from '~/components/BaseCard.vue'
@@ -162,6 +167,9 @@ const api = useApi()
 const toast = useToast()
 const confirm = useConfirm()
 const detailStore = useSpaceDetailStore()
+
+const prompt = usePrompt()
+const { createTemplate } = useExpenseTemplates(route.params.id as string)
 
 const transaction = ref<Transaction | null>(null)
 const loading = ref(true)
@@ -210,6 +218,46 @@ const fetchData = async () => {
     router.push(`/spaces/${route.params.id}/ledger`)
   } finally {
     loading.value = false
+  }
+}
+
+const handleSaveAsTemplate = async () => {
+  if (!transaction.value || !transaction.value.expense) return
+
+  const name = await prompt({
+    title: '儲存為模板',
+    placeholder: '輸入模板名稱',
+    defaultValue: transaction.value.title,
+  })
+  if (!name) return
+
+  try {
+    const txn = transaction.value
+    const expense = txn.expense!
+    await createTemplate(name, {
+      title: txn.title,
+      category: expense.category,
+      currency: txn.currency,
+      payment_method: expense.payment_method,
+      location_url: expense.location_url || '',
+      note: txn.note,
+      total_amount: txn.total_amount,
+      items: (expense.items || []).map(i => ({
+        name: i.name,
+        unit_price: i.unit_price,
+        quantity: i.quantity,
+        discount: i.discount,
+      })),
+      debts: (txn.debts || []).map(d => ({
+        payer_name: d.payer_name,
+        payee_name: d.payee_name,
+        amount: d.amount,
+        is_spot_paid: d.is_spot_paid,
+      })),
+    })
+    toast.success('已儲存為模板')
+  } catch (e: any) {
+    toast.error(e.message || '儲存失敗')
   }
 }
 

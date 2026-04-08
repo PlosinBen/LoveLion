@@ -40,6 +40,41 @@ export interface TransactionExpenseItem {
   amount: string
 }
 
+export interface ExpenseTemplateItem {
+  name: string
+  unit_price: string
+  quantity: string
+  discount: string
+}
+
+export interface ExpenseTemplateDebt {
+  payer_name: string
+  payee_name: string
+  amount: string
+  is_spot_paid: boolean
+}
+
+export interface ExpenseTemplateData {
+  title: string
+  category: string
+  currency: string
+  payment_method: string
+  location_url: string
+  note: string
+  total_amount: string
+  items: ExpenseTemplateItem[]
+  debts: ExpenseTemplateDebt[]
+}
+
+export interface ExpenseTemplate {
+  id: string
+  space_id: string
+  name: string
+  data: ExpenseTemplateData
+  created_at: string
+  updated_at: string
+}
+
 export interface TransactionDebt {
   id: string
   transaction_id: string

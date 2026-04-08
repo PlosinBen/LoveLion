@@ -27,6 +27,18 @@
         </button>
       </div>
 
+      <!-- Template Button (expense only) -->
+      <div v-if="transactionType === 'expense'" class="flex justify-end mb-4">
+        <button
+          type="button"
+          @click="showTemplatePicker = true; templateComposable.fetchTemplates()"
+          class="text-xs font-bold text-indigo-400 bg-transparent border border-indigo-500/30 rounded-lg px-3 py-1.5 cursor-pointer hover:bg-indigo-500/10 transition-colors flex items-center gap-1"
+        >
+          <Icon icon="mdi:file-document-outline" class="text-sm" />
+          套用模板
+        </button>
+      </div>
+
       <!-- Expense Form -->
       <ExpenseForm
         v-if="transactionType === 'expense'"
@@ -60,19 +72,35 @@
         @submit="handlePaymentSubmit"
       />
     </div>
+
+    <ClientOnly>
+      <TemplatePickerModal
+        :visible="showTemplatePicker"
+        :templates="templateComposable.templates.value"
+        :loading="templateComposable.loading.value"
+        @close="showTemplatePicker = false"
+        @select="handleTemplateSelect"
+        @delete="handleTemplateDelete"
+      />
+    </ClientOnly>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { Icon } from '@iconify/vue'
 import { useLoading } from '~/composables/useLoading'
 import { useToast } from '~/composables/useToast'
 import { useTransactionForm } from '~/composables/useTransactionForm'
+import { useExpenseTemplates } from '~/composables/useExpenseTemplates'
+import { useConfirm } from '~/composables/useConfirm'
 import PageTitle from '~/components/PageTitle.vue'
 import ImageManager from '~/components/ImageManager.vue'
 import ExpenseForm from '~/components/ExpenseForm.vue'
 import PaymentForm from '~/components/PaymentForm.vue'
+import TemplatePickerModal from '~/components/TemplatePickerModal.vue'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
+import type { ExpenseTemplate } from '~/types'
 
 definePageMeta({
   path: '/spaces/:id/ledger/transaction/add',
@@ -90,9 +118,27 @@ const imageManagerRef = ref<InstanceType<typeof ImageManager> | null>(null)
 const {
   transactionType, baseCurrency, categories, availableCurrencies,
   paymentMethods, memberOptions, debts, expenseForm, paymentForm,
-  fetchSpaceConfig, buildExpensePayload, buildPaymentPayload,
+  fetchSpaceConfig, populateFromTemplate, buildExpensePayload, buildPaymentPayload,
   validateExpense, validatePayment,
 } = useTransactionForm(route.params.id as string)
+
+const templateComposable = useExpenseTemplates(route.params.id as string)
+const showTemplatePicker = ref(false)
+const confirm = useConfirm()
+
+const handleTemplateSelect = (template: ExpenseTemplate) => {
+  populateFromTemplate(template.data)
+  showTemplatePicker.value = false
+}
+
+const handleTemplateDelete = async (templateId: string) => {
+  if (!await confirm({ message: '確定要刪除此模板嗎？', destructive: true })) return
+  try {
+    await templateComposable.deleteTemplate(templateId)
+  } catch (e: any) {
+    toast.error(e.message || '刪除失敗')
+  }
+}
 
 const handleExpenseSubmit = async () => {
   if (!validateExpense()) return
