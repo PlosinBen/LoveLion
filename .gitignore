@@ -27,3 +27,6 @@ postgres_data/
 bin/deploy
 .current-version
 deploy.log
+
+# Project planning
+TODO.md
