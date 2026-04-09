@@ -3,8 +3,10 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"lovelion/internal/models"
+	"lovelion/internal/repositories"
 	"lovelion/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -52,7 +54,24 @@ func (h *TransactionHandler) List(c *gin.Context) {
 		}
 	}
 
-	transactions, total, err := h.svc.ListPaginated(c.Request.Context(), space.ID, limit, offset)
+	filter := &repositories.TransactionFilter{
+		Search:   c.Query("search"),
+		Category: c.Query("category"),
+		Type:     c.Query("type"),
+	}
+	if dateFrom := c.Query("date_from"); dateFrom != "" {
+		if t, err := time.Parse("2006-01-02", dateFrom); err == nil {
+			filter.DateFrom = &t
+		}
+	}
+	if dateTo := c.Query("date_to"); dateTo != "" {
+		if t, err := time.Parse("2006-01-02", dateTo); err == nil {
+			end := t.Add(24*time.Hour - time.Nanosecond)
+			filter.DateTo = &end
+		}
+	}
+
+	transactions, total, err := h.svc.ListPaginated(c.Request.Context(), space.ID, limit, offset, filter)
 	if err != nil {
 		respondError(c, err)
 		return

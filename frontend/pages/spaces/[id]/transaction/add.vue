@@ -177,5 +177,13 @@ onMounted(async () => {
   detailStore.setSpaceId(route.params.id as string)
   detailStore.fetchSpace()
   await fetchSpaceConfig()
+
+  // Pre-fill payment form from query params (e.g. from stats suggested transfers)
+  if (route.query.type === 'payment') {
+    transactionType.value = 'payment'
+    if (route.query.payer) paymentForm.value.payer_name = route.query.payer as string
+    if (route.query.payee) paymentForm.value.payee_name = route.query.payee as string
+    if (route.query.amount) paymentForm.value.total_amount = Number(route.query.amount)
+  }
 })
 </script>

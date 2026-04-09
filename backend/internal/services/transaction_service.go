@@ -185,8 +185,8 @@ func (s *TransactionService) List(ctx context.Context, spaceID uuid.UUID) ([]mod
 	return transactions, nil
 }
 
-func (s *TransactionService) ListPaginated(ctx context.Context, spaceID uuid.UUID, limit, offset int) ([]models.Transaction, int64, error) {
-	transactions, total, err := s.txnRepo.FindBySpacePaginated(ctx, spaceID, limit, offset)
+func (s *TransactionService) ListPaginated(ctx context.Context, spaceID uuid.UUID, limit, offset int, filter *repositories.TransactionFilter) ([]models.Transaction, int64, error) {
+	transactions, total, err := s.txnRepo.FindBySpacePaginated(ctx, spaceID, limit, offset, filter)
 	if err != nil {
 		return nil, 0, errorx.Wrap(errorx.ErrInternal, "Failed to fetch transactions")
 	}

@@ -48,13 +48,40 @@ func (r *TransactionRepo) FindBySpace(ctx context.Context, spaceID uuid.UUID) ([
 	return transactions, err
 }
 
-func (r *TransactionRepo) FindBySpacePaginated(ctx context.Context, spaceID uuid.UUID, limit, offset int) ([]models.Transaction, int64, error) {
+type TransactionFilter struct {
+	Search   string
+	Category string
+	Type     string // "expense" or "payment"
+	DateFrom *time.Time
+	DateTo   *time.Time
+}
+
+func (r *TransactionRepo) FindBySpacePaginated(ctx context.Context, spaceID uuid.UUID, limit, offset int, filter *TransactionFilter) ([]models.Transaction, int64, error) {
+	query := r.db.WithContext(ctx).Where("space_id = ?", spaceID)
+
+	if filter != nil {
+		if filter.Search != "" {
+			query = query.Where("title ILIKE ?", "%"+filter.Search+"%")
+		}
+		if filter.Type != "" {
+			query = query.Where("type = ?", filter.Type)
+		}
+		if filter.DateFrom != nil {
+			query = query.Where("date >= ?", *filter.DateFrom)
+		}
+		if filter.DateTo != nil {
+			query = query.Where("date <= ?", *filter.DateTo)
+		}
+		if filter.Category != "" {
+			query = query.Where("id IN (SELECT transaction_id FROM transaction_expenses WHERE category = ?)", filter.Category)
+		}
+	}
+
 	var total int64
-	r.db.WithContext(ctx).Model(&models.Transaction{}).Where("space_id = ?", spaceID).Count(&total)
+	query.Model(&models.Transaction{}).Count(&total)
 
 	var transactions []models.Transaction
-	err := r.db.WithContext(ctx).
-		Where("space_id = ?", spaceID).
+	err := query.
 		Preload("Expense").
 		Preload("Expense.Items").
 		Preload("Debts").

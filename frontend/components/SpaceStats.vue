@@ -31,6 +31,31 @@
         </BaseCard>
     </section>
 
+    <!-- Suggested Transfers (建議付款) -->
+    <section v-if="suggestedTransfers.length > 0" class="flex flex-col gap-4">
+        <h2 class="text-sm font-bold text-neutral-400 uppercase tracking-wider px-1">建議付款</h2>
+        <BaseCard padding="p-0" class="divide-y divide-neutral-800">
+            <div v-for="(transfer, idx) in suggestedTransfers" :key="idx" class="flex items-center justify-between px-5 py-4 gap-3">
+                <div class="flex flex-col gap-1 min-w-0">
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="font-bold text-neutral-100 truncate">{{ transfer.from }}</span>
+                        <Icon icon="mdi:arrow-right" class="text-neutral-500 shrink-0" />
+                        <span class="font-bold text-neutral-100 truncate">{{ transfer.to }}</span>
+                    </div>
+                    <div class="text-xs font-bold text-indigo-400">
+                        {{ baseCurrency }} {{ transfer.amount.toLocaleString() }}
+                    </div>
+                </div>
+                <NuxtLink
+                  :to="paymentLink(transfer)"
+                  class="shrink-0 text-xs font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 rounded-lg px-3 py-2 no-underline hover:bg-indigo-500/20 transition-colors"
+                >
+                    記錄付款
+                </NuxtLink>
+            </div>
+        </BaseCard>
+    </section>
+
     <!-- Spending Categories -->
     <section class="flex flex-col gap-4">
         <h2 class="text-sm font-bold text-neutral-400 uppercase tracking-wider px-1">類別分布</h2>
@@ -67,6 +92,7 @@ import type { Transaction } from '~/types'
 const props = defineProps<{
   transactions: Transaction[]
   baseCurrency: string
+  spaceId: string
 }>()
 
 // Only count expenses for total spending (exclude payments)
@@ -117,6 +143,49 @@ const settlement = computed(() => {
 
     return { items, unsettledCount }
 })
+
+// Compute simplified transfers to minimize number of payments
+const suggestedTransfers = computed(() => {
+    const transfers: { from: string; to: string; amount: number }[] = []
+    const debtors: { name: string; amount: number }[] = []
+    const creditors: { name: string; amount: number }[] = []
+
+    for (const person of settlement.value.items) {
+        if (person.baseAmount < 0) {
+            debtors.push({ name: person.name, amount: Math.abs(person.baseAmount) })
+        } else if (person.baseAmount > 0) {
+            creditors.push({ name: person.name, amount: person.baseAmount })
+        }
+    }
+
+    // Sort descending by amount for greedy matching
+    debtors.sort((a, b) => b.amount - a.amount)
+    creditors.sort((a, b) => b.amount - a.amount)
+
+    let i = 0, j = 0
+    while (i < debtors.length && j < creditors.length) {
+        const amount = Math.min(debtors[i].amount, creditors[j].amount)
+        if (amount > 0) {
+            transfers.push({ from: debtors[i].name, to: creditors[j].name, amount: Math.round(amount) })
+        }
+        debtors[i].amount -= amount
+        creditors[j].amount -= amount
+        if (debtors[i].amount <= 0) i++
+        if (creditors[j].amount <= 0) j++
+    }
+
+    return transfers
+})
+
+const paymentLink = (transfer: { from: string; to: string; amount: number }) => {
+    const params = new URLSearchParams({
+        type: 'payment',
+        payer: transfer.from,
+        payee: transfer.to,
+        amount: String(transfer.amount),
+    })
+    return `/spaces/${props.spaceId}/ledger/transaction/add?${params.toString()}`
+}
 
 const categoryStats = computed(() => {
     const cats: Record<string, number> = {}

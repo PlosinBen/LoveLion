@@ -24,6 +24,7 @@
       v-else
       :transactions="store.transactions"
       :base-currency="store.space?.base_currency || 'TWD'"
+      :space-id="(route.params.id as string)"
     />
 
     <!-- FAB for adding transaction -->
