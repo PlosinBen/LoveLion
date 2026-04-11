@@ -41,7 +41,7 @@
 - **後端**：Go 1.25 / Gin / GORM / PostgreSQL 18
 - **前端**：Nuxt 4 (Vue 3) / Tailwind CSS / TypeScript
 - **測試**：Go testing / Vitest / httpexpect（整合測試）
-- **基礎設施**：Docker Compose / Cloudflare R2 / Cloudflare Tunnel
+- **基礎設施**：Docker Compose / Cloudflare R2
 
 ## 開發
 
