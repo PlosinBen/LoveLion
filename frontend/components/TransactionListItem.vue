@@ -15,8 +15,13 @@
         <Icon icon="mdi:image-off-outline" class="text-xl" />
       </div>
 
-      <div class="flex flex-col">
-        <h4 class="text-sm font-semibold text-neutral-100">{{ transaction.title || '未命名' }}</h4>
+      <div class="flex flex-col min-w-0">
+        <div class="flex items-center gap-1.5">
+          <h4 class="text-sm font-semibold text-neutral-100 truncate">{{ transaction.title || '未命名' }}</h4>
+          <!-- Badge hides itself for completed / NULL statuses, so a normal
+               transaction row looks identical to before. -->
+          <AiStatusBadge :status="transaction.ai_status" :error="transaction.ai_error" />
+        </div>
         <p class="text-xs text-neutral-500 mt-0.5">{{ formatDate(transaction.date) }}</p>
       </div>
     </div>
@@ -37,6 +42,7 @@ import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
 import BaseCard from '~/components/BaseCard.vue'
+import AiStatusBadge from '~/components/AiStatusBadge.vue'
 import type { Transaction } from '~/types'
 
 const props = defineProps<{
