@@ -64,7 +64,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['change'])
-defineExpose({ commit })
+defineExpose({ commit, getBufferedFiles })
 
 const { getImages, uploadImage, deleteImage, reorderImages, getImageUrl } = useImages()
 const toast = useToast()
@@ -166,6 +166,15 @@ async function handleDelete(index: number) {
             pendingUploads.value.splice(pendingIndex, 1)
         }
     }
+}
+
+// getBufferedFiles returns the raw File objects queued in buffered mode so
+// the caller (e.g. the add page) can ship them as part of a multipart request
+// instead of sending them through the /api/images endpoint. Intentionally
+// read-only — call clearBuffered() after successful submission if you want
+// to drop them.
+function getBufferedFiles(): File[] {
+    return pendingUploads.value.map(p => p.file)
 }
 
 async function commit(overrideEntityId?: string) {
