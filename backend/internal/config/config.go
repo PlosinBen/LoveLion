@@ -19,6 +19,13 @@ type Config struct {
 	R2SecretKey    string
 	R2Bucket       string
 	R2PublicDomain string
+
+	// AI receipt extraction
+	GeminiAPIKey           string
+	GeminiModel            string
+	GeminiBaseURL          string
+	ReceiptExtractEnabled  bool
+	ReceiptRateLimitPerDay int
 }
 
 func Load() *Config {
@@ -35,6 +42,12 @@ func Load() *Config {
 		R2SecretKey:    getEnv("R2_SECRET_ACCESS_KEY", ""),
 		R2Bucket:       getEnv("R2_BUCKET_NAME", ""),
 		R2PublicDomain: getEnv("R2_PUBLIC_DOMAIN", ""),
+
+		GeminiAPIKey:           getEnv("GEMINI_API_KEY", ""),
+		GeminiModel:            getEnv("GEMINI_MODEL", "gemini-2.5-flash"),
+		GeminiBaseURL:          getEnv("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com"),
+		ReceiptExtractEnabled:  getEnv("RECEIPT_EXTRACT_ENABLED", "false") == "true",
+		ReceiptRateLimitPerDay: parsePositiveInt(getEnv("RECEIPT_EXTRACT_RATE_LIMIT_PER_DAY", "20"), 20),
 	}
 
 	if isRelease {
@@ -56,6 +69,14 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+func parsePositiveInt(s string, defaultValue int) int {
+	n, err := strconv.Atoi(s)
+	if err != nil || n <= 0 {
+		return defaultValue
+	}
+	return n
 }
 
 func parseDurationDays(s string) time.Duration {
