@@ -151,11 +151,12 @@ func main() {
 				spaceGroup.PUT("/stores/:store_id/products/:product_id", comparisonHandler.UpdateProduct)
 				spaceGroup.DELETE("/stores/:store_id/products/:product_id", comparisonHandler.DeleteProduct)
 
-				// Transaction routes (shared: list, get, delete)
+				// Transaction routes (shared: list, get, delete, ai-cancel)
 				transactionHandler := handlers.NewTransactionHandler(txnService)
 				spaceGroup.GET("/transactions", transactionHandler.List)
 				spaceGroup.GET("/transactions/:txn_id", transactionHandler.Get)
 				spaceGroup.DELETE("/transactions/:txn_id", transactionHandler.Delete)
+				spaceGroup.POST("/transactions/:txn_id/ai-cancel", transactionHandler.AICancel)
 
 				// Expense routes
 				expenseHandler := handlers.NewExpenseHandler(txnService, aiRateLimiter)

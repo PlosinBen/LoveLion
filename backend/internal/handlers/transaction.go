@@ -109,3 +109,19 @@ func (h *TransactionHandler) Delete(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Transaction deleted"})
 }
+
+// AICancel aborts an in-flight AI receipt extraction by resetting ai_status
+// to NULL. Only pending/processing rows can be cancelled; failed rows are
+// cleared through the normal PUT flow.
+func (h *TransactionHandler) AICancel(c *gin.Context) {
+	spaceVal, _ := c.Get("space")
+	space := spaceVal.(*models.Space)
+	txnID := c.Param("txn_id")
+
+	if err := h.svc.CancelAIExtract(c.Request.Context(), txnID, space.ID); err != nil {
+		respondError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "AI extraction cancelled"})
+}

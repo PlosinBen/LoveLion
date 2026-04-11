@@ -72,12 +72,13 @@ type CreateExpenseRequest struct {
 }
 
 type UpdateExpenseRequest struct {
-	Date     *time.Time           `json:"date"`
-	Currency string               `json:"currency"`
-	Title    string               `json:"title"`
-	Note     string               `json:"note"`
-	Expense  ExpenseDetailRequest `json:"expense"`
-	Debts    []DebtRequest        `json:"debts"`
+	Date      *time.Time           `json:"date"`
+	Currency  string               `json:"currency"`
+	Title     string               `json:"title"`
+	Note      string               `json:"note"`
+	Expense   ExpenseDetailRequest `json:"expense"`
+	Debts     []DebtRequest        `json:"debts"`
+	AIExtract bool                 `json:"ai_extract"`
 }
 
 func toExpenseItemInputs(reqs []ExpenseItemRequest) []services.ExpenseItemInput {
@@ -280,6 +281,20 @@ func (h *ExpenseHandler) Update(c *gin.Context) {
 		return
 	}
 
+	// Re-running AI on a failed row needs to go through the same rate limit
+	// as the create flow.
+	if req.AIExtract {
+		userID, ok := c.Get("userID")
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+		if !h.aiRateLimit.Allow(userID.(uuid.UUID)) {
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Daily AI extraction limit reached"})
+			return
+		}
+	}
+
 	txn, err := h.svc.UpdateExpense(c.Request.Context(), txnID, space.ID, services.UpdateExpenseInput{
 		Date:     req.Date,
 		Currency: req.Currency,
@@ -293,7 +308,8 @@ func (h *ExpenseHandler) Update(c *gin.Context) {
 			PaymentMethod: req.Expense.PaymentMethod,
 			Items:         toExpenseItemInputs(req.Expense.Items),
 		},
-		Debts: toDebtInputs(req.Debts),
+		Debts:     toDebtInputs(req.Debts),
+		AIExtract: req.AIExtract,
 	})
 	if err != nil {
 		respondError(c, err)
