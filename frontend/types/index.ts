@@ -1,5 +1,5 @@
 export type { User } from './user'
 export type { Image } from './image'
 export type { Space, Member, Invite, InviteInfo } from './space'
-export type { Transaction, TransactionType, TransactionExpense, TransactionExpenseItem, TransactionDebt, ExpenseTemplate, ExpenseTemplateData } from './transaction'
+export type { Transaction, TransactionType, AiStatus, TransactionExpense, TransactionExpenseItem, TransactionDebt, ExpenseTemplate, ExpenseTemplateData } from './transaction'
 export type { ComparisonStore, ComparisonProduct } from './comparison'

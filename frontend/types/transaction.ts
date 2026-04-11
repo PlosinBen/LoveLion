@@ -2,6 +2,8 @@ import type { Image } from './image'
 
 export type TransactionType = 'expense' | 'payment'
 
+export type AiStatus = 'pending' | 'processing' | 'completed' | 'failed'
+
 export interface Transaction {
   id: string
   space_id: string
@@ -16,6 +18,10 @@ export interface Transaction {
   expense?: TransactionExpense
   debts?: TransactionDebt[]
   images?: Image[]
+  /** AI receipt extraction status; undefined when the row never went through AI. */
+  ai_status?: AiStatus
+  /** User-facing failure message when ai_status === 'failed'. */
+  ai_error?: string
 }
 
 export interface TransactionExpense {
