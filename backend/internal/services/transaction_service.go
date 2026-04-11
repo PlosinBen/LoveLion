@@ -1,8 +1,14 @@
 package services
 
 import (
+	"bytes"
 	"context"
+	"errors"
+	"fmt"
+	"io"
 	"math"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"lovelion/internal/models"
@@ -15,12 +21,20 @@ import (
 	"gorm.io/gorm"
 )
 
+// ImageStorage is the subset of a blob store that the transaction service
+// uses when creating transactions with attached images.
+type ImageStorage interface {
+	Upload(ctx context.Context, key string, body io.Reader, contentType string) (string, error)
+	Delete(ctx context.Context, key string) error
+}
+
 type TransactionService struct {
 	db          *gorm.DB
 	txnRepo     *repositories.TransactionRepo
 	expenseRepo *repositories.TransactionExpenseRepo
 	itemRepo    *repositories.TransactionExpenseItemRepo
 	debtRepo    *repositories.TransactionDebtRepo
+	storage     ImageStorage // optional — nil means image-bearing flows are rejected
 }
 
 func NewTransactionService(
@@ -29,6 +43,7 @@ func NewTransactionService(
 	expenseRepo *repositories.TransactionExpenseRepo,
 	itemRepo *repositories.TransactionExpenseItemRepo,
 	debtRepo *repositories.TransactionDebtRepo,
+	storage ImageStorage,
 ) *TransactionService {
 	return &TransactionService{
 		db:          db,
@@ -36,6 +51,7 @@ func NewTransactionService(
 		expenseRepo: expenseRepo,
 		itemRepo:    itemRepo,
 		debtRepo:    debtRepo,
+		storage:     storage,
 	}
 }
 
@@ -64,13 +80,22 @@ type DebtInput struct {
 	IsSpotPaid bool
 }
 
+type ImageUpload struct {
+	FileName    string // original upload name, used for extension
+	Body        []byte
+	ContentType string
+	BlurHash    string
+}
+
 type CreateExpenseInput struct {
-	Date     *time.Time
-	Currency string
-	Title    string
-	Note     string
-	Expense  ExpenseInput
-	Debts    []DebtInput
+	Date      *time.Time
+	Currency  string
+	Title     string
+	Note      string
+	Expense   ExpenseInput
+	Debts     []DebtInput
+	Images    []ImageUpload // optional — uploaded to R2 in the same tx
+	AIExtract bool          // when true, ai_status is set to pending for worker pickup
 }
 
 type UpdateExpenseInput struct {
@@ -266,6 +291,17 @@ func (s *TransactionService) CreateExpense(ctx context.Context, spaceID uuid.UUI
 
 	debts := buildDebts(txnID, input.Debts, totalAmount, &input.Expense, currency)
 
+	// Validate image-bearing input before doing any DB work.
+	if len(input.Images) > 0 && s.storage == nil {
+		return nil, errorx.Wrap(errorx.ErrInternal, "Image storage not configured")
+	}
+	if input.AIExtract && len(input.Images) == 0 {
+		return nil, errorx.Wrap(errorx.ErrBadRequest, "AI extraction requires at least one image")
+	}
+
+	// Keys of objects written to R2 so we can clean them up if the DB tx rolls back.
+	var uploadedKeys []string
+
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		txnRepo := s.txnRepo.WithTx(tx)
 		expenseRepo := s.expenseRepo.WithTx(tx)
@@ -288,12 +324,85 @@ func (s *TransactionService) CreateExpense(ctx context.Context, spaceID uuid.UUI
 				return err
 			}
 		}
+
+		// Upload images to R2 and insert image records under the same entity_id.
+		for i, img := range input.Images {
+			_, key, err := s.uploadImageForTransaction(ctx, tx, txnID, i, img)
+			if key != "" {
+				// Track the key for rollback even if the DB insert failed.
+				uploadedKeys = append(uploadedKeys, key)
+			}
+			if err != nil {
+				return err
+			}
+		}
+
+		// Set ai_status=pending so the worker will pick the row up.
+		if input.AIExtract {
+			pending := aiStatusPending
+			if err := tx.Model(&models.Transaction{}).
+				Where("id = ?", txnID).
+				Update("ai_status", pending).Error; err != nil {
+				return err
+			}
+		}
+
 		return nil
 	}); err != nil {
+		// Rollback R2 objects using background ctx so cleanup still runs if
+		// the request was cancelled.
+		cleanupCtx := context.Background()
+		for _, key := range uploadedKeys {
+			_ = s.storage.Delete(cleanupCtx, key)
+		}
+		// Preserve validation / not-found errors from the tx closure.
+		var appErr *errorx.AppError
+		if errors.As(err, &appErr) {
+			return nil, appErr
+		}
 		return nil, errorx.Wrap(errorx.ErrInternal, "Failed to create expense")
 	}
 
 	return s.txnRepo.FindByID(ctx, txnID, spaceID)
+}
+
+// uploadImageForTransaction uploads a single image to R2 and inserts an image
+// record bound to the transaction. On any error the caller is responsible for
+// rolling back both the DB tx and the R2 object (the key is returned so the
+// caller can add it to a cleanup list before returning).
+func (s *TransactionService) uploadImageForTransaction(
+	ctx context.Context,
+	tx *gorm.DB,
+	txnID string,
+	sortOrder int,
+	img ImageUpload,
+) (*models.Image, string, error) {
+	ext := strings.ToLower(filepath.Ext(img.FileName))
+	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" {
+		return nil, "", errorx.Wrap(errorx.ErrBadRequest, "Only jpg, jpeg, and png are allowed")
+	}
+
+	fileID := uuid.New()
+	key := fmt.Sprintf("transaction/%s%s", fileID.String(), ext)
+
+	url, err := s.storage.Upload(ctx, key, bytes.NewReader(img.Body), img.ContentType)
+	if err != nil {
+		return nil, "", errorx.Wrap(errorx.ErrInternal, "Failed to upload image")
+	}
+
+	record := &models.Image{
+		ID:         fileID,
+		EntityID:   txnID,
+		EntityType: "transaction",
+		FilePath:   url,
+		BlurHash:   img.BlurHash,
+		SortOrder:  sortOrder,
+	}
+	if err := tx.Create(record).Error; err != nil {
+		// Return the key so caller can delete the uploaded object.
+		return nil, key, errorx.Wrap(errorx.ErrInternal, "Failed to save image record")
+	}
+	return record, key, nil
 }
 
 func (s *TransactionService) UpdateExpense(ctx context.Context, txnID string, spaceID uuid.UUID, input UpdateExpenseInput) (*models.Transaction, error) {

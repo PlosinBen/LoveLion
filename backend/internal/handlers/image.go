@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"fmt"
 	"image"
 	_ "image/jpeg"
@@ -11,13 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"lovelion/internal/config"
 	"lovelion/internal/models"
+	"lovelion/internal/storage"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awsconfig "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/bbrks/go-blurhash"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -25,39 +20,12 @@ import (
 )
 
 type ImageHandler struct {
-	db           *gorm.DB
-	s3Client     *s3.Client
-	bucket       string
-	publicDomain string
+	db      *gorm.DB
+	storage *storage.R2Storage
 }
 
-func NewImageHandler(db *gorm.DB) (*ImageHandler, error) {
-	cfg := config.Load()
-
-	// Setup S3 Client for R2
-	r2Resolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		return aws.Endpoint{
-			URL: fmt.Sprintf("https://%s.r2.cloudflarestorage.com", cfg.R2AccountID),
-		}, nil
-	})
-
-	awsCfg, err := awsconfig.LoadDefaultConfig(context.TODO(),
-		awsconfig.WithEndpointResolverWithOptions(r2Resolver),
-		awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(cfg.R2AccessKey, cfg.R2SecretKey, "")),
-		awsconfig.WithRegion("auto"),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load R2 config: %w", err)
-	}
-
-	client := s3.NewFromConfig(awsCfg)
-
-	return &ImageHandler{
-		db:           db,
-		s3Client:     client,
-		bucket:       cfg.R2Bucket,
-		publicDomain: cfg.R2PublicDomain,
-	}, nil
+func NewImageHandler(db *gorm.DB, r2 *storage.R2Storage) *ImageHandler {
+	return &ImageHandler{db: db, storage: r2}
 }
 
 // Upload handles file upload and creates a database record
@@ -125,25 +93,18 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 	key := fmt.Sprintf("%s/%s%s", entityType, fileUUID.String(), ext)
 
 	// Upload to R2
-	_, err = h.s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket:      aws.String(h.bucket),
-		Key:         aws.String(key),
-		Body:        f,
-		ContentType: aws.String(file.Header.Get("Content-Type")),
-	})
-
+	fullURL, err := h.storage.Upload(c.Request.Context(), key, f, file.Header.Get("Content-Type"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload to storage: " + err.Error()})
 		return
 	}
 
 	// Create DB Record
-	fullURL := fmt.Sprintf("%s/%s", h.publicDomain, key)
 	image := models.Image{
 		ID:         fileUUID,
 		EntityID:   entityID,
 		EntityType: entityType,
-		FilePath:   fullURL, // Store Full URL
+		FilePath:   fullURL,
 		BlurHash:   blurHashStr,
 	}
 
@@ -160,10 +121,7 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 
 	if err := h.db.Create(&image).Error; err != nil {
 		// Attempt to delete from R2 if DB insert fails
-		h.s3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
-			Bucket: aws.String(h.bucket),
-			Key:    aws.String(key),
-		})
+		_ = h.storage.Delete(c.Request.Context(), key)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save image record"})
 		return
 	}
@@ -240,20 +198,8 @@ func (h *ImageHandler) Delete(c *gin.Context) {
 	}
 
 	// Delete from R2
-	// Extract key from full URL
-	// URL: https://domain.com/entity/uuid.ext
-	// Key: entity/uuid.ext
-	key := strings.TrimPrefix(image.FilePath, h.publicDomain+"/")
-
-	_, err := h.s3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
-		Bucket: aws.String(h.bucket),
-		Key:    aws.String(key),
-	})
-
-	if err != nil {
-		// Log error but continue to delete from DB?
-		// Or fail? Usually better to fail or log.
-		// For now, fail to alert user.
+	key := h.storage.KeyFromURL(image.FilePath)
+	if err := h.storage.Delete(c.Request.Context(), key); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete from storage: " + err.Error()})
 		return
 	}

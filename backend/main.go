@@ -15,6 +15,7 @@ import (
 	"lovelion/internal/middleware"
 	"lovelion/internal/repositories"
 	"lovelion/internal/services"
+	"lovelion/internal/storage"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -83,9 +84,20 @@ func main() {
 		expenseItemRepo := repositories.NewTransactionExpenseItemRepo(db)
 		debtRepo := repositories.NewTransactionDebtRepo(db)
 
+		// Shared R2 storage (used by ImageHandler and TransactionService)
+		r2Storage, err := storage.NewR2Storage(cfg)
+		if err != nil {
+			slog.Error("failed to initialize R2 storage", "error", err)
+			os.Exit(1)
+		}
+
 		// Services
 		inviteService := services.NewInviteService(db, inviteRepo, memberRepo)
-		txnService := services.NewTransactionService(db, txnRepo, expenseRepo, expenseItemRepo, debtRepo)
+		txnService := services.NewTransactionService(db, txnRepo, expenseRepo, expenseItemRepo, debtRepo, r2Storage)
+
+		// AI receipt extraction rate limiter (per-user daily cap).
+		// A zero/negative cap disables the check entirely.
+		aiRateLimiter := middleware.NewAIRateLimiter(cfg.ReceiptRateLimitPerDay)
 
 		// Sharing routes (Public Info)
 		sharingHandler := handlers.NewSpaceSharingHandler(inviteService, memberRepo)
@@ -146,7 +158,7 @@ func main() {
 				spaceGroup.DELETE("/transactions/:txn_id", transactionHandler.Delete)
 
 				// Expense routes
-				expenseHandler := handlers.NewExpenseHandler(txnService)
+				expenseHandler := handlers.NewExpenseHandler(txnService, aiRateLimiter)
 				spaceGroup.POST("/expenses", expenseHandler.Create)
 				spaceGroup.PUT("/expenses/:txn_id", expenseHandler.Update)
 
@@ -167,11 +179,7 @@ func main() {
 		images := api.Group("/images")
 		images.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db))
 		{
-			imageHandler, err := handlers.NewImageHandler(db)
-			if err != nil {
-				slog.Error("failed to initialize image handler", "error", err)
-				os.Exit(1)
-			}
+			imageHandler := handlers.NewImageHandler(db, r2Storage)
 			images.POST("", imageHandler.Upload)
 			images.GET("", imageHandler.List)
 			images.PUT("/order", imageHandler.Reorder)

@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"lovelion/internal/models"
+	"lovelion/internal/storage"
 	"lovelion/internal/testutil"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -76,7 +77,7 @@ func TestImageHandler_List(t *testing.T) {
 	}
 
 	// Setup handler
-	handler := &ImageHandler{db: db}
+	handler := NewImageHandler(db, nil)
 	router := testutil.TestRouter()
 	router.GET("/api/images", handler.List)
 
@@ -112,7 +113,7 @@ func TestImageHandler_Reorder(t *testing.T) {
 	db.Create(&img1)
 	db.Create(&img2)
 
-	handler := &ImageHandler{db: db}
+	handler := NewImageHandler(db, nil)
 	router := testutil.TestRouter()
 	router.POST("/api/images/reorder", handler.Reorder)
 
@@ -144,12 +145,8 @@ func TestImageHandler_Upload(t *testing.T) {
 	s3Client, server := mockS3Client(t)
 	defer server.Close()
 
-	handler := &ImageHandler{
-		db:           db,
-		s3Client:     s3Client,
-		bucket:       "test-bucket",
-		publicDomain: "https://r2.example.com",
-	}
+	r2 := storage.NewR2StorageFromClient(s3Client, "test-bucket", "https://r2.example.com")
+	handler := NewImageHandler(db, r2)
 
 	router := testutil.TestRouter()
 	router.POST("/api/images", handler.Upload)

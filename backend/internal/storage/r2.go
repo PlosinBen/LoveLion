@@ -24,6 +24,16 @@ type R2Storage struct {
 	publicDomain string
 }
 
+// NewR2StorageFromClient wraps a pre-built S3 client. Used by tests that
+// point the client at an httptest server.
+func NewR2StorageFromClient(client *s3.Client, bucket, publicDomain string) *R2Storage {
+	return &R2Storage{
+		client:       client,
+		bucket:       bucket,
+		publicDomain: strings.TrimRight(publicDomain, "/"),
+	}
+}
+
 // NewR2Storage constructs an R2 client from the app config.
 func NewR2Storage(cfg *config.Config) (*R2Storage, error) {
 	resolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
