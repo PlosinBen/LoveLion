@@ -49,10 +49,30 @@
         :payment-methods="paymentMethods"
         :debts="debts"
         :member-options="memberOptions"
+        :disabled="aiExtract"
         @update:debts="debts = $event"
         @submit="handleExpenseSubmit"
       >
         <template #images>
+          <!-- AI extract toggle lives in the images slot so it sits right next
+               to the upload area — which is the relevant interaction when the
+               toggle is on (just drop photos in and submit). -->
+          <div class="bg-neutral-900 rounded-xl p-4 border border-neutral-800 mb-3 flex flex-col gap-2">
+            <label class="flex items-center gap-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                v-model="aiExtract"
+                class="w-4 h-4 rounded text-indigo-500 bg-neutral-800 border-neutral-700"
+              >
+              <span class="flex items-center gap-1.5 text-sm font-bold text-indigo-300">
+                <Icon icon="mdi:robot-outline" class="text-base" />
+                使用 AI 辨識收據
+              </span>
+            </label>
+            <p class="text-xs text-neutral-500 leading-relaxed pl-7">
+              上傳的發票會傳送至 Google Gemini 進行辨識，不會用於模型訓練。系統會自動帶入金額、項目、日期等欄位。
+            </p>
+          </div>
           <ImageManager
             entity-id="pending"
             entity-type="transaction"
@@ -117,8 +137,8 @@ const imageManagerRef = ref<InstanceType<typeof ImageManager> | null>(null)
 
 const {
   transactionType, baseCurrency, categories, availableCurrencies,
-  paymentMethods, memberOptions, debts, expenseForm, paymentForm,
-  fetchSpaceConfig, populateFromTemplate, buildExpensePayload, buildPaymentPayload,
+  paymentMethods, memberOptions, debts, expenseForm, paymentForm, aiExtract,
+  fetchSpaceConfig, populateFromTemplate, buildExpenseMultipart, buildPaymentPayload,
   validateExpense, validatePayment,
 } = useTransactionForm(route.params.id as string)
 
@@ -143,12 +163,18 @@ const handleTemplateDelete = async (templateId: string) => {
 const handleExpenseSubmit = async () => {
   if (!validateExpense()) return
 
+  // The ImageManager is in buffered mode (instant-upload=false), so files live
+  // in its pending queue until we pull them out here. Submitting as multipart
+  // lets the backend create the transaction and attach images atomically.
+  const files = imageManagerRef.value?.getBufferedFiles() ?? []
+  if (aiExtract.value && files.length === 0) {
+    toast.error('使用 AI 辨識時必須上傳至少一張收據圖片')
+    return
+  }
+
   showLoading()
   try {
-    const created = await api.post<any>(`/api/spaces/${route.params.id}/expenses`, buildExpensePayload())
-    if (imageManagerRef.value) {
-      await imageManagerRef.value.commit(created.id)
-    }
+    await api.upload(`/api/spaces/${route.params.id}/expenses`, buildExpenseMultipart(files))
     detailStore.invalidate('transactions')
     router.push(`/spaces/${route.params.id}/ledger`)
   } catch (e: any) {

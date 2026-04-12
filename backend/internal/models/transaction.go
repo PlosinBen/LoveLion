@@ -16,6 +16,8 @@ type Transaction struct {
 	Currency    string          `gorm:"type:varchar(3);not null;default:'TWD'" json:"currency"`
 	TotalAmount decimal.Decimal `gorm:"type:decimal(10,2);not null;default:0" json:"total_amount"`
 	Note        string          `gorm:"type:text" json:"note"`
+	AIStatus    *string         `gorm:"type:varchar(20);column:ai_status" json:"ai_status,omitempty"`
+	AIError     string          `gorm:"type:text;column:ai_error" json:"ai_error,omitempty"`
 	CreatedAt   time.Time       `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt   time.Time       `gorm:"autoUpdateTime" json:"updated_at"`
 

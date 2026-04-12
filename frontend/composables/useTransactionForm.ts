@@ -31,6 +31,9 @@ export function useTransactionForm(spaceId: string) {
 
   const transactionType = ref<TransactionType>('expense')
   const baseCurrency = ref('TWD')
+  // When true, the worker will fill in items/date for us, so we skip those
+  // fields from validation and let the backend pick them up from the LLM.
+  const aiExtract = ref(false)
   const categories = ref<{ label: string; value: string }[]>([])
   const availableCurrencies = ref<{ label: string; value: string }[]>([])
   const paymentMethods = ref<{ label: string; value: string }[]>([])
@@ -176,7 +179,7 @@ export function useTransactionForm(spaceId: string) {
   // Build expense API payload
   const buildExpensePayload = () => {
     const form = expenseForm.value
-    return {
+    const payload: Record<string, any> = {
       title: form.title,
       total_amount: form.total_amount,
       date: form.date.toISOString(),
@@ -204,6 +207,22 @@ export function useTransactionForm(spaceId: string) {
             .map(d => ({ payer_name: d.payer_name, payee_name: d.payee_name, amount: d.amount, is_spot_paid: d.is_spot_paid }))
         : undefined,
     }
+    if (aiExtract.value) {
+      payload.ai_extract = true
+    }
+    return payload
+  }
+
+  // Build a multipart/form-data body the backend Create handler accepts:
+  //   data   — JSON string matching buildExpensePayload()
+  //   images — N files attached under the same field name
+  const buildExpenseMultipart = (files: File[]): FormData => {
+    const fd = new FormData()
+    fd.append('data', JSON.stringify(buildExpensePayload()))
+    for (const f of files) {
+      fd.append('images', f, f.name)
+    }
+    return fd
   }
 
   // Build payment API payload
@@ -219,8 +238,14 @@ export function useTransactionForm(spaceId: string) {
     }
   }
 
-  // Validate expense form, returns true if valid
+  // Validate expense form, returns true if valid.
+  // When ai_extract is on we trust the worker to fill in total/items, so the
+  // only requirement is that the caller attached at least one image (checked
+  // by the caller — this composable has no visibility into the ImageManager).
   const validateExpense = (): boolean => {
+    if (aiExtract.value) {
+      return true
+    }
     if (expenseForm.value.total_amount <= 0) {
       toast.error('請填寫總額')
       return false
@@ -252,10 +277,12 @@ export function useTransactionForm(spaceId: string) {
     debts,
     expenseForm,
     paymentForm,
+    aiExtract,
     fetchSpaceConfig,
     populateFromTransaction,
     populateFromTemplate,
     buildExpensePayload,
+    buildExpenseMultipart,
     buildPaymentPayload,
     validateExpense,
     validatePayment,

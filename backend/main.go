@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"lovelion/internal/middleware"
 	"lovelion/internal/repositories"
 	"lovelion/internal/services"
+	"lovelion/internal/storage"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -59,6 +61,10 @@ func main() {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 
+	// aiWorker is assigned inside the api block (where dependencies are in
+	// scope). It stays nil when receipt extraction is disabled.
+	var aiWorker *services.AIWorker
+
 	// API routes
 	api := r.Group("/api")
 	{
@@ -83,9 +89,34 @@ func main() {
 		expenseItemRepo := repositories.NewTransactionExpenseItemRepo(db)
 		debtRepo := repositories.NewTransactionDebtRepo(db)
 
+		// Shared R2 storage (used by ImageHandler and TransactionService)
+		r2Storage, err := storage.NewR2Storage(cfg)
+		if err != nil {
+			slog.Error("failed to initialize R2 storage", "error", err)
+			os.Exit(1)
+		}
+
 		// Services
 		inviteService := services.NewInviteService(db, inviteRepo, memberRepo)
-		txnService := services.NewTransactionService(db, txnRepo, expenseRepo, expenseItemRepo, debtRepo)
+		txnService := services.NewTransactionService(db, txnRepo, expenseRepo, expenseItemRepo, debtRepo, r2Storage)
+
+		// AI receipt extraction rate limiter (per-user daily cap).
+		// A zero/negative cap disables the check entirely.
+		aiRateLimiter := middleware.NewAIRateLimiter(cfg.ReceiptRateLimitPerDay)
+
+		// AI worker — polls transactions with ai_status='pending' and calls
+		// the Gemini extractor. Disabled if the feature flag is off or the
+		// API key is missing.
+		if cfg.ReceiptExtractEnabled {
+			if cfg.GeminiAPIKey == "" {
+				slog.Warn("receipt extraction enabled but GEMINI_API_KEY is empty — worker not started")
+			} else {
+				extractor := services.NewGeminiReceiptExtractor(cfg.GeminiAPIKey, cfg.GeminiModel, cfg.GeminiBaseURL)
+				aiWorker = services.NewAIWorker(db, extractor, r2Storage, services.AIWorkerConfig{})
+			}
+		} else {
+			slog.Info("receipt extraction disabled", "RECEIPT_EXTRACT_ENABLED", "false")
+		}
 
 		// Sharing routes (Public Info)
 		sharingHandler := handlers.NewSpaceSharingHandler(inviteService, memberRepo)
@@ -139,14 +170,15 @@ func main() {
 				spaceGroup.PUT("/stores/:store_id/products/:product_id", comparisonHandler.UpdateProduct)
 				spaceGroup.DELETE("/stores/:store_id/products/:product_id", comparisonHandler.DeleteProduct)
 
-				// Transaction routes (shared: list, get, delete)
+				// Transaction routes (shared: list, get, delete, ai-cancel)
 				transactionHandler := handlers.NewTransactionHandler(txnService)
 				spaceGroup.GET("/transactions", transactionHandler.List)
 				spaceGroup.GET("/transactions/:txn_id", transactionHandler.Get)
 				spaceGroup.DELETE("/transactions/:txn_id", transactionHandler.Delete)
+				spaceGroup.POST("/transactions/:txn_id/ai-cancel", transactionHandler.AICancel)
 
 				// Expense routes
-				expenseHandler := handlers.NewExpenseHandler(txnService)
+				expenseHandler := handlers.NewExpenseHandler(txnService, aiRateLimiter)
 				spaceGroup.POST("/expenses", expenseHandler.Create)
 				spaceGroup.PUT("/expenses/:txn_id", expenseHandler.Update)
 
@@ -167,11 +199,7 @@ func main() {
 		images := api.Group("/images")
 		images.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db))
 		{
-			imageHandler, err := handlers.NewImageHandler(db)
-			if err != nil {
-				slog.Error("failed to initialize image handler", "error", err)
-				os.Exit(1)
-			}
+			imageHandler := handlers.NewImageHandler(db, r2Storage)
 			images.POST("", imageHandler.Upload)
 			images.GET("", imageHandler.List)
 			images.PUT("/order", imageHandler.Reorder)
@@ -189,6 +217,20 @@ func main() {
 		Handler: r,
 	}
 
+	// Start AI worker (if enabled) with its own cancellable context so we can
+	// stop it independently of the HTTP server. We also hold a WaitGroup so
+	// shutdown blocks until the worker has returned from Run().
+	workerCtx, cancelWorker := context.WithCancel(context.Background())
+	defer cancelWorker()
+	var workerWG sync.WaitGroup
+	if aiWorker != nil {
+		workerWG.Add(1)
+		go func() {
+			defer workerWG.Done()
+			aiWorker.Run(workerCtx)
+		}()
+	}
+
 	go func() {
 		slog.Info("server starting", "port", port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -202,6 +244,15 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	slog.Info("shutting down server...")
+
+	// Stop the worker first so no new LLM calls or DB writes start during the
+	// HTTP drain window. A processing row at this point will be re-queued on
+	// the next boot via recoverStuck.
+	cancelWorker()
+	if aiWorker != nil {
+		workerWG.Wait()
+		slog.Info("ai worker stopped")
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

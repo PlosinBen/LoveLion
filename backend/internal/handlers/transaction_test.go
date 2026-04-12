@@ -18,7 +18,7 @@ func newTestTransactionService(db *gorm.DB) *services.TransactionService {
 	expenseRepo := repositories.NewTransactionExpenseRepo(db)
 	expenseItemRepo := repositories.NewTransactionExpenseItemRepo(db)
 	debtRepo := repositories.NewTransactionDebtRepo(db)
-	return services.NewTransactionService(db, txnRepo, expenseRepo, expenseItemRepo, debtRepo)
+	return services.NewTransactionService(db, txnRepo, expenseRepo, expenseItemRepo, debtRepo, nil)
 }
 
 // createTestSpace is a helper that creates a space and returns its ID
@@ -46,7 +46,7 @@ func TestExpenseHandler_Create(t *testing.T) {
 	spaceID := createTestSpace(t, db, user.ID)
 
 	svc := newTestTransactionService(db)
-	handler := NewExpenseHandler(svc)
+	handler := NewExpenseHandler(svc, nil)
 
 	router := testutil.TestRouter()
 	router.POST("/api/spaces/:id/expenses", testutil.AuthContext(user.ID), middleware.SpaceAccess(db), handler.Create)
@@ -190,7 +190,7 @@ func TestTransactionHandler_GetAndDelete(t *testing.T) {
 	spaceID := createTestSpace(t, db, user.ID)
 
 	svc := newTestTransactionService(db)
-	expenseHandler := NewExpenseHandler(svc)
+	expenseHandler := NewExpenseHandler(svc, nil)
 	txnHandler := NewTransactionHandler(svc)
 
 	router := testutil.TestRouter()
