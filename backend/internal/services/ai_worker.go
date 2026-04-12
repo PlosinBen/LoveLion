@@ -41,9 +41,13 @@ type AIWorker struct {
 	extractor ReceiptExtractor
 	storage   ImageDownloader
 	cfg       AIWorkerConfig
-	// In-memory retry counter per transaction ID. Resets on restart, which is
+	// In-memory retry state per transaction ID. Resets on restart, which is
 	// fine — startup recovery re-queues processing→pending anyway.
-	retries map[string]int
+	retries  map[string]int
+	// retryAt tracks when a transaction is allowed to be retried. The worker
+	// skips rows whose retryAt is still in the future, giving a simple
+	// exponential backoff: 30s, 60s, 120s for attempts 1/2/3.
+	retryAt map[string]time.Time
 }
 
 // NewAIWorker constructs a worker. Pass nil cfg fields to get defaults.
@@ -62,7 +66,8 @@ func NewAIWorker(db *gorm.DB, extractor ReceiptExtractor, storage ImageDownloade
 		extractor: extractor,
 		storage:   storage,
 		cfg:       cfg,
-		retries:   make(map[string]int),
+		retries: make(map[string]int),
+		retryAt: make(map[string]time.Time),
 	}
 }
 
@@ -126,9 +131,14 @@ func (w *AIWorker) tick(ctx context.Context) {
 		return
 	}
 
+	now := time.Now()
 	for _, txn := range pending {
 		if ctx.Err() != nil {
 			return
+		}
+		// Skip rows that are in backoff from a previous retryable failure.
+		if t, ok := w.retryAt[txn.ID]; ok && now.Before(t) {
+			continue
 		}
 		w.processOne(ctx, txn.ID)
 	}
@@ -175,8 +185,12 @@ func (w *AIWorker) processOne(ctx context.Context, txnID string) {
 			w.retries[txnID]++
 			attempt := w.retries[txnID]
 			if attempt <= w.cfg.MaxRetries {
+				// Exponential backoff: 30s, 60s, 120s.
+				backoff := time.Duration(30<<(attempt-1)) * time.Second
+				w.retryAt[txnID] = time.Now().Add(backoff)
 				log.Warn("ai worker retryable error, re-queuing",
-					"error", err, "attempt", attempt, "max", w.cfg.MaxRetries)
+					"error", err, "attempt", attempt, "max", w.cfg.MaxRetries,
+					"backoff", backoff)
 				w.writeRetry(ctx, txnID)
 				return
 			}
@@ -186,6 +200,7 @@ func (w *AIWorker) processOne(ctx context.Context, txnID string) {
 		log.Warn("ai worker extract failed", "error", err)
 		w.writeFailure(ctx, txnID, friendlyExtractError(err))
 		delete(w.retries, txnID)
+		delete(w.retryAt, txnID)
 		return
 	}
 
@@ -194,10 +209,12 @@ func (w *AIWorker) processOne(ctx context.Context, txnID string) {
 		log.Error("ai worker write-back failed", "error", err)
 		w.writeFailure(ctx, txnID, "failed to save result")
 		delete(w.retries, txnID)
+		delete(w.retryAt, txnID)
 		return
 	}
 
 	delete(w.retries, txnID)
+	delete(w.retryAt, txnID)
 	log.Info("ai worker completed", "items", len(result.Items), "elapsed", time.Since(start))
 }
 
