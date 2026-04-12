@@ -119,10 +119,38 @@
         </BaseButton>
       </section>
 
+      <!-- Links -->
+      <section class="flex flex-col gap-3">
+        <label class="text-xs font-bold text-neutral-500 uppercase tracking-widest px-1">其他</label>
+        <BaseCard padding="p-0" class="shadow-sm divide-y divide-neutral-800">
+          <NuxtLink to="/announcements" class="flex items-center justify-between px-5 py-4 hover:bg-neutral-800 transition-colors no-underline">
+            <div class="flex items-center gap-3">
+              <Icon icon="mdi:bullhorn-outline" class="text-xl text-neutral-400" />
+              <span class="text-sm font-bold text-neutral-200">公告</span>
+            </div>
+            <Icon icon="mdi:chevron-right" class="text-neutral-600" />
+          </NuxtLink>
+          <NuxtLink to="/about" class="flex items-center justify-between px-5 py-4 hover:bg-neutral-800 transition-colors no-underline">
+            <div class="flex items-center gap-3">
+              <Icon icon="mdi:information-outline" class="text-xl text-neutral-400" />
+              <span class="text-sm font-bold text-neutral-200">關於 LoveLion</span>
+            </div>
+            <Icon icon="mdi:chevron-right" class="text-neutral-600" />
+          </NuxtLink>
+          <NuxtLink v-if="user?.role === 'admin'" to="/admin/announcements" class="flex items-center justify-between px-5 py-4 hover:bg-neutral-800 transition-colors no-underline">
+            <div class="flex items-center gap-3">
+              <Icon icon="mdi:shield-crown-outline" class="text-xl text-amber-500" />
+              <span class="text-sm font-bold text-amber-400">公告管理</span>
+            </div>
+            <Icon icon="mdi:chevron-right" class="text-neutral-600" />
+          </NuxtLink>
+        </BaseCard>
+      </section>
+
       <!-- App Info -->
       <p class="text-center text-xs text-neutral-700 font-bold uppercase tracking-widest mt-6 flex flex-col gap-2">
-        <span>LoveLion v1.2.0-stable</span>
-        <span>Crafted with Passion © 2026 Antigravity</span>
+        <span>LoveLion {{ appVersion }}</span>
+        <span>Built by Ben &copy; 2026</span>
       </p>
     </div>
 
@@ -167,7 +195,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useAuth } from '~/composables/useAuth'
 import { useSpace } from '~/composables/useSpace'
@@ -184,6 +212,7 @@ definePageMeta({
 })
 
 const router = useRouter()
+const config = useRuntimeConfig()
 const { user, logout: authLogout, updateProfile } = useAuth()
 const { allSpaces, fetchSpaces, leaveSpace } = useSpace()
 const { showLoading, hideLoading } = useLoading()
@@ -286,6 +315,11 @@ const handleLogout = () => {
   authLogout()
   router.push('/login')
 }
+
+const appVersion = computed(() => {
+  const version = config.public.appVersion as string
+  return version ? `v${version}` : ''
+})
 
 onMounted(async () => {
   await fetchSpaces(true)

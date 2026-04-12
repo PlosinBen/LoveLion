@@ -174,6 +174,13 @@ type generateAnnouncementRequest struct {
 	Description string `json:"description" binding:"required,min=1"`
 }
 
+// Config returns admin feature availability flags.
+func (h *AdminAnnouncementHandler) Config(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"ai_available": h.generator != nil,
+	})
+}
+
 // Generate uses AI to generate announcement title and content from a description.
 func (h *AdminAnnouncementHandler) Generate(c *gin.Context) {
 	if h.generator == nil {

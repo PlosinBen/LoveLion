@@ -139,6 +139,7 @@ func main() {
 			adminAnnouncements := adminGroup.Group("/announcements")
 			{
 				adminAnnouncements.GET("", adminAnnouncementHandler.List)
+				adminAnnouncements.GET("/config", adminAnnouncementHandler.Config)
 				adminAnnouncements.POST("", adminAnnouncementHandler.Create)
 				adminAnnouncements.PUT("/:id", adminAnnouncementHandler.Update)
 				adminAnnouncements.DELETE("/:id", adminAnnouncementHandler.Delete)

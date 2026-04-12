@@ -2,6 +2,7 @@
   <BaseLayout>
     <template #header>
       <Header class="px-4" />
+      <BroadcastBar />
     </template>
     
     <slot />
@@ -19,6 +20,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuth } from '~/composables/useAuth'
 import Header from '~/components/Header.vue'
+import BroadcastBar from '~/components/BroadcastBar.vue'
 import BottomNav from '~/components/BottomNav.vue'
 
 const { isAuthenticated } = useAuth()

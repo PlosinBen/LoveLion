@@ -75,6 +75,7 @@ services:
     container_name: lovelion-frontend
     environment:
       NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-}
+      NUXT_PUBLIC_APP_VERSION: ${NUXT_PUBLIC_APP_VERSION:-}
     ports:
       - "${PORT:-3000}:3000"
     deploy:
