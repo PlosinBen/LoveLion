@@ -7,13 +7,13 @@
     >
       <template #right>
         <div class="flex gap-1">
-          <button v-if="transaction?.type === 'expense'" @click="handleSaveAsTemplate" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-amber-400 border-0 cursor-pointer hover:bg-neutral-800 transition-colors active:scale-95">
+          <button v-if="transaction?.type === 'expense'" @click="handleSaveAsTemplate" title="儲存為模板" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-amber-400 border-0 cursor-pointer hover:bg-neutral-800 transition-colors active:scale-95">
             <Icon icon="mdi:file-document-plus-outline" class="text-xl" />
           </button>
-          <NuxtLink :to="`/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}/edit`" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-indigo-400 hover:bg-neutral-800 transition-colors active:scale-95 no-underline">
+          <NuxtLink :to="`/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}/edit`" title="編輯" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-indigo-400 hover:bg-neutral-800 transition-colors active:scale-95 no-underline">
             <Icon icon="mdi:pencil-outline" class="text-xl" />
           </NuxtLink>
-          <button @click="handleDelete" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-red-500 border-0 cursor-pointer hover:bg-neutral-800 transition-colors active:scale-95">
+          <button @click="handleDelete" title="刪除" class="flex justify-center items-center w-10 h-10 rounded-xl bg-neutral-900 text-red-500 border-0 cursor-pointer hover:bg-neutral-800 transition-colors active:scale-95">
             <Icon icon="mdi:trash-can-outline" class="text-xl" />
           </button>
         </div>

@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	maxImageSize = 5 * 1024 * 1024 // 5MB
+	maxImageSize  = 5 * 1024 * 1024 // 5MB
 	maxImageCount = 10
 )
 
