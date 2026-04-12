@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS announcements;
+ALTER TABLE users DROP COLUMN IF EXISTS role;

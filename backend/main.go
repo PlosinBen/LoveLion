@@ -118,6 +118,34 @@ func main() {
 			slog.Info("receipt extraction disabled", "RECEIPT_EXTRACT_ENABLED", "false")
 		}
 
+		// Public announcement routes
+		announcementHandler := handlers.NewAnnouncementHandler(db)
+		announcements := api.Group("/announcements")
+		{
+			announcements.GET("", announcementHandler.List)
+			announcements.GET("/broadcast", announcementHandler.Broadcast)
+			announcements.GET("/:id", announcementHandler.Get)
+		}
+
+		// Admin announcement routes
+		var announcementGenerator *services.AnnouncementGenerator
+		if cfg.GeminiAPIKey != "" {
+			announcementGenerator = services.NewAnnouncementGenerator(cfg.GeminiAPIKey, cfg.GeminiModel, cfg.GeminiBaseURL)
+		}
+		adminAnnouncementHandler := handlers.NewAdminAnnouncementHandler(db, announcementGenerator)
+		adminGroup := api.Group("/admin")
+		adminGroup.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db), middleware.AdminOnly(db))
+		{
+			adminAnnouncements := adminGroup.Group("/announcements")
+			{
+				adminAnnouncements.GET("", adminAnnouncementHandler.List)
+				adminAnnouncements.POST("", adminAnnouncementHandler.Create)
+				adminAnnouncements.PUT("/:id", adminAnnouncementHandler.Update)
+				adminAnnouncements.DELETE("/:id", adminAnnouncementHandler.Delete)
+				adminAnnouncements.POST("/generate", adminAnnouncementHandler.Generate)
+			}
+		}
+
 		// Sharing routes (Public Info)
 		sharingHandler := handlers.NewSpaceSharingHandler(inviteService, memberRepo)
 		api.GET("/invites/:token", sharingHandler.GetInviteInfo)
