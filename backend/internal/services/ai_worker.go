@@ -31,6 +31,7 @@ type ImageDownloader interface {
 type AIWorkerConfig struct {
 	PollInterval time.Duration // default 10s
 	BatchSize    int           // default 5
+	MaxRetries   int           // default 3
 }
 
 // AIWorker polls the transactions table for rows with ai_status='pending',
@@ -40,6 +41,9 @@ type AIWorker struct {
 	extractor ReceiptExtractor
 	storage   ImageDownloader
 	cfg       AIWorkerConfig
+	// In-memory retry counter per transaction ID. Resets on restart, which is
+	// fine — startup recovery re-queues processing→pending anyway.
+	retries map[string]int
 }
 
 // NewAIWorker constructs a worker. Pass nil cfg fields to get defaults.
@@ -50,11 +54,15 @@ func NewAIWorker(db *gorm.DB, extractor ReceiptExtractor, storage ImageDownloade
 	if cfg.BatchSize <= 0 {
 		cfg.BatchSize = 5
 	}
+	if cfg.MaxRetries <= 0 {
+		cfg.MaxRetries = 3
+	}
 	return &AIWorker{
 		db:        db,
 		extractor: extractor,
 		storage:   storage,
 		cfg:       cfg,
+		retries:   make(map[string]int),
 	}
 }
 
@@ -162,8 +170,22 @@ func (w *AIWorker) processOne(ctx context.Context, txnID string) {
 			log.Warn("ai worker cancelled mid-call", "elapsed", time.Since(start))
 			return
 		}
+
+		if isRetryableError(err) {
+			w.retries[txnID]++
+			attempt := w.retries[txnID]
+			if attempt <= w.cfg.MaxRetries {
+				log.Warn("ai worker retryable error, re-queuing",
+					"error", err, "attempt", attempt, "max", w.cfg.MaxRetries)
+				w.writeRetry(ctx, txnID)
+				return
+			}
+			log.Warn("ai worker max retries reached", "error", err, "attempts", attempt)
+		}
+
 		log.Warn("ai worker extract failed", "error", err)
 		w.writeFailure(ctx, txnID, friendlyExtractError(err))
+		delete(w.retries, txnID)
 		return
 	}
 
@@ -171,9 +193,11 @@ func (w *AIWorker) processOne(ctx context.Context, txnID string) {
 	if err := w.writeSuccess(ctx, txnID, result); err != nil {
 		log.Error("ai worker write-back failed", "error", err)
 		w.writeFailure(ctx, txnID, "failed to save result")
+		delete(w.retries, txnID)
 		return
 	}
 
+	delete(w.retries, txnID)
 	log.Info("ai worker completed", "items", len(result.Items), "elapsed", time.Since(start))
 }
 
@@ -255,6 +279,18 @@ func (w *AIWorker) writeSuccess(ctx context.Context, txnID string, data *Receipt
 	})
 }
 
+// writeRetry sets the row back to pending so the next poll picks it up.
+// Uses the same conditional WHERE so a racing cancel wins.
+func (w *AIWorker) writeRetry(ctx context.Context, txnID string) {
+	err := w.db.WithContext(ctx).
+		Model(&models.Transaction{}).
+		Where("id = ? AND ai_status = ?", txnID, aiStatusProcessing).
+		Update("ai_status", aiStatusPending).Error
+	if err != nil {
+		slog.Error("ai worker retry re-queue failed", "txn_id", txnID, "error", err)
+	}
+}
+
 // writeFailure flips the row to failed with an error message. Uses the same
 // conditional WHERE so a racing cancel wins.
 func (w *AIWorker) writeFailure(ctx context.Context, txnID, message string) {
@@ -305,6 +341,22 @@ func friendlyExtractError(err error) string {
 		return "辨識結果格式錯誤"
 	default:
 		return "辨識失敗"
+	}
+}
+
+// isRetryableError returns true for transient errors that are likely to resolve
+// on their own (Gemini overload, rate limit, network timeout).
+func isRetryableError(err error) bool {
+	msg := err.Error()
+	switch {
+	case strings.Contains(msg, "gemini http 503"):
+		return true
+	case strings.Contains(msg, "gemini http 429"):
+		return true
+	case strings.Contains(msg, "context deadline exceeded"):
+		return true
+	default:
+		return false
 	}
 }
 
