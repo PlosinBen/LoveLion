@@ -3,27 +3,37 @@
 package integration
 
 import (
+	"database/sql"
 	"net/http"
 	"testing"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
-// makeAdmin promotes the dev user to admin via direct SQL so admin endpoints
-// can be tested. The test restores the role to 'user' via t.Cleanup.
-func makeAdmin(t *testing.T, token string) {
+// promoteToAdmin sets a user's role to 'admin' via direct DB connection.
+// Returns the user ID for reference.
+func promoteToAdmin(t *testing.T, token string) string {
 	t.Helper()
-	// Get user ID
+
 	ae := authExpect(t, token)
 	userID := ae.GET("/api/users/me").
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object().Value("id").String().Raw()
 
-	// We can't run SQL directly from the integration test, so we rely on
-	// the dev user already being promoted. If the test needs a guaranteed
-	// admin, the seed/migration should handle it.
-	// Instead, let's just verify the user has role info.
-	_ = userID
+	db, err := sql.Open("postgres", "postgres://postgres:postgres@postgres:5432/lovelion?sslmode=disable")
+	if err != nil {
+		t.Fatalf("connect to db: %v", err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec("UPDATE users SET role = 'admin' WHERE id = $1", userID)
+	if err != nil {
+		t.Fatalf("promote to admin: %v", err)
+	}
+
+	return userID
 }
 
 func TestAnnouncements(t *testing.T) {
@@ -34,12 +44,10 @@ func TestAnnouncements(t *testing.T) {
 
 	t.Run("public list returns empty initially", func(t *testing.T) {
 		e := newExpect(t)
-		arr := e.GET("/api/announcements").
+		e.GET("/api/announcements").
 			Expect().
 			Status(http.StatusOK).
 			JSON().Array()
-		// May have existing data from other tests, just verify it's an array
-		_ = arr
 	})
 
 	t.Run("broadcast returns null when none active", func(t *testing.T) {
@@ -71,24 +79,11 @@ func TestAnnouncements(t *testing.T) {
 			Status(http.StatusUnauthorized)
 	})
 
-	// The remaining tests require the dev user to be admin.
-	// Promote dev to admin via a direct DB update through the backend's
-	// test helper. Since we don't have direct DB access in integration
-	// tests, we'll use a workaround: set role via psql in the test setup,
-	// or assume the dev user is already admin.
-	//
-	// For now, let's test that the admin endpoints return 403 for non-admin
-	// users (which we verified above). Full CRUD testing of admin endpoints
-	// would require the dev user to have admin role set in the database.
+	// Promote dev to admin for CRUD tests
+	promoteToAdmin(t, devToken)
 
 	t.Run("admin CRUD flow", func(t *testing.T) {
-		// First, try to access as dev user — if 403, skip
 		ae := authExpect(t, devToken)
-		resp := ae.GET("/api/admin/announcements").
-			Expect().Raw()
-		if resp.StatusCode == http.StatusForbidden {
-			t.Skip("dev user is not admin — set role='admin' to test CRUD")
-		}
 
 		// Create draft announcement
 		created := ae.POST("/api/admin/announcements").
@@ -112,7 +107,6 @@ func TestAnnouncements(t *testing.T) {
 			Status(http.StatusOK).
 			JSON().Array()
 
-		// Check that our draft is not in public list
 		found := false
 		for i := 0; i < int(pubList.Length().Raw()); i++ {
 			if pubList.Value(i).Object().Value("id").Raw() == announcementID {
@@ -157,14 +151,14 @@ func TestAnnouncements(t *testing.T) {
 			JSON().Object()
 
 		updated.Value("status").IsEqual("published")
-		updated.Value("title").IsEqual("系統維護通知（��新）")
+		updated.Value("title").IsEqual("系統維護通知（更新）")
 
 		// Published should appear in public list
 		e.GET("/api/announcements/{id}", announcementID).
 			Expect().
 			Status(http.StatusOK).
 			JSON().Object().
-			Value("title").IsEqual("���統維護��知（更新）")
+			Value("title").IsEqual("系統維護通知（更新）")
 
 		// Should appear in broadcast
 		broadcast := e.GET("/api/announcements/broadcast").
@@ -184,14 +178,18 @@ func TestAnnouncements(t *testing.T) {
 			Status(http.StatusNotFound)
 	})
 
+	t.Run("admin config endpoint", func(t *testing.T) {
+		ae := authExpect(t, devToken)
+		cfg := ae.GET("/api/admin/announcements/config").
+			Expect().
+			Status(http.StatusOK).
+			JSON().Object()
+
+		cfg.ContainsKey("ai_available")
+	})
+
 	t.Run("create with invalid status returns 400", func(t *testing.T) {
 		ae := authExpect(t, devToken)
-		resp := ae.GET("/api/admin/announcements").
-			Expect().Raw()
-		if resp.StatusCode == http.StatusForbidden {
-			t.Skip("dev user is not admin")
-		}
-
 		ae.POST("/api/admin/announcements").
 			WithJSON(map[string]interface{}{
 				"title":  "Test",
