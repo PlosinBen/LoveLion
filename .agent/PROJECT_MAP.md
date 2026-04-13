@@ -52,7 +52,7 @@
 | 改分帳模型 | `backend/internal/models/transaction_debt.go` | TransactionDebt：payer/payee、settled_amount、is_spot_paid |
 | 改交易 Repository | `backend/internal/repositories/transaction_repo.go` | 分頁查詢、搜尋/分類/日期範圍篩選 |
 | 改帳本頁面 | `frontend/pages/spaces/[id]/ledger.vue` | 交易列表、搜尋、篩選 |
-| 改新增交易頁 | `frontend/pages/spaces/[id]/transaction/add.vue` | 消費/付款表單、AI 辨識開關、模板套用 |
+| 改新增交易頁 | `frontend/pages/spaces/[id]/transaction/add.vue` | 快速掃描收據入口、消費/付款表單、AI 辨識開關、模板套用 |
 | 改編輯交易頁 | `frontend/pages/spaces/[id]/transaction/[txnId]/edit.vue` | 編輯消費/付款、AI 重試 |
 | 改交易詳情頁 | `frontend/pages/spaces/[id]/transaction/[txnId]/index.vue` | 交易明細、圖片、分帳資訊 |
 | 改交易表單邏輯 | `frontend/composables/useTransactionForm.ts` | 表單狀態、驗證、multipart payload 組裝、幣別換算 |
