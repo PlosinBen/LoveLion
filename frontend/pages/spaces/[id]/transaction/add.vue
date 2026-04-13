@@ -7,6 +7,37 @@
     />
 
     <div>
+      <!-- Quick Scan Receipt -->
+      <button
+        type="button"
+        @click="scanInputRef?.click()"
+        class="w-full mb-6 p-4 bg-gradient-to-r from-indigo-500/10 to-violet-500/10 border border-indigo-500/30 rounded-2xl cursor-pointer flex items-center gap-3 hover:from-indigo-500/20 hover:to-violet-500/20 transition-all"
+      >
+        <div class="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center shrink-0">
+          <Icon icon="mdi:camera" class="text-xl text-indigo-400" />
+        </div>
+        <div class="text-left">
+          <div class="text-sm font-bold text-indigo-300">掃描收據</div>
+          <div class="text-xs text-neutral-500 mt-0.5">拍照或上傳發票，AI 自動辨識明細</div>
+        </div>
+        <Icon icon="mdi:chevron-right" class="text-xl text-neutral-600 ml-auto" />
+      </button>
+      <input
+        ref="scanInputRef"
+        type="file"
+        accept="image/*"
+        multiple
+        class="hidden"
+        @change="handleScanReceipt"
+      >
+
+      <!-- Divider -->
+      <div class="flex items-center gap-3 mb-6">
+        <div class="flex-1 border-t border-neutral-800" />
+        <span class="text-xs text-neutral-600">或手動輸入</span>
+        <div class="flex-1 border-t border-neutral-800" />
+      </div>
+
       <!-- Type Selector -->
       <div class="flex bg-neutral-900 rounded-xl p-1 border border-neutral-800 mb-6">
         <button
@@ -134,6 +165,7 @@ const detailStore = useSpaceDetailStore()
 const { showLoading, hideLoading } = useLoading()
 const toast = useToast()
 const imageManagerRef = ref<InstanceType<typeof ImageManager> | null>(null)
+const scanInputRef = ref<HTMLInputElement | null>(null)
 
 const {
   transactionType, baseCurrency, categories, availableCurrencies,
@@ -157,6 +189,44 @@ const handleTemplateDelete = async (templateId: string) => {
     await templateComposable.deleteTemplate(templateId)
   } catch (e: any) {
     toast.error(e.message || '刪除失敗')
+  }
+}
+
+const handleScanReceipt = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const files = Array.from(input.files || [])
+  if (files.length === 0) return
+
+  // Reset input so same file can be re-selected
+  input.value = ''
+
+  // Build title: "Receipt MM/DD HH:mm"
+  const now = new Date()
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const dd = String(now.getDate()).padStart(2, '0')
+  const hh = String(now.getHours()).padStart(2, '0')
+  const min = String(now.getMinutes()).padStart(2, '0')
+  const title = `Receipt ${mm}/${dd} ${hh}:${min}`
+
+  // Set form values for AI extract
+  expenseForm.value.title = title
+  expenseForm.value.date = now
+  expenseForm.value.total_amount = 0
+  aiExtract.value = true
+
+  // Build multipart and submit
+  const fd = buildExpenseMultipart(files)
+
+  showLoading()
+  try {
+    await api.upload(`/api/spaces/${route.params.id}/expenses`, fd)
+    detailStore.invalidate('transactions')
+    toast.success('收據已送出，AI 辨識中...')
+    router.push(`/spaces/${route.params.id}/ledger`)
+  } catch (e: any) {
+    toast.error(e.message || '送出失敗')
+  } finally {
+    hideLoading()
   }
 }
 
