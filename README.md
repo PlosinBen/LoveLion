@@ -2,6 +2,8 @@
 
 共享記帳與比價應用程式。以「Space」作為統一概念，將交易、商店與成員歸屬於同一空間。
 
+**網站**：https://www.lovelion.me/
+
 ## 功能
 
 ### 空間管理
@@ -16,6 +18,7 @@
 - 項目明細（名稱、單價、數量、折扣）
 - 分類、付款方式、Google Maps 地點連結
 - 收據 / 照片上傳（Cloudflare R2 儲存）
+- AI 收據辨識：上傳發票，自動辨識日期、品項與金額（Gemini Vision）
 - 消費模板：從現有交易儲存為模板，新增時一鍵套用
 
 ### 分帳與付款
@@ -32,9 +35,13 @@
 - 空間消費統計
 - 分類支出分佈
 
+### 公告系統
+- 管理員公告發布（草稿 / 發布）
+- 首頁廣播列通知
+
 ### 使用者
 - 帳號註冊 / 登入（JWT 認證）
-- 個人資料管理
+- 個人資料與密碼管理
 
 ## 技術棧
 
@@ -78,9 +85,9 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-Production 環境使用 `docker-compose.prod.yml`，包含：
+正式環境使用 `docker-compose.prod.yml`，包含：
 - 獨立 migration container（啟動時自動遷移）
-- Backend graceful shutdown（10 秒 timeout）
+- 後端 graceful shutdown（10 秒 timeout）
 - 各 container 資源限制（適配 4GB RAM 機器）
 
 ## 專案結構
