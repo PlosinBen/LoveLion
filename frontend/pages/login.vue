@@ -104,6 +104,12 @@ const router = useRouter()
 const { login, register } = useAuth()
 const { showLoading, hideLoading } = useLoading()
 
+// If already logged in, redirect to home
+const token = localStorage.getItem('token')
+if (token) {
+  router.replace('/')
+}
+
 const isRegister = ref(false)
 const username = ref('')
 const password = ref('')

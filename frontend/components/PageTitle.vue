@@ -81,7 +81,10 @@ const handleBack = () => {
   if (props.backTo) {
     router.push(props.backTo)
   } else {
-    router.back()
+    // Derive back target from the last breadcrumb that has a link,
+    // so we never depend on browser history (which may land on login).
+    const lastCrumb = props.breadcrumbs?.filter(c => c.to).pop()
+    router.push(lastCrumb?.to || '/')
   }
 }
 </script>
