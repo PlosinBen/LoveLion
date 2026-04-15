@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-announcements-page">
+  <div>
     <PageTitle
       title="公告管理"
       :breadcrumbs="[{ label: '設定', to: '/settings' }]"
@@ -93,9 +93,3 @@ onMounted(async () => {
   }
 })
 </script>
-
-<style scoped>
-.admin-announcements-page {
-  @apply max-w-lg mx-auto;
-}
-</style>

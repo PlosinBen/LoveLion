@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-announcement-form-page">
+  <div>
     <PageTitle
       title="編輯公告"
       back-to="/admin/announcements"
@@ -95,9 +95,3 @@ onMounted(async () => {
   }
 })
 </script>
-
-<style scoped>
-.admin-announcement-form-page {
-  @apply max-w-lg mx-auto;
-}
-</style>

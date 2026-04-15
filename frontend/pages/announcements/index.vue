@@ -1,5 +1,5 @@
 <template>
-  <div class="announcements-page">
+  <div>
     <PageTitle
       title="公告"
       :breadcrumbs="[{ label: '設定', to: '/settings' }]"
@@ -60,9 +60,3 @@ onMounted(async () => {
   }
 })
 </script>
-
-<style scoped>
-.announcements-page {
-  @apply max-w-lg mx-auto;
-}
-</style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-announcement-form-page">
+  <div>
     <PageTitle
       title="新增公告"
       back-to="/admin/announcements"
@@ -41,9 +41,3 @@ const handleCreate = async (payload: any) => {
   }
 }
 </script>
-
-<style scoped>
-.admin-announcement-form-page {
-  @apply max-w-lg mx-auto;
-}
-</style>

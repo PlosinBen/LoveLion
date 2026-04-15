@@ -1,5 +1,5 @@
 <template>
-  <div class="settings-page">
+  <div>
     <PageTitle
       title="個人設定"
       :breadcrumbs="[{ label: '空間列表', to: '/' }]"
@@ -326,8 +326,3 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped>
-.settings-page {
-  @apply max-w-lg mx-auto;
-}
-</style>

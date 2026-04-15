@@ -1,5 +1,5 @@
 <template>
-  <div class="about-page">
+  <div>
     <PageTitle
       title="關於 LoveLion"
       :breadcrumbs="[{ label: '設定', to: '/settings' }]"
@@ -59,9 +59,3 @@ const appVersion = computed(() => {
   return version ? `v${version}` : 'dev'
 })
 </script>
-
-<style scoped>
-.about-page {
-  @apply max-w-lg mx-auto;
-}
-</style>

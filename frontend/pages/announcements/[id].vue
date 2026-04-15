@@ -1,5 +1,5 @@
 <template>
-  <div class="announcement-detail-page">
+  <div>
     <PageTitle
       :title="announcement?.title || '公告'"
       back-to="/announcements"
@@ -73,9 +73,3 @@ onMounted(async () => {
   }
 })
 </script>
-
-<style scoped>
-.announcement-detail-page {
-  @apply max-w-lg mx-auto;
-}
-</style>
