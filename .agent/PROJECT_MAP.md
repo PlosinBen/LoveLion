@@ -18,8 +18,9 @@
 | 改 JWT 驗證邏輯 | `backend/internal/middleware/auth.go` | Bearer token 解析、claims 驗證、userID 注入 context |
 | 改空間存取權限 | `backend/internal/middleware/space.go` | SpaceAccess（成員驗證）、SpaceOwnerOnly（擁有者限制） |
 | 改管理員權限 | `backend/internal/middleware/admin.go` | AdminOnly 中介層，檢查 user.Role == "admin" |
-| 改速率限制 | `backend/internal/middleware/rate_limit.go` | 通用 RateLimit 與 AI 專用 AIRateLimiter |
-| 改請求日誌 | `backend/internal/middleware/logger.go` | 結構化 slog 請求日誌 |
+| 改速率限制 | `backend/internal/middleware/ratelimit.go` | 通用 RateLimit |
+| 改 AI 速率限制 | `backend/internal/middleware/ai_ratelimit.go` | AI 專用 AIRateLimiter |
+| 改請求日誌 | `backend/internal/middleware/request_logger.go` | 結構化 slog 請求日誌 |
 | 改前端路由守衛 | `frontend/middleware/auth.global.ts` | 全局 auth middleware，公開路由：/login、/join/* |
 | 改登入/註冊/登出 | `frontend/stores/auth.ts` | Pinia store：token 持久化、localStorage、自動初始化 |
 | 改 HTTP 客戶端 | `frontend/composables/useApi.ts` | Bearer 注入、401 自動登出、FormData 偵測 |
@@ -30,9 +31,8 @@
 |------|------|------|
 | 改空間 CRUD API | `backend/internal/handlers/space.go` | 建立/讀取/更新/刪除空間、離開空間 |
 | 改空間資料模型 | `backend/internal/models/space.go` | JSONB 欄位（currencies/categories/paymentMethods/splitMembers） |
-| 改成員管理 API | `backend/internal/handlers/member.go` | 成員列表、別名修改、移除成員 |
-| 改成員資料模型 | `backend/internal/models/space_member.go` | SpaceMember：role (member/owner)、alias |
-| 改邀請連結功能 | `backend/internal/handlers/invite.go` | 建立/列出/撤銷邀請、透過 token 加入 |
+| 改成員/邀請 API | `backend/internal/handlers/space_sharing.go` | 成員列表/別名/移除、邀請建立/列出/撤銷/加入 |
+| 改成員資料模型 | `backend/internal/models/space.go` | SpaceMember：role (member/owner)、alias（與 Space 同檔） |
 | 改邀請業務邏輯 | `backend/internal/services/invite_service.go` | 邀請驗證、使用次數、到期檢查 |
 | 改空間列表頁 | `frontend/pages/index.vue` | 首頁：所有空間列表、置頂/分類 |
 | 改空間設定頁 | `frontend/pages/spaces/[id]/settings.vue` | 空間名稱/幣別/分類/成員/邀請管理 |
@@ -48,7 +48,7 @@
 | 改付款 CRUD API | `backend/internal/handlers/payment.go` | 建立/更新付款 |
 | 改交易業務邏輯 | `backend/internal/services/transaction_service.go` | DB Transaction 包裝多表寫入、R2 上傳、AI 狀態轉換 |
 | 改交易資料模型 | `backend/internal/models/transaction.go` | Transaction：short ID、AIStatus/AIError、關聯 Expense/Debts/Images |
-| 改消費明細模型 | `backend/internal/models/transaction_expense.go` | TransactionExpense + TransactionExpenseItem（品項明細） |
+| 改消費明細模型 | `backend/internal/models/transaction.go` | TransactionExpense + TransactionExpenseItem（與 Transaction 同檔） |
 | 改分帳模型 | `backend/internal/models/transaction_debt.go` | TransactionDebt：payer/payee、settled_amount、is_spot_paid |
 | 改交易 Repository | `backend/internal/repositories/transaction_repo.go` | 分頁查詢、搜尋/分類/日期範圍篩選 |
 | 改帳本頁面 | `frontend/pages/spaces/[id]/ledger.vue` | 交易列表、搜尋、篩選 |
@@ -67,7 +67,7 @@
 | 改 AI Worker | `backend/internal/services/ai_worker.go` | 背景 polling（10s）、狀態機、重試與錯誤恢復 |
 | 改 Gemini 呼叫 | `backend/internal/services/ai_extract.go` | Gemini Vision API 呼叫、結構化輸出解析、超時 35s |
 | 改 AI 取消 API | `backend/internal/handlers/transaction.go` | POST /transactions/:id/ai-cancel |
-| 改 AI 速率限制 | `backend/internal/middleware/ai_rate_limit.go` | 每用戶每日上限（預設 20 次） |
+| 改 AI 速率限制 | `backend/internal/middleware/ai_ratelimit.go` | 每用戶每日上限（預設 20 次） |
 | 看 AI 功能規格 | `.agent/features/ai-receipt-extraction.md` | 完整功能規格文件 |
 
 ## 比價功能
@@ -104,7 +104,7 @@
 
 | 意圖 | 路徑 | 說明 |
 |------|------|------|
-| 改模板 API | `backend/internal/handlers/template.go` | 消費模板 CRUD |
+| 改模板 API | `backend/internal/handlers/expense_template.go` | 消費模板 CRUD |
 | 改模板資料模型 | `backend/internal/models/expense_template.go` | ExpenseTemplate 模型 |
 | 改模板選擇元件 | `frontend/components/TemplatePickerModal.vue` | 模板選擇彈窗 |
 | 改模板 composable | `frontend/composables/useExpenseTemplates.ts` | 模板資料 CRUD |
@@ -165,7 +165,8 @@
 
 | 意圖 | 路徑 | 說明 |
 |------|------|------|
-| 後端整合測試 | `backend/internal/handlers/*_test.go` | httptest + testutil，含 01-07 號測試檔 |
+| 後端整合測試 | `backend/integration/*_test.go` | httpexpect 整合測試，01-07 號測試檔 |
+| 後端單元測試 | `backend/internal/handlers/*_test.go` | httptest + testutil 單元測試 |
 | 後端測試工具 | `backend/internal/testutil/` | TestDB、CreateTestUser、AuthContext 等 helper |
 | 前端單元測試 | `frontend/tests/composables/` | Vitest 測試 useAuth/useSpace/useTransactionForm 等 |
 | 執行整合測試 | `bin/integration_test` | DB 重置 + seed + 完整 API 測試 |

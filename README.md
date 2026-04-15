@@ -101,6 +101,7 @@ backend/
     services/              # 業務邏輯
     repositories/          # 資料存取
     middleware/            # 認證、權限、日誌、限流
+  integration/             # API 整合測試（httpexpect）
   migrations/              # SQL 遷移檔
   cmd/seed/                # 種子資料
 
