@@ -105,4 +105,4 @@ docker compose exec postgres psql -U postgres -d lovelion
 - 所有檔案必須使用 **LF** 換行（嚴禁 CRLF）
 
 ## 補充文件
-更多細節請參考 `.agent/` 目錄 — 包含檔案索引（PROJECT_MAP）、架構決策（DECISIONS）、踩坑紀錄（GOTCHAS）與功能規格（features/）。
+更多細節請參考 `.agent/` 目錄 — 包含檔案索引（PROJECT_MAP）、架構決策（DECISIONS）、踩坑紀錄（GOTCHAS）、發布流程（RELEASE）與功能規格（features/）。
