@@ -217,7 +217,6 @@
         <BaseInput
           v-model="form.location_url"
           placeholder="貼上 Google Maps 連結"
-          type="url"
         />
       </div>
 
