@@ -43,7 +43,7 @@ type AIWorker struct {
 	cfg       AIWorkerConfig
 	// In-memory retry state per transaction ID. Resets on restart, which is
 	// fine — startup recovery re-queues processing→pending anyway.
-	retries  map[string]int
+	retries map[string]int
 	// retryAt tracks when a transaction is allowed to be retried. The worker
 	// skips rows whose retryAt is still in the future, giving a simple
 	// exponential backoff: 30s, 60s, 120s for attempts 1/2/3.
@@ -66,8 +66,8 @@ func NewAIWorker(db *gorm.DB, extractor ReceiptExtractor, storage ImageDownloade
 		extractor: extractor,
 		storage:   storage,
 		cfg:       cfg,
-		retries: make(map[string]int),
-		retryAt: make(map[string]time.Time),
+		retries:   make(map[string]int),
+		retryAt:   make(map[string]time.Time),
 	}
 }
 
