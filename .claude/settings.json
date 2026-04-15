@@ -1,17 +1,20 @@
 {
-  "permissions": {
-    "allow": [
-      "Read",
-      "Edit",
-      "Write",
-      "Glob",
-      "Grep",
-      "WebFetch",
-      "Bash(git *)",
-      "Bash(docker compose *)",
-      "Bash(./bin/e2e_test)",
-      "WebSearch"
-    ],
-    "defaultMode": "acceptEdits"
-  }
+    "permissions": {
+        "allow": [
+            "Read",
+            "Edit",
+            "Write",
+            "Glob",
+            "Grep",
+            "WebFetch",
+            "Bash(git *)",
+            "Bash(ls:*)",
+            "Bash(docker compose *)",
+            "Bash(./bin/e2e_test)",
+            "Bash(./bin/refresh-database 2>&1)",
+            "Bash(./bin/integration_test:*)",
+            "WebSearch"
+        ],
+        "defaultMode": "acceptEdits"
+    }
 }
