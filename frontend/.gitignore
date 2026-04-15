@@ -8,3 +8,8 @@ dist/
 
 # Logs
 npm-debug.log*
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/

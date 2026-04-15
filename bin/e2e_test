@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# LoveLion E2E Test
+# Uses docker-compose.test.yml — fully isolated stack with ephemeral DB.
+# Phases: start infra → seed → promote admin → run playwright → cleanup
+
+set -e
+
+COMPOSE="docker compose -f docker-compose.test.yml -p lovelion-e2e"
+
+cleanup() {
+  echo ""
+  echo "🧹 Cleaning up..."
+  $COMPOSE down -v --remove-orphans 2>/dev/null || true
+}
+trap cleanup EXIT
+
+echo "🎭 Starting E2E tests..."
+echo ""
+
+# Clean slate
+cleanup 2>/dev/null || true
+
+# Phase 1: Start postgres + backend + frontend (wait for healthy)
+echo "🚀 Starting infrastructure..."
+$COMPOSE up -d postgres backend frontend
+
+echo "⏳ Waiting for backend..."
+$COMPOSE up --wait backend
+
+echo "⏳ Waiting for frontend..."
+$COMPOSE up --wait frontend
+
+# Phase 2: Seed data
+echo "📋 Seeding test data..."
+$COMPOSE run --rm seed
+
+# Phase 3: Promote dev to admin
+echo "👑 Promoting dev user to admin..."
+$COMPOSE run --rm promote-admin
+
+# Phase 4: Run Playwright
+echo ""
+echo "🎭 Running Playwright tests..."
+$COMPOSE run --rm playwright
+E2E_EXIT=$?
+
+if [ $E2E_EXIT -eq 0 ]; then
+  echo ""
+  echo "🎉 E2E tests passed!"
+else
+  echo ""
+  echo "❌ E2E tests failed (exit code: $E2E_EXIT)"
+  exit 1
+fi

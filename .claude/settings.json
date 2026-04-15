@@ -8,7 +8,8 @@
       "Grep",
       "WebFetch",
       "Bash(git *)",
-      "Bash(docker compose *)"
+      "Bash(docker compose *)",
+      "Bash(./bin/e2e_test)"
     ],
     "defaultMode": "acceptEdits"
   }

@@ -181,30 +181,30 @@ export function useTransactionForm(spaceId: string) {
     const form = expenseForm.value
     const payload: Record<string, any> = {
       title: form.title,
-      total_amount: form.total_amount,
+      total_amount: Number(form.total_amount),
       date: form.date.toISOString(),
       currency: form.currency,
       note: form.note,
       expense: {
         category: form.category,
-        exchange_rate: form.currency === baseCurrency.value ? 1 : form.exchange_rate,
-        billing_amount: form.currency === baseCurrency.value ? form.total_amount : form.billing_amount,
-        handling_fee: form.currency === baseCurrency.value ? 0 : form.handling_fee,
+        exchange_rate: form.currency === baseCurrency.value ? 1 : Number(form.exchange_rate),
+        billing_amount: form.currency === baseCurrency.value ? Number(form.total_amount) : Number(form.billing_amount),
+        handling_fee: form.currency === baseCurrency.value ? 0 : Number(form.handling_fee),
         payment_method: form.payment_method,
         location_url: form.location_url || '',
         items: form.items
           .filter(item => item.name && Number(item.unit_price) > 0)
           .map(item => ({
             name: item.name,
-            unit_price: item.unit_price,
-            quantity: item.quantity,
-            discount: item.discount || 0,
+            unit_price: Number(item.unit_price),
+            quantity: Number(item.quantity),
+            discount: Number(item.discount) || 0,
           })),
       },
       debts: debts.value.length > 0
         ? debts.value
             .filter(d => d.payer_name && d.payee_name && d.amount > 0)
-            .map(d => ({ payer_name: d.payer_name, payee_name: d.payee_name, amount: d.amount, is_spot_paid: d.is_spot_paid }))
+            .map(d => ({ payer_name: d.payer_name, payee_name: d.payee_name, amount: Number(d.amount), is_spot_paid: d.is_spot_paid }))
         : undefined,
     }
     if (aiExtract.value) {
@@ -232,7 +232,7 @@ export function useTransactionForm(spaceId: string) {
       date: form.date.toISOString(),
       title: form.title,
       note: form.note,
-      total_amount: form.total_amount,
+      total_amount: Number(form.total_amount),
       payer_name: form.payer_name,
       payee_name: form.payee_name,
     }

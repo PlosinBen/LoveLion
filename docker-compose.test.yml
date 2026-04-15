@@ -1,0 +1,94 @@
+# E2E test stack — fully isolated, no persistent volumes.
+# Usage: see bin/e2e_test
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: lovelion
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    image: golang:1.25.9-alpine
+    working_dir: /app
+    environment:
+      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/lovelion?sslmode=disable"
+      JWT_SECRET: e2e-secret
+      PORT: "8080"
+      RECEIPT_EXTRACT_ENABLED: "false"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -c "go mod tidy && go run cmd/migrate/main.go && go run main.go"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/api/announcements || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+
+  frontend:
+    image: node:24-alpine
+    working_dir: /app
+    environment:
+      NUXT_PUBLIC_APP_VERSION: e2e
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - backend
+    command: sh -c "npm install --prefer-offline --silent 2>/dev/null && npm run dev"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000').then(r=>{if(!r.ok)throw 1}).catch(()=>process.exit(1))\""]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+  seed:
+    image: golang:1.25.9-alpine
+    working_dir: /app
+    environment:
+      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/lovelion?sslmode=disable"
+      API_BASE: "http://backend:8080/api"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      backend:
+        condition: service_healthy
+    command: sh -c "go run cmd/seed/main.go"
+    profiles:
+      - seed
+
+  promote-admin:
+    image: postgres:18-alpine
+    environment:
+      PGPASSWORD: postgres
+    depends_on:
+      backend:
+        condition: service_healthy
+    command: psql -h postgres -U postgres -d lovelion -c "UPDATE users SET role = 'admin' WHERE username = 'dev';"
+    profiles:
+      - seed
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.52.0-noble
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      frontend:
+        condition: service_healthy
+    environment:
+      BASE_URL: http://frontend:3000
+      API_BASE: http://backend:8080
+    command: sh -c "npm install --prefer-offline --silent 2>/dev/null && npx playwright test --reporter=list"
+    profiles:
+      - test

@@ -9,7 +9,8 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "test": "vitest",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@iconify/vue": "^5.0.0",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@nuxtjs/tailwindcss": "^6.14.0",
+    "@playwright/test": "1.52.0",
     "@types/node": "^25.3.5",
     "typescript": "^5.9.0",
     "vitest": "^4.0.18"
