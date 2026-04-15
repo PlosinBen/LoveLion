@@ -9,7 +9,9 @@
 | 看所有 API 路由 | `backend/main.go` | 路由定義、中介層串接、依賴注入、AI Worker 啟動 |
 | 看 Nuxt 設定 | `frontend/nuxt.config.ts` | SSR 開關、API 代理規則、Vite/Tailwind 設定 |
 | 看 Docker 服務編排 | `docker-compose.yml` | postgres / backend / frontend 三服務定義 |
+| 看 E2E 測試服務編排 | `docker-compose.test.yml` | 隔離測試環境：ephemeral postgres、seed、promote-admin、playwright |
 | 看生產部署設定 | `docker-compose.prod.yml` | 獨立 migration container、資源限制、graceful shutdown |
+| 看 PWA 設定 | `frontend/public/manifest.json` | Web App Manifest：standalone 模式、icon、theme color |
 
 ## 認證與授權
 
@@ -169,7 +171,13 @@
 | 後端單元測試 | `backend/internal/handlers/*_test.go` | httptest + testutil 單元測試 |
 | 後端測試工具 | `backend/internal/testutil/` | TestDB、CreateTestUser、AuthContext 等 helper |
 | 前端單元測試 | `frontend/tests/composables/` | Vitest 測試 useAuth/useSpace/useTransactionForm 等 |
+| 前端單元測試設定 | `frontend/vitest.config.ts` | Vitest 設定檔 |
+| E2E 測試 | `frontend/e2e/` | Playwright E2E 測試：auth、core-flow、announcements |
+| E2E 測試 fixtures | `frontend/e2e/fixtures/auth.ts` | 登入 helper 與 authedPage fixture |
+| E2E 測試設定 | `frontend/playwright.config.ts` | Playwright 設定：單 worker、Chromium、HTML reporter |
 | 執行整合測試 | `bin/integration_test` | DB 重置 + seed + 完整 API 測試 |
+| 執行 E2E 測試 | `bin/e2e_test` | 隔離 Docker 環境啟動 → seed → playwright → cleanup |
+| 看 E2E 功能規格 | `.agent/features/e2e-testing.md` | E2E 測試架構與設計文件 |
 
 ## TypeScript 型別
 
