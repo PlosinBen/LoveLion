@@ -9,7 +9,8 @@
       "WebFetch",
       "Bash(git *)",
       "Bash(docker compose *)",
-      "Bash(./bin/e2e_test)"
+      "Bash(./bin/e2e_test)",
+      "WebSearch"
     ],
     "defaultMode": "acceptEdits"
   }

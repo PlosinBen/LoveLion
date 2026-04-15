@@ -1,0 +1,17 @@
+{
+  "name": "LoveLion",
+  "short_name": "LoveLion",
+  "description": "共享記帳與比價應用程式",
+  "id": "/",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#171717",
+  "theme_color": "#171717",
+  "icons": [
+    {
+      "src": "/favicon-155.png",
+      "sizes": "155x155",
+      "type": "image/png"
+    }
+  ]
+}

@@ -11,9 +11,14 @@ export default defineNuxtConfig({
       meta: [
         { name: 'description', content: '共享記帳與比價應用程式' },
         { name: 'theme-color', content: '#171717' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
       ],
       link: [
-        { rel: 'icon', type: 'image/png', href: '/dark-logo.png' },
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'manifest', href: '/manifest.json' },
+        { rel: 'apple-touch-icon', href: '/favicon-155.png' },
       ],
     },
   },

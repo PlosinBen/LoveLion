@@ -34,7 +34,7 @@ func Load() *Config {
 	cfg := &Config{
 		DatabaseURL:    getEnv("DATABASE_URL", "postgres://postgres:postgres@postgres:5432/lovelion?sslmode=disable"),
 		JWTSecret:      getEnv("JWT_SECRET", "dev-secret-key"),
-		JWTExpiry:      parseDurationDays(getEnv("JWT_EXPIRY_DAYS", "7")),
+		JWTExpiry:      parseDurationDays(getEnv("JWT_EXPIRY_DAYS", "30")),
 		Port:           getEnv("PORT", "8080"),
 		CORSOrigins:    parseCORSOrigins(os.Getenv("CORS_ORIGINS")),
 		R2AccountID:    getEnv("R2_ACCOUNT_ID", ""),
