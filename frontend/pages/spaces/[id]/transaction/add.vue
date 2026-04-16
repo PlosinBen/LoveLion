@@ -200,28 +200,35 @@ const handleScanReceipt = async (event: Event) => {
   // Reset input so same file can be re-selected
   input.value = ''
 
-  // Build title: "Receipt MM/DD HH:mm"
   const now = new Date()
   const mm = String(now.getMonth() + 1).padStart(2, '0')
   const dd = String(now.getDate()).padStart(2, '0')
   const hh = String(now.getHours()).padStart(2, '0')
   const min = String(now.getMinutes()).padStart(2, '0')
-  const title = `Receipt ${mm}/${dd} ${hh}:${min}`
 
-  // Set form values for AI extract
-  expenseForm.value.title = title
+  // Each image becomes its own transaction, uploaded in parallel
+  aiExtract.value = true
   expenseForm.value.date = now
   expenseForm.value.total_amount = 0
-  aiExtract.value = true
 
-  // Build multipart and submit
-  const fd = buildExpenseMultipart(files)
+  // Build all FormData payloads first (synchronous), then send in parallel
+  const payloads = files.map((file, i) => {
+    const suffix = files.length > 1 ? ` (${i + 1})` : ''
+    expenseForm.value.title = `Receipt ${mm}/${dd} ${hh}:${min}${suffix}`
+    return buildExpenseMultipart([file])
+  })
+  const uploads = payloads.map(fd =>
+    api.upload(`/api/spaces/${route.params.id}/expenses`, fd)
+  )
 
   showLoading()
   try {
-    await api.upload(`/api/spaces/${route.params.id}/expenses`, fd)
+    await Promise.all(uploads)
     detailStore.invalidate('transactions')
-    toast.success('收據已送出，AI 辨識中...')
+    const msg = files.length > 1
+      ? `${files.length} 筆收據已送出，AI 辨識中...`
+      : '收據已送出，AI 辨識中...'
+    toast.success(msg)
     router.push(`/spaces/${route.params.id}/ledger`)
   } catch (e: any) {
     toast.error(e.message || '送出失敗')
