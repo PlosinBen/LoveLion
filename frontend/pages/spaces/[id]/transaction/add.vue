@@ -7,6 +7,37 @@
     />
 
     <div>
+      <!-- Quick Text Entry -->
+      <div
+        class="w-full mb-3 p-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-2xl"
+      >
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center shrink-0">
+            <Icon icon="mdi:flash-outline" class="text-xl text-emerald-400" />
+          </div>
+          <div class="text-left">
+            <div class="text-sm font-bold text-emerald-300">快速文字記帳</div>
+            <div class="text-xs text-neutral-500 mt-0.5">例如「停車費 100」，AI 自動解析成一筆交易</div>
+          </div>
+        </div>
+        <form @submit.prevent="handleQuickText" class="flex gap-2">
+          <input
+            v-model="quickText"
+            type="text"
+            maxlength="200"
+            placeholder="輸入一筆消費..."
+            class="flex-1 px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-800 text-sm text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-emerald-500/60"
+          >
+          <button
+            type="submit"
+            :disabled="!quickText.trim()"
+            class="px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm font-bold disabled:bg-neutral-800 disabled:text-neutral-600 disabled:cursor-not-allowed hover:bg-emerald-400 transition-colors"
+          >
+            送出
+          </button>
+        </form>
+      </div>
+
       <!-- Quick Scan Receipt -->
       <button
         type="button"
@@ -177,6 +208,40 @@ const {
 const templateComposable = useExpenseTemplates(route.params.id as string)
 const showTemplatePicker = ref(false)
 const confirm = useConfirm()
+const quickText = ref('')
+
+// Submit a free-form text line (e.g. "停車費 100") as a pending AI transaction.
+// Backend sees ai_extract=true with no images and dispatches to the text extractor.
+const handleQuickText = async () => {
+  const text = quickText.value.trim()
+  if (!text) return
+  showLoading()
+  try {
+    await api.post(`/api/spaces/${route.params.id}/expenses`, {
+      title: text,
+      total_amount: 0,
+      date: new Date().toISOString(),
+      currency: baseCurrency.value,
+      note: '',
+      expense: {
+        category: categories.value[0] || '其他',
+        exchange_rate: 1,
+        billing_amount: 0,
+        handling_fee: 0,
+        payment_method: '',
+        items: [],
+      },
+      ai_extract: true,
+    })
+    detailStore.invalidate('transactions')
+    toast.success('已送出，AI 辨識中...')
+    router.push(`/spaces/${route.params.id}/ledger`)
+  } catch (e: any) {
+    toast.error(e.message || '送出失敗')
+  } finally {
+    hideLoading()
+  }
+}
 
 const handleTemplateSelect = (template: ExpenseTemplate) => {
   populateFromTemplate(template.data)

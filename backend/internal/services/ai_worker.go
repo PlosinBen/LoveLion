@@ -37,10 +37,11 @@ type AIWorkerConfig struct {
 // AIWorker polls the transactions table for rows with ai_status='pending',
 // calls the configured ReceiptExtractor, and writes back the result.
 type AIWorker struct {
-	db        *gorm.DB
-	extractor ReceiptExtractor
-	storage   ImageDownloader
-	cfg       AIWorkerConfig
+	db            *gorm.DB
+	extractor     ReceiptExtractor
+	textExtractor TextExtractor // optional; required only for no-image rows
+	storage       ImageDownloader
+	cfg           AIWorkerConfig
 	// In-memory retry state per transaction ID. Resets on restart, which is
 	// fine — startup recovery re-queues processing→pending anyway.
 	retries map[string]int
@@ -69,6 +70,13 @@ func NewAIWorker(db *gorm.DB, extractor ReceiptExtractor, storage ImageDownloade
 		retries:   make(map[string]int),
 		retryAt:   make(map[string]time.Time),
 	}
+}
+
+// WithTextExtractor enables the text-based quick-entry path. If unset, rows
+// without images will be marked failed instead of falling through to text.
+func (w *AIWorker) WithTextExtractor(te TextExtractor) *AIWorker {
+	w.textExtractor = te
+	return w
 }
 
 // Run executes the worker loop until ctx is cancelled. It performs a startup
@@ -140,13 +148,13 @@ func (w *AIWorker) tick(ctx context.Context) {
 		if t, ok := w.retryAt[txn.ID]; ok && now.Before(t) {
 			continue
 		}
-		w.processOne(ctx, txn.ID)
+		w.processOne(ctx, txn.ID, txn.Title)
 	}
 }
 
 // processOne drives a single transaction through claim → call LLM → write-back.
 // Returns without panicking on any error; errors are recorded on the row.
-func (w *AIWorker) processOne(ctx context.Context, txnID string) {
+func (w *AIWorker) processOne(ctx context.Context, txnID, title string) {
 	start := time.Now()
 	log := slog.With("txn_id", txnID)
 
@@ -164,15 +172,36 @@ func (w *AIWorker) processOne(ctx context.Context, txnID string) {
 		return
 	}
 
-	// Stage 2: load the first image and call the LLM with no DB connection held.
-	imgBytes, mimeType, err := w.loadFirstImage(ctx, txnID)
+	// Stage 2: decide image vs text based on whether any image is attached.
+	hasImage, err := w.hasTransactionImage(ctx, txnID)
 	if err != nil {
-		log.Warn("ai worker load image failed", "error", err)
-		w.writeFailure(ctx, txnID, friendlyExtractError(err))
+		log.Error("ai worker image lookup failed", "error", err)
+		w.writeFailure(ctx, txnID, "辨識失敗")
 		return
 	}
 
-	result, err := w.extractor.Extract(ctx, imgBytes, mimeType)
+	var result *ReceiptData
+	if hasImage {
+		imgBytes, mimeType, loadErr := w.loadFirstImage(ctx, txnID)
+		if loadErr != nil {
+			log.Warn("ai worker load image failed", "error", loadErr)
+			w.writeFailure(ctx, txnID, friendlyExtractError(loadErr))
+			return
+		}
+		result, err = w.extractor.Extract(ctx, imgBytes, mimeType)
+	} else {
+		if w.textExtractor == nil {
+			log.Warn("ai worker no text extractor configured")
+			w.writeFailure(ctx, txnID, "辨識服務未啟用")
+			return
+		}
+		if strings.TrimSpace(title) == "" {
+			w.writeFailure(ctx, txnID, "無文字可辨識")
+			return
+		}
+		result, err = w.textExtractor.ExtractText(ctx, title)
+	}
+
 	if err != nil {
 		// Don't write back if the context was cancelled mid-flight: let the
 		// next startup's recovery pass pick it up.
@@ -205,7 +234,9 @@ func (w *AIWorker) processOne(ctx context.Context, txnID string) {
 	}
 
 	// Stage 3: write success back inside a short db.Transaction.
-	if err := w.writeSuccess(ctx, txnID, result); err != nil {
+	// For text-extraction rows we also overwrite the original raw input title
+	// with the cleaned item name so the ledger reads naturally.
+	if err := w.writeSuccess(ctx, txnID, result, !hasImage); err != nil {
 		log.Error("ai worker write-back failed", "error", err)
 		w.writeFailure(ctx, txnID, "failed to save result")
 		delete(w.retries, txnID)
@@ -216,6 +247,20 @@ func (w *AIWorker) processOne(ctx context.Context, txnID string) {
 	delete(w.retries, txnID)
 	delete(w.retryAt, txnID)
 	log.Info("ai worker completed", "items", len(result.Items), "elapsed", time.Since(start))
+}
+
+// hasTransactionImage reports whether any image is attached to the given
+// transaction. Used to pick the image- vs text-extraction path.
+func (w *AIWorker) hasTransactionImage(ctx context.Context, txnID string) (bool, error) {
+	var count int64
+	err := w.db.WithContext(ctx).
+		Model(&models.Image{}).
+		Where("entity_type = ? AND entity_id = ?", "transaction", txnID).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 // loadFirstImage fetches the earliest (sort_order ASC) image for a transaction
@@ -246,7 +291,7 @@ func (w *AIWorker) loadFirstImage(ctx context.Context, txnID string) ([]byte, st
 // writeSuccess updates the transaction + replaces expense items in one tx.
 // The WHERE ai_status='processing' guard lets a concurrent cancel cause the
 // whole write to be a no-op.
-func (w *AIWorker) writeSuccess(ctx context.Context, txnID string, data *ReceiptData) error {
+func (w *AIWorker) writeSuccess(ctx context.Context, txnID string, data *ReceiptData, overwriteTitle bool) error {
 	return w.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		updates := map[string]interface{}{
 			"ai_status": aiStatusCompleted,
@@ -254,6 +299,11 @@ func (w *AIWorker) writeSuccess(ctx context.Context, txnID string, data *Receipt
 		}
 		if data.Date != nil {
 			updates["date"] = *data.Date
+		}
+		if overwriteTitle && len(data.Items) > 0 {
+			if name := strings.TrimSpace(data.Items[0].Name); name != "" {
+				updates["title"] = name
+			}
 		}
 
 		result := tx.Model(&models.Transaction{}).

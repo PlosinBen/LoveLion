@@ -112,7 +112,8 @@ func main() {
 				slog.Warn("receipt extraction enabled but GEMINI_API_KEY is empty — worker not started")
 			} else {
 				extractor := services.NewGeminiReceiptExtractor(cfg.GeminiAPIKey, cfg.GeminiModel, cfg.GeminiBaseURL)
-				aiWorker = services.NewAIWorker(db, extractor, r2Storage, services.AIWorkerConfig{})
+				aiWorker = services.NewAIWorker(db, extractor, r2Storage, services.AIWorkerConfig{}).
+					WithTextExtractor(extractor)
 			}
 		} else {
 			slog.Info("receipt extraction disabled", "RECEIPT_EXTRACT_ENABLED", "false")

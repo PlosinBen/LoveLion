@@ -298,8 +298,8 @@ func (s *TransactionService) CreateExpense(ctx context.Context, spaceID uuid.UUI
 	if len(input.Images) > 0 && s.storage == nil {
 		return nil, errorx.Wrap(errorx.ErrInternal, "Image storage not configured")
 	}
-	if input.AIExtract && len(input.Images) == 0 {
-		return nil, errorx.Wrap(errorx.ErrBadRequest, "AI extraction requires at least one image")
+	if input.AIExtract && len(input.Images) == 0 && strings.TrimSpace(input.Title) == "" {
+		return nil, errorx.Wrap(errorx.ErrBadRequest, "AI extraction requires an image or text")
 	}
 
 	// Keys of objects written to R2 so we can clean them up if the DB tx rolls back.

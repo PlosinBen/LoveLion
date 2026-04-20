@@ -154,7 +154,7 @@ func TestAIWorker_ProcessOne_Success(t *testing.T) {
 	txnID := createPendingExpense(t, db, space.ID, "https://cdn/test/transaction/a.jpg")
 
 	worker := newTestWorker(db, ext, store)
-	worker.processOne(context.Background(), txnID)
+	worker.processOne(context.Background(), txnID, "AI receipt")
 
 	txn := loadTxn(t, db, txnID)
 	require.NotNil(t, txn.AIStatus)
@@ -183,7 +183,7 @@ func TestAIWorker_ProcessOne_LLMError_MarksFailed(t *testing.T) {
 	txnID := createPendingExpense(t, db, space.ID, "https://cdn/x.jpg")
 
 	worker := newTestWorker(db, ext, store)
-	worker.processOne(context.Background(), txnID)
+	worker.processOne(context.Background(), txnID, "AI receipt")
 
 	txn := loadTxn(t, db, txnID)
 	require.NotNil(t, txn.AIStatus)
@@ -211,13 +211,69 @@ func TestAIWorker_ProcessOne_NoImage_MarksFailed(t *testing.T) {
 	ext := &fakeExtractor{}
 	store := &fakeStorage{}
 	worker := newTestWorker(db, ext, store)
-	worker.processOne(context.Background(), txnID)
+	// No text extractor configured → no-image row fails with a service-off message.
+	worker.processOne(context.Background(), txnID, txn.Title)
 
 	got := loadTxn(t, db, txnID)
 	require.NotNil(t, got.AIStatus)
 	assert.Equal(t, aiStatusFailed, *got.AIStatus)
-	assert.Contains(t, got.AIError, "找不到")
-	assert.Equal(t, 0, ext.calls, "extractor should not be called when no image")
+	assert.Contains(t, got.AIError, "辨識服務未啟用")
+	assert.Equal(t, 0, ext.calls, "image extractor should not be called when no image")
+}
+
+// fakeTextExtractor records ExtractText calls and returns a canned ReceiptData.
+type fakeTextExtractor struct {
+	mu      sync.Mutex
+	calls   int
+	lastIn  string
+	result  *ReceiptData
+	err     error
+}
+
+func (f *fakeTextExtractor) ExtractText(ctx context.Context, text string) (*ReceiptData, error) {
+	f.mu.Lock()
+	f.calls++
+	f.lastIn = text
+	f.mu.Unlock()
+	if f.err != nil {
+		return nil, f.err
+	}
+	return f.result, nil
+}
+
+func TestAIWorker_ProcessOne_TextExtract_Success(t *testing.T) {
+	db := testutil.TestDB(t)
+	user := testutil.CreateTestUser(t, db)
+	space := createTestSpace(t, db, user.ID)
+
+	// Pending row with no image, title holds the raw user input.
+	txnID := "txn_" + uuid.NewString()[:8]
+	pending := aiStatusPending
+	txn := &models.Transaction{
+		ID: txnID, SpaceID: space.ID, Type: "expense", Title: "停車費 100",
+		Date: time.Now(), Currency: "TWD", TotalAmount: decimal.Zero, AIStatus: &pending,
+	}
+	require.NoError(t, db.Create(txn).Error)
+	require.NoError(t, db.Create(&models.TransactionExpense{
+		ID: uuid.New(), TransactionID: txnID, ExchangeRate: decimal.NewFromInt(1),
+	}).Error)
+
+	text := &fakeTextExtractor{result: &ReceiptData{
+		Items: []ReceiptItem{
+			{Name: "停車費", UnitPrice: decimal.NewFromInt(100), Quantity: decimal.NewFromInt(1)},
+		},
+	}}
+	worker := newTestWorker(db, &fakeExtractor{}, &fakeStorage{}).WithTextExtractor(text)
+	worker.processOne(context.Background(), txnID, txn.Title)
+
+	got := loadTxn(t, db, txnID)
+	require.NotNil(t, got.AIStatus)
+	assert.Equal(t, aiStatusCompleted, *got.AIStatus)
+	assert.Equal(t, "停車費 100", text.lastIn, "text extractor receives the raw title")
+	// Title is overwritten with the cleaned item name.
+	assert.Equal(t, "停車費", got.Title)
+	require.Len(t, got.Expense.Items, 1)
+	assert.True(t, decimal.NewFromInt(100).Equal(got.TotalAmount))
 }
 
 func TestAIWorker_ProcessOne_ClaimRaceLosesSilently(t *testing.T) {
@@ -235,7 +291,7 @@ func TestAIWorker_ProcessOne_ClaimRaceLosesSilently(t *testing.T) {
 	ext := &fakeExtractor{}
 	store := &fakeStorage{data: []byte("img"), contentType: "image/jpeg"}
 	worker := newTestWorker(db, ext, store)
-	worker.processOne(context.Background(), txnID)
+	worker.processOne(context.Background(), txnID, "AI receipt")
 
 	var txn models.Transaction
 	require.NoError(t, db.First(&txn, "id = ?", txnID).Error)
@@ -265,7 +321,7 @@ func TestAIWorker_ProcessOne_CancelMidCall_NoWriteBack(t *testing.T) {
 
 	done := make(chan struct{})
 	go func() {
-		worker.processOne(context.Background(), txnID)
+		worker.processOne(context.Background(), txnID, "AI receipt")
 		close(done)
 	}()
 

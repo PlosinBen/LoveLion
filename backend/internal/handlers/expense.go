@@ -129,8 +129,10 @@ func (h *ExpenseHandler) Create(c *gin.Context) {
 	}
 
 	if req.AIExtract {
-		if len(images) == 0 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "AI extraction requires at least one image"})
+		// AI extraction can run on either an attached image or a non-empty
+		// title (quick text entry). At least one must be present.
+		if len(images) == 0 && strings.TrimSpace(req.Title) == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "AI extraction requires an image or text"})
 			return
 		}
 		userID, ok := c.Get("userID")
