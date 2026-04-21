@@ -224,7 +224,7 @@ const handleQuickText = async () => {
       currency: baseCurrency.value,
       note: '',
       expense: {
-        category: categories.value[0] || '其他',
+        category: categories.value[0]?.value || '其他',
         exchange_rate: 1,
         billing_amount: 0,
         handling_fee: 0,
