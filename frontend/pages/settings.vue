@@ -44,18 +44,24 @@
               v-model="passwordForm.current"
               label="目前密碼"
               type="password"
+              name="current-password"
+              autocomplete="current-password"
               placeholder="請輸入目前密碼"
             />
             <BaseInput
               v-model="passwordForm.new"
               label="新密碼"
               type="password"
+              name="new-password"
+              autocomplete="new-password"
               placeholder="請輸入新密碼 (至少 6 個字)"
             />
             <BaseInput
               v-model="passwordForm.confirm"
               label="確認新密碼"
               type="password"
+              name="confirm-password"
+              autocomplete="new-password"
               placeholder="請再次輸入新密碼"
             />
             

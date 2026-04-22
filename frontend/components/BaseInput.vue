@@ -8,6 +8,8 @@
       :placeholder="placeholder"
       :required="required"
       :disabled="disabled"
+      :name="name"
+      :autocomplete="autocomplete"
       class="w-full bg-neutral-800 border border-neutral-700 text-white py-1.5 px-2 rounded outline-none focus:border-indigo-500 transition-colors placeholder-neutral-500 text-base"
       :class="inputClass"
       v-bind="$attrs"
@@ -16,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+withDefaults(defineProps<{
   modelValue: string | number | null | undefined
   label?: string
   type?: string
@@ -24,7 +26,11 @@ defineProps<{
   required?: boolean
   disabled?: boolean
   inputClass?: string
-}>()
+  name?: string
+  autocomplete?: string
+}>(), {
+  autocomplete: 'off',
+})
 
 defineEmits(['update:modelValue'])
 </script>

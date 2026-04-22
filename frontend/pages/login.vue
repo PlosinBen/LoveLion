@@ -5,22 +5,26 @@
     </div>
 
     <BaseCard padding="p-6" class="w-full max-w-sm mx-auto shadow-xl">
-      <div v-if="!isRegister">
+      <form v-if="!isRegister" @submit.prevent="handleLogin">
         <h2 class="mb-8 text-center text-2xl font-bold text-white tracking-tight">歡迎回來</h2>
 
         <div class="flex flex-col gap-4">
-          <BaseInput 
-            v-model="username" 
-            label="帳號" 
-            placeholder="請輸入您的帳號" 
+          <BaseInput
+            v-model="username"
+            label="帳號"
+            placeholder="請輸入您的帳號"
+            name="username"
+            autocomplete="username"
             required
           />
 
-          <BaseInput 
-            v-model="password" 
-            type="password" 
-            label="密碼" 
-            placeholder="請輸入您的密碼" 
+          <BaseInput
+            v-model="password"
+            type="password"
+            label="密碼"
+            placeholder="請輸入您的密碼"
+            name="password"
+            autocomplete="current-password"
             required
           />
         </div>
@@ -30,7 +34,7 @@
         </div>
 
         <BaseButton
-          @click="handleLogin"
+          type="submit"
           class="w-full mt-8"
         >
           登入
@@ -38,33 +42,39 @@
 
         <p class="text-center mt-6 text-neutral-500 text-sm font-medium flex items-center justify-center gap-1">
           還沒有帳號嗎？
-          <button @click="isRegister = true" class="text-indigo-400 font-bold hover:underline bg-transparent border-0 cursor-pointer p-0 text-sm">立即註冊</button>
+          <button type="button" @click="isRegister = true" class="text-indigo-400 font-bold hover:underline bg-transparent border-0 cursor-pointer p-0 text-sm">立即註冊</button>
         </p>
-      </div>
+      </form>
 
-      <div v-else>
+      <form v-else @submit.prevent="handleRegister">
         <h2 class="mb-8 text-center text-2xl font-bold text-white tracking-tight">加入 LoveLion</h2>
 
         <div class="flex flex-col gap-4">
-          <BaseInput 
-            v-model="username" 
-            label="帳號" 
-            placeholder="設定登入帳號" 
+          <BaseInput
+            v-model="username"
+            label="帳號"
+            placeholder="設定登入帳號"
+            name="username"
+            autocomplete="username"
             required
           />
 
-          <BaseInput 
-            v-model="displayName" 
-            label="顯示名稱" 
-            placeholder="大家如何稱呼您" 
+          <BaseInput
+            v-model="displayName"
+            label="顯示名稱"
+            placeholder="大家如何稱呼您"
+            name="displayName"
+            autocomplete="name"
             required
           />
 
-          <BaseInput 
-            v-model="password" 
-            type="password" 
-            label="密碼" 
-            placeholder="設定登入密碼" 
+          <BaseInput
+            v-model="password"
+            type="password"
+            label="密碼"
+            placeholder="設定登入密碼"
+            name="password"
+            autocomplete="new-password"
             required
           />
         </div>
@@ -74,7 +84,7 @@
         </div>
 
         <BaseButton
-          @click="handleRegister"
+          type="submit"
           class="w-full mt-8"
         >
           註冊帳號
@@ -82,9 +92,9 @@
 
         <p class="text-center mt-6 text-neutral-500 text-sm font-medium flex items-center justify-center gap-1">
           已經有帳號了？
-          <button @click="isRegister = false" class="text-indigo-400 font-bold hover:underline bg-transparent border-0 cursor-pointer p-0 text-sm">點此登入</button>
+          <button type="button" @click="isRegister = false" class="text-indigo-400 font-bold hover:underline bg-transparent border-0 cursor-pointer p-0 text-sm">點此登入</button>
         </p>
-      </div>
+      </form>
     </BaseCard>
   </div>
 </template>
