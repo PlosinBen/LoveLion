@@ -69,9 +69,9 @@
         @submit="handleExpenseSubmit"
       >
         <template #images>
-          <!-- AI retry checkbox only appears in the failed state. -->
+          <!-- AI extract checkbox — available unless the worker is currently processing. -->
           <div
-            v-if="aiStatus === 'failed'"
+            v-if="!formDisabled"
             class="bg-neutral-900 rounded-xl p-4 border border-neutral-800 mb-3 flex flex-col gap-2"
           >
             <label class="flex items-center gap-3 cursor-pointer select-none">
@@ -82,11 +82,11 @@
               >
               <span class="flex items-center gap-1.5 text-sm font-bold text-indigo-300">
                 <Icon icon="mdi:robot-outline" class="text-base" />
-                使用 AI 重新辨識
+                使用 AI 辨識
               </span>
             </label>
             <p class="text-xs text-neutral-500 leading-relaxed pl-7">
-              勾選後儲存，worker 會使用現有的發票圖片重新嘗試辨識，先前填入的項目會被清除。
+              勾選後儲存，AI 會重新辨識收據圖片或標題文字，現有的項目明細會被覆蓋。
             </p>
           </div>
           <ImageManager

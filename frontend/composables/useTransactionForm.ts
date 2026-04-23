@@ -193,7 +193,7 @@ export function useTransactionForm(spaceId: string) {
         payment_method: form.payment_method,
         location_url: form.location_url || '',
         items: form.items
-          .filter(item => item.name && Number(item.unit_price) > 0)
+          .filter(item => item.name)
           .map(item => ({
             name: item.name,
             unit_price: Number(item.unit_price),
