@@ -26,16 +26,9 @@
             />
           </div>
 
-          <!-- Currency, Category & Payment Method -->
+          <!-- Category & Currency -->
           <div class="grid grid-cols-3 gap-3">
-            <div class="flex flex-col gap-2">
-              <label class="text-xs font-bold text-neutral-500 uppercase px-1">幣別</label>
-              <BaseSelect
-                v-model="form.currency"
-                :options="availableCurrencies"
-              />
-            </div>
-            <div class="flex flex-col gap-2">
+            <div class="col-span-2 flex flex-col gap-2">
               <label class="text-xs font-bold text-neutral-500 uppercase px-1">類別</label>
               <BaseSelect
                 v-model="form.category"
@@ -43,23 +36,32 @@
               />
             </div>
             <div class="flex flex-col gap-2">
+              <label class="text-xs font-bold text-neutral-500 uppercase px-1">幣別</label>
+              <BaseSelect
+                v-model="form.currency"
+                :options="availableCurrencies"
+              />
+            </div>
+          </div>
+
+          <!-- Payment Method & Total Amount -->
+          <div class="grid grid-cols-3 gap-3">
+            <div class="col-span-2 flex flex-col gap-2">
               <label class="text-xs font-bold text-neutral-500 uppercase px-1">付款方式</label>
               <BaseSelect
                 v-model="form.payment_method"
                 :options="paymentMethods"
               />
             </div>
-          </div>
-
-          <!-- Total Amount -->
-          <div class="flex flex-col gap-2">
-            <label class="text-xs font-bold text-neutral-500 uppercase px-1">總額 ({{ form.currency }})</label>
-            <BaseInput
-              v-model.number="form.total_amount"
-              type="number"
-              placeholder="0"
-              input-class="text-2xl font-bold text-center"
-            />
+            <div class="flex flex-col gap-2">
+              <label class="text-xs font-bold text-neutral-500 uppercase px-1">總額</label>
+              <BaseInput
+                v-model.number="form.total_amount"
+                type="number"
+                placeholder="0"
+                input-class="font-bold text-center"
+              />
+            </div>
           </div>
         </fieldset>
       </div>
