@@ -200,7 +200,7 @@ const handleExpenseSubmit = async () => {
   try {
     await api.put(`/api/spaces/${route.params.id}/expenses/${route.params.txnId}`, buildExpensePayload())
     detailStore.invalidate('transactions')
-    router.replace(`/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}`)
+    router.back()
   } catch (e: any) {
     toast.error(e.message || '更新失敗')
   } finally {
@@ -215,7 +215,7 @@ const handlePaymentSubmit = async () => {
   try {
     await api.put(`/api/spaces/${route.params.id}/payments/${route.params.txnId}`, buildPaymentPayload())
     detailStore.invalidate('transactions')
-    router.replace(`/spaces/${route.params.id}/ledger/transaction/${route.params.txnId}`)
+    router.back()
   } catch (e: any) {
     toast.error(e.message || '更新失敗')
   } finally {
