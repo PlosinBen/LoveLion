@@ -149,7 +149,6 @@ const fetchTransactions = async (append = false) => {
   } else {
     loading.value = true
     offset.value = 0
-    filteredTransactions.value = []
   }
 
   try {
