@@ -30,7 +30,7 @@ type fakeExtractor struct {
 	sleep time.Duration
 }
 
-func (f *fakeExtractor) Extract(ctx context.Context, image []byte, mimeType string) (*ReceiptData, error) {
+func (f *fakeExtractor) Extract(ctx context.Context, image []byte, mimeType string, _ ExtractHints) (*ReceiptData, error) {
 	f.mu.Lock()
 	idx := f.calls
 	f.calls++
@@ -230,7 +230,7 @@ type fakeTextExtractor struct {
 	err     error
 }
 
-func (f *fakeTextExtractor) ExtractText(ctx context.Context, text string) (*ReceiptData, error) {
+func (f *fakeTextExtractor) ExtractText(ctx context.Context, text string, _ ExtractHints) (*ReceiptData, error) {
 	f.mu.Lock()
 	f.calls++
 	f.lastIn = text

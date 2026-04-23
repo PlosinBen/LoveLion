@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"path/filepath"
@@ -172,7 +173,13 @@ func (w *AIWorker) processOne(ctx context.Context, txnID, title string) {
 		return
 	}
 
-	// Stage 2: decide image vs text based on whether any image is attached.
+	// Stage 2: load space config for extraction hints (categories, payment methods).
+	hints, err := w.loadSpaceHints(ctx, txnID)
+	if err != nil {
+		log.Warn("ai worker load space hints failed", "error", err)
+	}
+
+	// Stage 3: decide image vs text based on whether any image is attached.
 	hasImage, err := w.hasTransactionImage(ctx, txnID)
 	if err != nil {
 		log.Error("ai worker image lookup failed", "error", err)
@@ -188,7 +195,7 @@ func (w *AIWorker) processOne(ctx context.Context, txnID, title string) {
 			w.writeFailure(ctx, txnID, friendlyExtractError(loadErr))
 			return
 		}
-		result, err = w.extractor.Extract(ctx, imgBytes, mimeType)
+		result, err = w.extractor.Extract(ctx, imgBytes, mimeType, hints)
 	} else {
 		if w.textExtractor == nil {
 			log.Warn("ai worker no text extractor configured")
@@ -199,7 +206,7 @@ func (w *AIWorker) processOne(ctx context.Context, txnID, title string) {
 			w.writeFailure(ctx, txnID, "無文字可辨識")
 			return
 		}
-		result, err = w.textExtractor.ExtractText(ctx, title)
+		result, err = w.textExtractor.ExtractText(ctx, title, hints)
 	}
 
 	if err != nil {
@@ -288,6 +295,28 @@ func (w *AIWorker) loadFirstImage(ctx context.Context, txnID string) ([]byte, st
 	return data, ct, nil
 }
 
+// loadSpaceHints reads the space's categories and payment_methods for a given
+// transaction so the LLM can prefer existing values.
+func (w *AIWorker) loadSpaceHints(ctx context.Context, txnID string) (ExtractHints, error) {
+	var space models.Space
+	err := w.db.WithContext(ctx).
+		Select("categories", "payment_methods").
+		Joins("JOIN transactions ON transactions.space_id = spaces.id").
+		Where("transactions.id = ?", txnID).
+		First(&space).Error
+	if err != nil {
+		return ExtractHints{}, err
+	}
+	var hints ExtractHints
+	if len(space.Categories) > 0 {
+		_ = json.Unmarshal(space.Categories, &hints.Categories)
+	}
+	if len(space.PaymentMethods) > 0 {
+		_ = json.Unmarshal(space.PaymentMethods, &hints.PaymentMethods)
+	}
+	return hints, nil
+}
+
 // writeSuccess updates the transaction + replaces expense items in one tx.
 // The WHERE ai_status='processing' guard lets a concurrent cancel cause the
 // whole write to be a no-op.
@@ -300,10 +329,16 @@ func (w *AIWorker) writeSuccess(ctx context.Context, txnID string, data *Receipt
 		if data.Date != nil {
 			updates["date"] = *data.Date
 		}
-		if overwriteTitle && len(data.Items) > 0 {
-			if name := strings.TrimSpace(data.Items[0].Name); name != "" {
-				updates["title"] = name
+		if overwriteTitle {
+			// Text path: prefer cleaned item name, fall back to LLM title.
+			if len(data.Items) > 0 {
+				if name := strings.TrimSpace(data.Items[0].Name); name != "" {
+					updates["title"] = name
+				}
 			}
+		} else if data.Title != "" {
+			// Image path: use store name from receipt.
+			updates["title"] = data.Title
 		}
 
 		result := tx.Model(&models.Transaction{}).
@@ -313,7 +348,6 @@ func (w *AIWorker) writeSuccess(ctx context.Context, txnID string, data *Receipt
 			return result.Error
 		}
 		if result.RowsAffected == 0 {
-			// Cancelled between claim and now — discard everything.
 			return nil
 		}
 
@@ -321,10 +355,23 @@ func (w *AIWorker) writeSuccess(ctx context.Context, txnID string, data *Receipt
 		var expense models.TransactionExpense
 		if err := tx.Where("transaction_id = ?", txnID).First(&expense).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				// Non-expense transaction shouldn't get here, but be defensive.
 				return nil
 			}
 			return err
+		}
+
+		// Update category and payment_method if the LLM provided them.
+		expenseUpdates := map[string]interface{}{}
+		if data.Category != "" {
+			expenseUpdates["category"] = data.Category
+		}
+		if data.PaymentMethod != "" {
+			expenseUpdates["payment_method"] = data.PaymentMethod
+		}
+		if len(expenseUpdates) > 0 {
+			if err := tx.Model(&expense).Updates(expenseUpdates).Error; err != nil {
+				return err
+			}
 		}
 
 		// Replace items entirely: delete existing, then insert extracted.

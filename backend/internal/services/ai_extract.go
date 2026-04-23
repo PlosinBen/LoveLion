@@ -17,8 +17,11 @@ import (
 
 // ReceiptData is the parsed output of a receipt extraction call.
 type ReceiptData struct {
-	Date  *time.Time
-	Items []ReceiptItem
+	Date          *time.Time
+	Title         string // store name (image) or cleaned description (text)
+	Category      string // best-match from ExtractHints.Categories
+	PaymentMethod string // best-match from ExtractHints.PaymentMethods
+	Items         []ReceiptItem
 }
 
 // ReceiptItem represents a single line item on a receipt.
@@ -28,16 +31,35 @@ type ReceiptItem struct {
 	Quantity  decimal.Decimal
 }
 
+// ExtractHints carries space-specific option lists so the LLM can pick from
+// existing values rather than inventing its own.
+type ExtractHints struct {
+	Categories     []string
+	PaymentMethods []string
+}
+
+// promptFragment builds the user-message addendum that lists available options.
+func (h ExtractHints) promptFragment() string {
+	var parts []string
+	if len(h.Categories) > 0 {
+		parts = append(parts, fmt.Sprintf("可用的分類清單：%s", strings.Join(h.Categories, "、")))
+	}
+	if len(h.PaymentMethods) > 0 {
+		parts = append(parts, fmt.Sprintf("可用的付款方式清單：%s", strings.Join(h.PaymentMethods, "、")))
+	}
+	return strings.Join(parts, "\n")
+}
+
 // ReceiptExtractor abstracts the underlying LLM provider so we can swap
 // implementations (or inject fakes in tests).
 type ReceiptExtractor interface {
-	Extract(ctx context.Context, image []byte, mimeType string) (*ReceiptData, error)
+	Extract(ctx context.Context, image []byte, mimeType string, hints ExtractHints) (*ReceiptData, error)
 }
 
 // TextExtractor parses a single free-form text line (e.g. "停車費 100") into the
 // same ReceiptData shape used by image extraction.
 type TextExtractor interface {
-	ExtractText(ctx context.Context, text string) (*ReceiptData, error)
+	ExtractText(ctx context.Context, text string, hints ExtractHints) (*ReceiptData, error)
 }
 
 // --- Gemini implementation ---
@@ -51,20 +73,26 @@ const (
 const geminiSystemPrompt = `你是發票辨識助手。請從圖片擷取消費資訊，並以指定的 JSON Schema 回傳。
 
 規則：
+- title 為店家名稱。若發票上無法判讀店家名稱，填空字串。
 - date 取發票上的消費日期，格式 YYYY-MM-DD。若無法判讀填 null。
 - items 依發票上的順序列出。
 - unit_price 是單價（不是小計）。quantity 是數量。
 - 若有整單折扣，加一筆 name="折扣" 的品項，unit_price 為負數，quantity=1。
+- category：根據消費內容判斷最適合的分類。若使用者有提供可用分類清單，優先從清單中選擇；若都不符合，可自行填寫。若無法判斷填空字串。
+- payment_method：若發票上有標示付款方式（如信用卡、現金、Line Pay 等），請填寫。若使用者有提供可用付款方式清單，優先從清單中選擇；若都不符合，可自行填寫。若無法判讀填空字串。
 - 不要輸出 total，呼叫端會自行計算。`
 
 //nolint:lll // prompt is intentionally a single literal block
 const geminiTextSystemPrompt = `你是記帳輸入解析助手。使用者會給你一小段中文／英文混合的簡短文字（例如「停車費 100」、「昨天 小七 買咖啡 55」、「午餐 250 刷卡」），請從中擷取消費資訊，並以指定的 JSON Schema 回傳。
 
 規則：
+- title 為店家名稱，若文字中有提及店家（如「小七」、「全聯」），填入店家名稱；若無填空字串。
 - 將整筆消費視為「一個」品項。items 陣列只會有 1 筆。
-- item.name 為消費名稱（例如「停車費」、「午餐」、「咖啡」），去除金額與日期字樣。若僅有金額沒有名稱，填「未命名」。
+- item.name 為消費名稱（例如「停車費」、「午餐」、「咖啡」），去除金額、日期與店家字樣。若僅有金額沒有名稱，填「未命名」。
 - item.unit_price 為金額數字；quantity 固定為 1。
 - 若文字中指出相對日期（例如「昨天」、「前天」），請以今天的日期推算並輸出 YYYY-MM-DD；若無法判讀日期則填 null。
+- category：根據消費內容判斷最適合的分類。若使用者有提供可用分類清單，優先從清單中選擇；若都不符合，可自行填寫。若無法判斷填空字串。
+- payment_method：若文字中有提及付款方式（如「刷卡」、「現金」、「Line Pay」），請填寫。若使用者有提供可用付款方式清單，優先從清單中選擇；若都不符合，可自行填寫。若無法判讀填空字串。
 - 若完全無法解析出金額，仍請回傳 items=[] — 呼叫端會視為失敗。
 - 不要輸出 total。`
 
@@ -72,7 +100,10 @@ const geminiTextSystemPrompt = `你是記帳輸入解析助手。使用者會給
 var geminiResponseSchema = json.RawMessage(`{
   "type": "object",
   "properties": {
-    "date": { "type": "string", "nullable": true },
+    "title":          { "type": "string" },
+    "date":           { "type": "string", "nullable": true },
+    "category":       { "type": "string" },
+    "payment_method": { "type": "string" },
     "items": {
       "type": "array",
       "items": {
@@ -162,8 +193,11 @@ type geminiResponse struct {
 }
 
 type receiptJSONPayload struct {
-	Date  *string `json:"date"`
-	Items []struct {
+	Title         string  `json:"title"`
+	Date          *string `json:"date"`
+	Category      string  `json:"category"`
+	PaymentMethod string  `json:"payment_method"`
+	Items         []struct {
 		Name      string          `json:"name"`
 		UnitPrice decimal.Decimal `json:"unit_price"`
 		Quantity  decimal.Decimal `json:"quantity"`
@@ -171,9 +205,14 @@ type receiptJSONPayload struct {
 }
 
 // Extract sends the image to Gemini and parses the structured response.
-func (g *GeminiReceiptExtractor) Extract(ctx context.Context, image []byte, mimeType string) (*ReceiptData, error) {
+func (g *GeminiReceiptExtractor) Extract(ctx context.Context, image []byte, mimeType string, hints ExtractHints) (*ReceiptData, error) {
 	if len(image) == 0 {
 		return nil, errors.New("empty image")
+	}
+
+	userText := "請辨識這張發票。"
+	if extra := hints.promptFragment(); extra != "" {
+		userText += "\n" + extra
 	}
 
 	reqBody := geminiRequest{
@@ -183,7 +222,7 @@ func (g *GeminiReceiptExtractor) Extract(ctx context.Context, image []byte, mime
 		Contents: []geminiContent{{
 			Role: "user",
 			Parts: []geminiPart{
-				{Text: "請辨識這張發票。"},
+				{Text: userText},
 				{InlineData: &geminiInlineData{
 					MimeType: mimeType,
 					Data:     base64.StdEncoding.EncodeToString(image),
@@ -202,13 +241,18 @@ func (g *GeminiReceiptExtractor) Extract(ctx context.Context, image []byte, mime
 
 // ExtractText sends a short text line to Gemini and parses the same structured
 // shape as Extract. Used by the quick-text-entry flow.
-func (g *GeminiReceiptExtractor) ExtractText(ctx context.Context, text string) (*ReceiptData, error) {
+func (g *GeminiReceiptExtractor) ExtractText(ctx context.Context, text string, hints ExtractHints) (*ReceiptData, error) {
 	text = strings.TrimSpace(text)
 	if text == "" {
 		return nil, errors.New("empty text")
 	}
 
 	today := time.Now().Format("2006-01-02")
+	userMsg := fmt.Sprintf("今天是 %s。請解析以下這筆記帳輸入：\n%s", today, text)
+	if extra := hints.promptFragment(); extra != "" {
+		userMsg += "\n" + extra
+	}
+
 	reqBody := geminiRequest{
 		SystemInstruction: &geminiContent{
 			Parts: []geminiPart{{Text: geminiTextSystemPrompt}},
@@ -216,7 +260,7 @@ func (g *GeminiReceiptExtractor) ExtractText(ctx context.Context, text string) (
 		Contents: []geminiContent{{
 			Role: "user",
 			Parts: []geminiPart{
-				{Text: fmt.Sprintf("今天是 %s。請解析以下這筆記帳輸入：\n%s", today, text)},
+				{Text: userMsg},
 			},
 		}},
 		GenerationConfig: geminiGenerationCfg{
@@ -294,7 +338,12 @@ func (g *GeminiReceiptExtractor) callAndParse(ctx context.Context, reqBody gemin
 		return nil, fmt.Errorf("parse receipt json: %w (raw=%s)", err, truncate(text, 200))
 	}
 
-	out := &ReceiptData{Items: make([]ReceiptItem, 0, len(receipt.Items))}
+	out := &ReceiptData{
+		Title:         strings.TrimSpace(receipt.Title),
+		Category:      strings.TrimSpace(receipt.Category),
+		PaymentMethod: strings.TrimSpace(receipt.PaymentMethod),
+		Items:         make([]ReceiptItem, 0, len(receipt.Items)),
+	}
 
 	if receipt.Date != nil && *receipt.Date != "" {
 		if t, err := time.Parse("2006-01-02", *receipt.Date); err == nil {

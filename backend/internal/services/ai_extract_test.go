@@ -68,7 +68,7 @@ func TestGeminiExtract_Success(t *testing.T) {
 	fake := newFakeGemini(t, 200, canned)
 
 	ext := NewGeminiReceiptExtractor("test-key", "gemini-2.5-flash", fake.server.URL)
-	data, err := ext.Extract(context.Background(), []byte("fake-image-bytes"), "image/jpeg")
+	data, err := ext.Extract(context.Background(), []byte("fake-image-bytes"), "image/jpeg", ExtractHints{})
 
 	require.NoError(t, err)
 	require.NotNil(t, data)
@@ -106,7 +106,7 @@ func TestGeminiExtract_NullDate(t *testing.T) {
 	fake := newFakeGemini(t, 200, canned)
 
 	ext := NewGeminiReceiptExtractor("k", "", fake.server.URL)
-	data, err := ext.Extract(context.Background(), []byte("img"), "image/png")
+	data, err := ext.Extract(context.Background(), []byte("img"), "image/png", ExtractHints{})
 	require.NoError(t, err)
 	assert.Nil(t, data.Date)
 	require.Len(t, data.Items, 1)
@@ -121,7 +121,7 @@ func TestGeminiExtract_DiscountItem(t *testing.T) {
     }`)
 	fake := newFakeGemini(t, 200, canned)
 	ext := NewGeminiReceiptExtractor("k", "", fake.server.URL)
-	data, err := ext.Extract(context.Background(), []byte("img"), "image/jpeg")
+	data, err := ext.Extract(context.Background(), []byte("img"), "image/jpeg", ExtractHints{})
 	require.NoError(t, err)
 	require.Len(t, data.Items, 2)
 	assert.Equal(t, "折扣", data.Items[1].Name)
@@ -131,7 +131,7 @@ func TestGeminiExtract_DiscountItem(t *testing.T) {
 func TestGeminiExtract_HTTPError(t *testing.T) {
 	fake := newFakeGemini(t, 500, `{"error":{"code":500,"message":"boom","status":"INTERNAL"}}`)
 	ext := NewGeminiReceiptExtractor("k", "", fake.server.URL)
-	_, err := ext.Extract(context.Background(), []byte("img"), "image/jpeg")
+	_, err := ext.Extract(context.Background(), []byte("img"), "image/jpeg", ExtractHints{})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "gemini http 500")
 }
@@ -139,7 +139,7 @@ func TestGeminiExtract_HTTPError(t *testing.T) {
 func TestGeminiExtract_EmptyCandidates(t *testing.T) {
 	fake := newFakeGemini(t, 200, `{"candidates":[]}`)
 	ext := NewGeminiReceiptExtractor("k", "", fake.server.URL)
-	_, err := ext.Extract(context.Background(), []byte("img"), "image/jpeg")
+	_, err := ext.Extract(context.Background(), []byte("img"), "image/jpeg", ExtractHints{})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "no candidates")
 }
@@ -148,21 +148,21 @@ func TestGeminiExtract_MalformedJSON(t *testing.T) {
 	canned := wrapCandidate(t, `not-json`)
 	fake := newFakeGemini(t, 200, canned)
 	ext := NewGeminiReceiptExtractor("k", "", fake.server.URL)
-	_, err := ext.Extract(context.Background(), []byte("img"), "image/jpeg")
+	_, err := ext.Extract(context.Background(), []byte("img"), "image/jpeg", ExtractHints{})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "parse receipt json")
 }
 
 func TestGeminiExtract_MissingAPIKey(t *testing.T) {
 	ext := NewGeminiReceiptExtractor("", "", "")
-	_, err := ext.Extract(context.Background(), []byte("img"), "image/jpeg")
+	_, err := ext.Extract(context.Background(), []byte("img"), "image/jpeg", ExtractHints{})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "api key")
 }
 
 func TestGeminiExtract_EmptyImage(t *testing.T) {
 	ext := NewGeminiReceiptExtractor("k", "", "")
-	_, err := ext.Extract(context.Background(), []byte{}, "image/jpeg")
+	_, err := ext.Extract(context.Background(), []byte{}, "image/jpeg", ExtractHints{})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "empty image")
 }
@@ -179,7 +179,7 @@ func TestGeminiExtract_ContextCancelled(t *testing.T) {
 	ext := NewGeminiReceiptExtractor("k", "", server.URL)
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
 	defer cancel()
-	_, err := ext.Extract(ctx, []byte("img"), "image/jpeg")
+	_, err := ext.Extract(ctx, []byte("img"), "image/jpeg", ExtractHints{})
 	require.Error(t, err)
 	// Error should mention deadline or context
 	assert.True(t, strings.Contains(err.Error(), "context") || strings.Contains(err.Error(), "deadline"))
