@@ -4,10 +4,11 @@
     
     <div class="relative">
       <BaseInput
-        v-model="newItem" 
+        ref="inputRef"
+        v-model="newItem"
         :placeholder="placeholder"
         class="pr-10"
-        @keydown.enter.prevent="add"
+        @keydown.enter.prevent="addAndRefocus"
         @blur="add"
       />
       <button
@@ -32,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { Icon } from '@iconify/vue'
 
 const props = defineProps<{
@@ -46,15 +47,21 @@ const emit = defineEmits<{
 }>()
 
 const newItem = ref('')
+const inputRef = ref<{ $el?: HTMLElement } | null>(null)
 
 const add = () => {
   const val = newItem.value.trim()
   if (val && !props.modelValue.includes(val)) {
     emit('update:modelValue', [...props.modelValue, val])
-    newItem.value = ''
-  } else {
-      newItem.value = ''
   }
+  newItem.value = ''
+}
+
+const addAndRefocus = () => {
+  add()
+  nextTick(() => {
+    inputRef.value?.$el?.querySelector('input')?.focus()
+  })
 }
 
 const remove = (index: number) => {
