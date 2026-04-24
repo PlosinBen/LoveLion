@@ -114,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useApi } from '~/composables/useApi'
 import { useImages } from '~/composables/useImages'
@@ -240,5 +240,11 @@ onMounted(() => {
   detailStore.setSpaceId(route.params.id as string)
   detailStore.fetchSpace()
   fetchStore()
+})
+
+// Parent route stays mounted under product add/edit overlays; refetch when
+// a child signals the stores list is stale.
+watch(() => detailStore.fetched.stores, (v) => {
+  if (v === false) fetchStore()
 })
 </script>

@@ -173,6 +173,10 @@ const fetchTransactions = async (append = false) => {
     } else {
       filteredTransactions.value = data
     }
+    // Mark the shared invalidation flag as fresh so child overlays
+    // (add / edit / delete) can signal us via `store.invalidate('transactions')`
+    // and this watcher will pick up the flip back to false.
+    store.fetched.transactions = true
   } catch (e) {
     console.error('Failed to fetch transactions:', e)
   } finally {
@@ -195,6 +199,13 @@ const debouncedFetch = () => {
 
 watch([filterType, filterCategory], () => {
   fetchTransactions()
+})
+
+// Nested-route overlays (add / edit / delete) call store.invalidate('transactions')
+// after mutating. Since this page stays mounted as a parent route, onMounted
+// doesn't re-run — watch the flag and refetch when it flips to false.
+watch(() => store.fetched.transactions, (v) => {
+  if (v === false) fetchTransactions()
 })
 
 const setupObserver = () => {

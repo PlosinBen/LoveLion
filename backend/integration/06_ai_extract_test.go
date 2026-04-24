@@ -96,11 +96,14 @@ func TestAIReceiptExtraction(t *testing.T) {
 		pendingTxnID = obj.Value("id").String().Raw()
 	})
 
-	t.Run("ai_extract=true without any image is rejected", func(t *testing.T) {
+	t.Run("ai_extract=true without image or title is rejected", func(t *testing.T) {
+		// Text-based quick entry (added after the original image-only AI flow)
+		// lets the worker run on a non-empty title when no image is attached.
+		// So AI extract is only rejected when BOTH title and images are empty.
 		ae := authExpect(t, token)
 		ae.POST("/api/spaces/{id}/expenses", personalID).
 			WithMultipart().
-			WithFormField("data", expenseBodyJSON(t, "缺圖", true)).
+			WithFormField("data", expenseBodyJSON(t, "", true)).
 			Expect().
 			Status(http.StatusBadRequest)
 	})

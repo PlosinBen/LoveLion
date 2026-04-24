@@ -223,11 +223,11 @@ func TestAIWorker_ProcessOne_NoImage_MarksFailed(t *testing.T) {
 
 // fakeTextExtractor records ExtractText calls and returns a canned ReceiptData.
 type fakeTextExtractor struct {
-	mu      sync.Mutex
-	calls   int
-	lastIn  string
-	result  *ReceiptData
-	err     error
+	mu     sync.Mutex
+	calls  int
+	lastIn string
+	result *ReceiptData
+	err    error
 }
 
 func (f *fakeTextExtractor) ExtractText(ctx context.Context, text string, _ ExtractHints) (*ReceiptData, error) {

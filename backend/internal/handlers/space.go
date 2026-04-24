@@ -36,16 +36,16 @@ type CreateSpaceRequest struct {
 }
 
 type UpdateSpaceRequest struct {
-	Name           string      `json:"name" binding:"omitempty,min=1,max=100"`
-	Description    *string     `json:"description"`
-	BaseCurrency   string      `json:"base_currency"`
-	Currencies     *[]string   `json:"currencies"`
-	SplitMembers   *[]string   `json:"split_members"`
-	Categories     *[]string   `json:"categories"`
-	PaymentMethods *[]string   `json:"payment_methods"`
-	StartDate      *time.Time  `json:"start_date"`
-	EndDate        *time.Time  `json:"end_date"`
-	IsPinned       *bool       `json:"is_pinned"`
+	Name           string     `json:"name" binding:"omitempty,min=1,max=100"`
+	Description    *string    `json:"description"`
+	BaseCurrency   string     `json:"base_currency"`
+	Currencies     *[]string  `json:"currencies"`
+	SplitMembers   *[]string  `json:"split_members"`
+	Categories     *[]string  `json:"categories"`
+	PaymentMethods *[]string  `json:"payment_methods"`
+	StartDate      *time.Time `json:"start_date"`
+	EndDate        *time.Time `json:"end_date"`
+	IsPinned       *bool      `json:"is_pinned"`
 }
 
 func toJSON(v interface{}) (datatypes.JSON, error) {

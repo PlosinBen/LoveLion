@@ -48,7 +48,7 @@ test.describe('Space & Expense', () => {
     await totalInput.fill('250')
 
     await page.getByRole('button', { name: '儲存交易' }).click()
-    await page.waitForURL(/\/spaces\/.*\/ledger/)
+    await page.waitForURL(/\/spaces\/[^/]+\/ledger$/)
 
     await expect(page.getByText('E2E 午餐')).toBeVisible()
   })
@@ -87,9 +87,12 @@ test.describe('Space & Expense', () => {
 
     await page.getByRole('button', { name: '儲存交易' }).click()
 
-    // Edit page redirects to detail page after save
+    // Edit page redirects to detail page after save. The ledger list stays
+    // mounted behind the overlay, so the updated title appears in both the
+    // detail heading and the list row — scope the assertion to the detail
+    // heading (role=heading) to avoid a strict-mode duplicate match.
     await page.waitForURL(/\/transaction\/[^/]+$/)
-    await expect(page.getByText('E2E 晚餐')).toBeVisible()
+    await expect(page.getByRole('heading', { level: 2, name: 'E2E 晚餐' })).toBeVisible()
   })
 
   test('delete transaction', async ({ authedPage: page }) => {
@@ -101,7 +104,7 @@ test.describe('Space & Expense', () => {
 
     await page.getByRole('button', { name: '刪除' }).click()
     await page.getByRole('button', { name: '確定' }).click()
-    await page.waitForURL(/\/spaces\/.*\/ledger/)
+    await page.waitForURL(/\/spaces\/[^/]+\/ledger$/)
 
     await expect(page.getByText('E2E 晚餐')).not.toBeVisible()
   })
@@ -129,7 +132,7 @@ test.describe('Payment', () => {
     await amountInput.fill('500')
 
     await page.getByRole('button', { name: '儲存付款' }).click()
-    await page.waitForURL(/\/spaces\/.*\/ledger/)
+    await page.waitForURL(/\/spaces\/[^/]+\/ledger$/)
 
     await expect(page.getByText('E2E 測試付款')).toBeVisible()
   })
@@ -144,7 +147,7 @@ test.describe('Comparison (Stores & Products)', () => {
     await page.goto(`/spaces/${spaceId}/stores/add`)
     await page.getByPlaceholder('例如：唐吉訶德、大國藥妝').fill('E2E 測試商店')
     await page.getByRole('button', { name: '建立店家' }).click()
-    await page.waitForURL(/\/spaces\/.*\/stores/)
+    await page.waitForURL(/\/spaces\/[^/]+\/stores$/)
 
     await expect(page.getByText('E2E 測試商店')).toBeVisible()
   })

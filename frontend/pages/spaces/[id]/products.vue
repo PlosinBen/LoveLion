@@ -56,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
@@ -123,5 +123,11 @@ onMounted(async () => {
     detailStore.fetchSpace(),
     detailStore.fetchProducts()
   ])
+})
+
+// Parent route stays mounted across overlay navigations; refetch when child
+// pages signal the list is stale via detailStore.invalidate('products').
+watch(() => detailStore.fetched.products, (v) => {
+  if (v === false) detailStore.fetchProducts()
 })
 </script>
