@@ -8,9 +8,9 @@
       leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
-      <div v-if="visible" class="fixed inset-0 z-[100] flex items-end justify-center">
+      <div v-if="visible" class="fixed inset-0 z-30 flex items-end justify-center">
         <div class="absolute inset-0 bg-black/60" @click="$emit('close')"></div>
-        <div class="relative w-full max-w-lg bg-neutral-900 border-t border-neutral-800 rounded-t-2xl shadow-2xl max-h-[70vh] flex flex-col">
+        <div class="relative w-full max-w-lg bg-neutral-900 border-t border-neutral-800 rounded-t-2xl shadow-2xl max-h-3/4 flex flex-col">
           <!-- Header -->
           <div class="flex justify-between items-center p-4 border-b border-neutral-800 shrink-0">
             <span class="text-sm font-bold text-white">套用模板</span>

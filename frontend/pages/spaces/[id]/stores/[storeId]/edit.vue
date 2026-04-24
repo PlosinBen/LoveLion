@@ -44,7 +44,7 @@
           <BaseButton
             type="submit"
             variant="primary"
-            class="flex-[2]"
+            class="flex-2"
           >
             儲存變更
           </BaseButton>
