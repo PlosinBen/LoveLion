@@ -1,4 +1,5 @@
 <template>
+  <OverlayPage>
   <div class="add-product-page">
     <PageTitle
       title="新增商品"
@@ -56,6 +57,7 @@
       </BaseButton>
     </form>
   </div>
+  </OverlayPage>
 </template>
 
 <script setup lang="ts">
@@ -68,10 +70,6 @@ import PageTitle from '~/components/PageTitle.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
 import BaseCard from '~/components/BaseCard.vue'
-
-definePageMeta({
-  layout: 'default'
-})
 
 const router = useRouter()
 const route = useRoute()

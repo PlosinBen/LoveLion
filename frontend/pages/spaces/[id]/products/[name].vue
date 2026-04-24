@@ -1,4 +1,5 @@
 <template>
+  <OverlayPage>
   <div class="product-view-page">
     <PageTitle
       :title="productName"
@@ -61,6 +62,7 @@
       </div>
     </div>
   </div>
+  </OverlayPage>
 </template>
 
 <script setup lang="ts">

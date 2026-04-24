@@ -23,7 +23,7 @@ export default defineNuxtConfig({
     },
   },
   
-  // css: ['~/assets/css/main.css'],
+  css: ['~/assets/css/transitions.css'],
 
   postcss: {
     plugins: {

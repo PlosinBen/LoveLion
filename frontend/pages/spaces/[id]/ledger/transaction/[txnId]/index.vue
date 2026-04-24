@@ -1,4 +1,5 @@
 <template>
+  <OverlayPage>
   <div class="transaction-detail">
     <PageTitle
       title="交易詳情"
@@ -142,6 +143,7 @@
       </div>
     </div>
   </div>
+  </OverlayPage>
 </template>
 
 <script setup lang="ts">
@@ -157,9 +159,6 @@ import PageTitle from '~/components/PageTitle.vue'
 import BaseCard from '~/components/BaseCard.vue'
 import type { Transaction } from '~/types'
 
-definePageMeta({
-  path: '/spaces/:id/ledger/transaction/:txnId'
-})
 
 const router = useRouter()
 const route = useRoute()

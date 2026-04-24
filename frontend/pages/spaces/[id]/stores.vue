@@ -1,0 +1,77 @@
+<template>
+  <div class="stores-page">
+    <PageTitle
+      title="商店"
+      :settings-to="`/spaces/${route.params.id}/settings`"
+      :breadcrumbs="[{ label: '我的空間', to: '/' }, { label: detailStore.space?.name || '空間', to: `/spaces/${route.params.id}/stats` }]"
+    />
+
+    <!-- View Toggle via URL -->
+    <BaseSegmentControl
+      :options="[
+        { label: '按商店', to: `/spaces/${route.params.id}/stores` },
+        { label: '按商品', to: `/spaces/${route.params.id}/products` }
+      ]"
+    />
+
+    <div v-if="detailStore.loading.stores" class="flex justify-center items-center py-20 text-neutral-500">
+      <Icon icon="mdi:loading" class="text-3xl animate-spin" />
+    </div>
+
+    <!-- Stores View -->
+    <div v-if="detailStore.stores.length === 0" class="flex flex-col items-center justify-center py-20 bg-neutral-900 rounded-2xl border border-neutral-800 border-dashed text-neutral-500">
+      <Icon icon="mdi:store-plus-outline" class="text-5xl mb-4 opacity-20" />
+      <p class="text-sm">尚未建立任何商店紀錄</p>
+      <NuxtLink :to="`/spaces/${route.params.id}/stores/add`" class="mt-6 inline-flex justify-center items-center px-4 py-2.5 text-sm rounded bg-indigo-500 text-white font-bold hover:bg-indigo-600 no-underline shadow-lg transition-all active:scale-95">立即新增</NuxtLink>
+    </div>
+
+    <div v-else class="flex flex-col gap-4">
+      <BaseCard
+        v-for="s in detailStore.stores"
+        :key="s.id"
+        @click="router.push(`/spaces/${route.params.id}/stores/${s.id}`)"
+        class="flex items-center justify-between cursor-pointer hover:bg-neutral-800 transition-colors"
+      >
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center text-indigo-400 border border-neutral-700">
+              <Icon icon="mdi:store-outline" class="text-xl" />
+            </div>
+            <div class="flex flex-col">
+              <span class="font-bold text-white text-sm">{{ s.name }}</span>
+              <span class="text-xs text-neutral-500 font-medium mt-0.5">{{ s.products?.length || 0 }} 個商品</span>
+            </div>
+        </div>
+        <Icon icon="mdi:chevron-right" class="text-neutral-700 text-xl" />
+      </BaseCard>
+    </div>
+
+    <!-- FAB for adding store -->
+    <BaseFab @click="router.push(`/spaces/${route.params.id}/stores/add`)" />
+  </div>
+
+  <Transition name="slide-right">
+    <NuxtPage />
+  </Transition>
+</template>
+
+<script setup lang="ts">
+import { onMounted } from 'vue'
+import { Icon } from '@iconify/vue'
+import { useSpaceDetailStore } from '~/stores/spaceDetail'
+import PageTitle from '~/components/PageTitle.vue'
+import BaseFab from '~/components/BaseFab.vue'
+import BaseSegmentControl from '~/components/BaseSegmentControl.vue'
+import BaseCard from '~/components/BaseCard.vue'
+
+const route = useRoute()
+const router = useRouter()
+const detailStore = useSpaceDetailStore()
+
+onMounted(async () => {
+  detailStore.setSpaceId(route.params.id as string)
+  await Promise.all([
+    detailStore.fetchSpace(),
+    detailStore.fetchStores()
+  ])
+})
+</script>

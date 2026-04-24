@@ -1,4 +1,5 @@
 <template>
+  <OverlayPage>
   <div class="edit-transaction-page">
     <PageTitle
       title="編輯交易"
@@ -113,6 +114,7 @@
       />
     </div>
   </div>
+  </OverlayPage>
 </template>
 
 <script setup lang="ts">
@@ -129,10 +131,6 @@ import AiStatusBadge from '~/components/AiStatusBadge.vue'
 import type { Transaction } from '~/types'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 
-definePageMeta({
-  path: '/spaces/:id/ledger/transaction/:txnId/edit',
-  layout: 'default'
-})
 
 const router = useRouter()
 const route = useRoute()

@@ -435,10 +435,9 @@ func (s *TransactionService) UpdateExpense(ctx context.Context, txnID string, sp
 	if currentAIStatus == aiStatusPending || currentAIStatus == aiStatusProcessing {
 		return nil, errorx.Wrap(errorx.ErrConflict, "Transaction is being processed by AI, cannot update")
 	}
-	// When re-running AI on a failed row we want the worker to repopulate
-	// items from scratch, so clear any items the caller sent.
-	rerunAI := currentAIStatus == aiStatusFailed && input.AIExtract
-	if rerunAI {
+	// When re-running AI we want the worker to repopulate items from
+	// scratch, so clear any items the caller sent.
+	if input.AIExtract {
 		input.Expense.Items = nil
 	}
 
@@ -509,20 +508,25 @@ func (s *TransactionService) UpdateExpense(ctx context.Context, txnID string, sp
 			return err
 		}
 
-		// ai_status transitions (only relevant when the row was previously `failed`):
-		//   failed + ai_extract=true  → pending (worker re-runs)
-		//   failed + ai_extract=false → NULL    (user is editing manually)
-		// NULL / completed rows are left untouched.
-		if currentAIStatus == aiStatusFailed {
-			updates := map[string]interface{}{"ai_error": gorm.Expr("NULL")}
-			if input.AIExtract {
-				updates["ai_status"] = aiStatusPending
-			} else {
-				updates["ai_status"] = gorm.Expr("NULL")
-			}
+		// ai_status transitions:
+		//   ai_extract=true  → pending (worker picks up)
+		//   failed + ai_extract=false → NULL (user editing manually)
+		if input.AIExtract {
 			if err := tx.Model(&models.Transaction{}).
 				Where("id = ?", txnID).
-				Updates(updates).Error; err != nil {
+				Updates(map[string]interface{}{
+					"ai_status": aiStatusPending,
+					"ai_error":  gorm.Expr("NULL"),
+				}).Error; err != nil {
+				return err
+			}
+		} else if currentAIStatus == aiStatusFailed {
+			if err := tx.Model(&models.Transaction{}).
+				Where("id = ?", txnID).
+				Updates(map[string]interface{}{
+					"ai_status": gorm.Expr("NULL"),
+					"ai_error":  gorm.Expr("NULL"),
+				}).Error; err != nil {
 				return err
 			}
 		}

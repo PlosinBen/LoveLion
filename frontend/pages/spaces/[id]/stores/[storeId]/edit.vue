@@ -1,4 +1,5 @@
 <template>
+  <OverlayPage>
   <div class="store-edit-page">
     <PageTitle
       title="編輯商店"
@@ -51,6 +52,7 @@
       </BaseCard>
     </form>
   </div>
+  </OverlayPage>
 </template>
 
 <script setup lang="ts">
@@ -65,10 +67,6 @@ import LinkButton from '~/components/LinkButton.vue'
 import BaseInput from '~/components/BaseInput.vue'
 import BaseTextarea from '~/components/BaseTextarea.vue'
 import BaseCard from '~/components/BaseCard.vue'
-
-definePageMeta({
-  layout: 'default'
-})
 
 const route = useRoute()
 const router = useRouter()

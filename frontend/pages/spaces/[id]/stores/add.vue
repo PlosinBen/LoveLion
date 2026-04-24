@@ -1,4 +1,5 @@
 <template>
+  <OverlayPage>
   <div class="add-store-page">
     <PageTitle
       title="新增店家"
@@ -36,6 +37,7 @@
       </form>
     </div>
   </div>
+  </OverlayPage>
 </template>
 
 <script setup lang="ts">
@@ -46,10 +48,6 @@ import { useToast } from '~/composables/useToast'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import BaseCard from '~/components/BaseCard.vue'
-
-definePageMeta({
-  layout: 'default'
-})
 
 const router = useRouter()
 const route = useRoute()

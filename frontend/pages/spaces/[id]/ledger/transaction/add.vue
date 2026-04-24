@@ -1,4 +1,5 @@
 <template>
+  <OverlayPage>
   <div class="add-transaction-page">
     <PageTitle
       title="新增交易"
@@ -166,6 +167,7 @@
       />
     </ClientOnly>
   </div>
+  </OverlayPage>
 </template>
 
 <script setup lang="ts">
@@ -184,10 +186,6 @@ import TemplatePickerModal from '~/components/TemplatePickerModal.vue'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import type { ExpenseTemplate } from '~/types'
 
-definePageMeta({
-  path: '/spaces/:id/ledger/transaction/add',
-  layout: 'default'
-})
 
 const router = useRouter()
 const route = useRoute()
