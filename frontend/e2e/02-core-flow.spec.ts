@@ -39,7 +39,9 @@ test.describe('Space & Expense', () => {
     }
 
     await page.goto(`/spaces/${spaceId}/ledger/transaction/add`)
-    await page.getByRole('button', { name: '消費' }).click()
+    // .last() targets the type selector on the add page, not the 消費 filter
+    // button on the ledger parent (which now renders behind the overlay).
+    await page.getByRole('button', { name: '消費' }).last().click()
 
     // Fill form
     await page.getByPlaceholder('例如: 午餐、計程車').fill('E2E 午餐')
@@ -116,7 +118,9 @@ test.describe('Payment', () => {
     const spaceId = await enterSpace(page, '2024 東京春櫻季')
 
     await page.goto(`/spaces/${spaceId}/ledger/transaction/add`)
-    await page.getByRole('button', { name: '付款' }).click()
+    // .last() targets the type selector on the add page, not the 付款 filter
+    // button on the ledger parent (which now renders behind the overlay).
+    await page.getByRole('button', { name: '付款' }).last().click()
 
     await page.getByPlaceholder('例如: 小明付款給小美').fill('E2E 測試付款')
 
