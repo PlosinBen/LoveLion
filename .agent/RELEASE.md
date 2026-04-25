@@ -8,8 +8,10 @@ Release 綁定在 Git tag 上，不使用 `gh release create`。
 
 1. 確認所有變更已 commit
 2. Push master 到 origin：`git push origin master`
-3. 建立 tag：`git tag v<版本號>`
-4. Push tag：`git push origin v<版本號>`
+3. **Fetch remote tags 確認最新版本號**：`git fetch --tags origin && git tag --sort=-v:refname | head -5`
+4. 根據最新 tag 決定下一個版本號
+5. 建立 tag：`git tag v<版本號>`
+6. Push tag：`git push origin v<版本號>`
 
 ## 版本號規則
 
