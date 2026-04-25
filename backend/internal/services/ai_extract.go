@@ -347,7 +347,12 @@ func (g *GeminiReceiptExtractor) callAndParse(ctx context.Context, reqBody gemin
 
 	if receipt.Date != nil && *receipt.Date != "" {
 		if t, err := time.Parse("2006-01-02", *receipt.Date); err == nil {
-			out.Date = &t
+			// Receipt dates are date-only; merge with current wall-clock time
+			// so the timestamp isn't stuck at midnight UTC.
+			now := time.Now()
+			merged := time.Date(t.Year(), t.Month(), t.Day(),
+				now.Hour(), now.Minute(), now.Second(), 0, now.Location())
+			out.Date = &merged
 		}
 	}
 
