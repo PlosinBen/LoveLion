@@ -57,6 +57,17 @@
             交易紀錄
             <span v-if="totalCount > 0" class="text-neutral-600 ml-1">({{ totalCount }})</span>
           </h2>
+          <button
+            type="button"
+            @click="toggleAutoRefresh"
+            class="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg border transition-colors"
+            :class="autoRefresh
+              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+              : 'bg-transparent text-neutral-500 border-neutral-700 hover:text-neutral-300'"
+          >
+            <Icon :icon="autoRefresh ? 'mdi:sync' : 'mdi:sync-off'" class="text-sm" :class="{ 'animate-spin': autoRefresh }" />
+            自動更新
+          </button>
         </div>
 
         <div v-if="!loading && filteredTransactions.length === 0" class="bg-neutral-900/50 rounded-2xl border border-neutral-800 border-dashed p-10 flex flex-col items-center justify-center text-neutral-500 text-sm italic">
@@ -69,11 +80,33 @@
             :transaction="txn"
             :space-id="store.space.id"
           />
+        </div>
 
-          <!-- Load more -->
-          <div v-if="hasMore" ref="loadMoreRef" class="flex justify-center py-4">
-            <span v-if="loadingMore" class="text-xs text-neutral-500">載入中...</span>
-          </div>
+        <!-- Pagination -->
+        <div v-if="totalPages > 1" class="flex items-center justify-center gap-3 pt-2">
+          <button
+            type="button"
+            :disabled="currentPage <= 1"
+            @click="goToPage(currentPage - 1)"
+            class="text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors"
+            :class="currentPage <= 1
+              ? 'text-neutral-700 border-neutral-800 cursor-not-allowed'
+              : 'text-neutral-400 border-neutral-700 hover:text-white hover:border-neutral-500'"
+          >
+            上一頁
+          </button>
+          <span class="text-xs text-neutral-500">{{ currentPage }} / {{ totalPages }}</span>
+          <button
+            type="button"
+            :disabled="currentPage >= totalPages"
+            @click="goToPage(currentPage + 1)"
+            class="text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors"
+            :class="currentPage >= totalPages
+              ? 'text-neutral-700 border-neutral-800 cursor-not-allowed'
+              : 'text-neutral-400 border-neutral-700 hover:text-white hover:border-neutral-500'"
+          >
+            下一頁
+          </button>
         </div>
       </section>
     </div>
@@ -88,20 +121,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useApi } from '~/composables/useApi'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
 import PageTitle from '~/components/PageTitle.vue'
 import TransactionListItem from '~/components/TransactionListItem.vue'
 import BaseFab from '~/components/BaseFab.vue'
 import type { Transaction } from '~/types'
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 50
+const AUTO_REFRESH_INTERVAL = 8000
 
 const route = useRoute()
 const router = useRouter()
-const api = useApi()
 const store = useSpaceDetailStore()
 
 const search = ref('')
@@ -110,10 +142,9 @@ const filterCategory = ref('')
 const filteredTransactions = ref<Transaction[]>([])
 const totalCount = ref(0)
 const loading = ref(false)
-const loadingMore = ref(false)
-const offset = ref(0)
-const loadMoreRef = ref<HTMLElement | null>(null)
-let observer: IntersectionObserver | null = null
+const currentPage = ref(1)
+const autoRefresh = ref(false)
+let refreshTimer: ReturnType<typeof setInterval> | null = null
 
 const typeOptions = [
   { label: '消費', value: 'expense' },
@@ -126,7 +157,7 @@ const categories = computed(() => {
 })
 
 const hasFilters = computed(() => search.value || filterType.value || filterCategory.value)
-const hasMore = computed(() => filteredTransactions.value.length < totalCount.value)
+const totalPages = computed(() => Math.max(1, Math.ceil(totalCount.value / PAGE_SIZE)))
 
 const toggleType = (value: string) => {
   filterType.value = filterType.value === value ? '' : value
@@ -136,27 +167,22 @@ const toggleCategory = (value: string) => {
   filterCategory.value = filterCategory.value === value ? '' : value
 }
 
-const buildQuery = (currentOffset: number) => {
+const buildQuery = () => {
   const params = new URLSearchParams()
   params.set('limit', String(PAGE_SIZE))
-  params.set('offset', String(currentOffset))
+  params.set('offset', String((currentPage.value - 1) * PAGE_SIZE))
   if (search.value) params.set('search', search.value)
   if (filterType.value) params.set('type', filterType.value)
   if (filterCategory.value) params.set('category', filterCategory.value)
   return params.toString()
 }
 
-const fetchTransactions = async (append = false) => {
+const fetchTransactions = async () => {
   if (!store.space) return
-  if (append) {
-    loadingMore.value = true
-  } else {
-    loading.value = true
-    offset.value = 0
-  }
+  loading.value = true
 
   try {
-    const query = buildQuery(offset.value)
+    const query = buildQuery()
     const url = `/api/spaces/${store.space.id}/transactions?${query}`
 
     const response = await fetch(url, {
@@ -168,63 +194,51 @@ const fetchTransactions = async (append = false) => {
     const total = parseInt(response.headers.get('X-Total-Count') || '0', 10)
 
     totalCount.value = total
-    if (append) {
-      filteredTransactions.value = [...filteredTransactions.value, ...data]
-    } else {
-      filteredTransactions.value = data
-    }
-    // Mark the shared invalidation flag as fresh so child overlays
-    // (add / edit / delete) can signal us via `store.invalidate('transactions')`
-    // and this watcher will pick up the flip back to false.
+    filteredTransactions.value = data
     store.fetched.transactions = true
   } catch (e) {
     console.error('Failed to fetch transactions:', e)
   } finally {
     loading.value = false
-    loadingMore.value = false
   }
 }
 
-const loadMore = () => {
-  if (loadingMore.value || !hasMore.value) return
-  offset.value += PAGE_SIZE
-  fetchTransactions(true)
+const goToPage = (page: number) => {
+  if (page < 1 || page > totalPages.value) return
+  currentPage.value = page
+  fetchTransactions()
 }
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 const debouncedFetch = () => {
   if (debounceTimer) clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => fetchTransactions(), 300)
+  debounceTimer = setTimeout(() => {
+    currentPage.value = 1
+    fetchTransactions()
+  }, 300)
 }
 
 watch([filterType, filterCategory], () => {
+  currentPage.value = 1
   fetchTransactions()
 })
 
-// Nested-route overlays (add / edit / delete) call store.invalidate('transactions')
-// after mutating. Since this page stays mounted as a parent route, onMounted
-// doesn't re-run — watch the flag and refetch when it flips to false.
 watch(() => store.fetched.transactions, (v) => {
   if (v === false) fetchTransactions()
 })
 
-const setupObserver = () => {
-  observer = new IntersectionObserver((entries) => {
-    if (entries[0]?.isIntersecting) {
-      loadMore()
-    }
-  }, { rootMargin: '200px' })
-}
-
-watch(loadMoreRef, (el) => {
-  if (el && observer) {
-    observer.observe(el)
+const toggleAutoRefresh = () => {
+  autoRefresh.value = !autoRefresh.value
+  if (autoRefresh.value) {
+    refreshTimer = setInterval(() => fetchTransactions(), AUTO_REFRESH_INTERVAL)
+  } else {
+    if (refreshTimer) clearInterval(refreshTimer)
+    refreshTimer = null
   }
-})
+}
 
 onMounted(async () => {
   store.setSpaceId(route.params.id as string)
-  setupObserver()
   try {
     await store.fetchSpace()
     await fetchTransactions()
@@ -234,8 +248,8 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  observer?.disconnect()
   if (debounceTimer) clearTimeout(debounceTimer)
+  if (refreshTimer) clearInterval(refreshTimer)
 })
 </script>
 
