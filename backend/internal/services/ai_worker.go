@@ -327,7 +327,16 @@ func (w *AIWorker) writeSuccess(ctx context.Context, txnID string, data *Receipt
 			"ai_error":  "",
 		}
 		if data.Date != nil {
-			updates["date"] = *data.Date
+			if data.Date.Hour() != 0 || data.Date.Minute() != 0 {
+				updates["date"] = *data.Date
+			} else {
+				var orig models.Transaction
+				if err := tx.Select("date").Where("id = ?", txnID).First(&orig).Error; err == nil {
+					merged := time.Date(data.Date.Year(), data.Date.Month(), data.Date.Day(),
+						orig.Date.Hour(), orig.Date.Minute(), orig.Date.Second(), 0, time.UTC)
+					updates["date"] = merged
+				}
+			}
 		}
 		if overwriteTitle {
 			// Text path: prefer cleaned item name, fall back to LLM title.

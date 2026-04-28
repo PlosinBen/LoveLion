@@ -1,6 +1,11 @@
 import { ref } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useToast } from '~/composables/useToast'
+
+function toLocalISOString(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}Z`
+}
 import type { ExpenseFormData } from '~/components/ExpenseForm.vue'
 import type { PaymentFormData } from '~/components/PaymentForm.vue'
 import type { DebtItem } from '~/components/DebtEditor.vue'
@@ -182,7 +187,7 @@ export function useTransactionForm(spaceId: string) {
     const payload: Record<string, any> = {
       title: form.title,
       total_amount: Number(form.total_amount),
-      date: form.date.toISOString(),
+      date: toLocalISOString(form.date),
       currency: form.currency,
       note: form.note,
       expense: {
@@ -229,7 +234,7 @@ export function useTransactionForm(spaceId: string) {
   const buildPaymentPayload = () => {
     const form = paymentForm.value
     return {
-      date: form.date.toISOString(),
+      date: toLocalISOString(form.date),
       title: form.title,
       note: form.note,
       total_amount: Number(form.total_amount),
