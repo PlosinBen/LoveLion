@@ -20,6 +20,8 @@ type Config struct {
 	R2Bucket       string
 	R2PublicDomain string
 
+	AuthRateLimit int
+
 	// AI receipt extraction
 	GeminiAPIKey           string
 	GeminiModel            string
@@ -42,6 +44,8 @@ func Load() *Config {
 		R2SecretKey:    getEnv("R2_SECRET_ACCESS_KEY", ""),
 		R2Bucket:       getEnv("R2_BUCKET_NAME", ""),
 		R2PublicDomain: getEnv("R2_PUBLIC_DOMAIN", ""),
+
+		AuthRateLimit:          parsePositiveInt(getEnv("AUTH_RATE_LIMIT", "30"), 30),
 
 		GeminiAPIKey:           getEnv("GEMINI_API_KEY", ""),
 		GeminiModel:            getEnv("GEMINI_MODEL", "gemini-2.5-flash"),

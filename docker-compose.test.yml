@@ -22,6 +22,7 @@ services:
       JWT_SECRET: e2e-secret
       PORT: "8080"
       RECEIPT_EXTRACT_ENABLED: "false"
+      AUTH_RATE_LIMIT: "200"
     volumes:
       - ./backend:/app
     depends_on:
