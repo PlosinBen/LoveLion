@@ -63,7 +63,6 @@ export const useSpaceDetailStore = defineStore('spaceDetail', () => {
     loading.value.space = true
     try {
       space.value = await api.get<Space>(`/api/spaces/${spaceId.value}`)
-      members.value = space.value.members || []
       fetched.value.space = true
     } catch (e) {
       console.error('Failed to fetch space:', e)

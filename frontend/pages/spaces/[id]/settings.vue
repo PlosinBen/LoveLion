@@ -364,7 +364,7 @@ const handleUpdateAlias = async () => {
     if (!selectedMember.value) return
     showLoading()
     try {
-        await api.put(`/api/spaces/${spaceId}/members/${selectedMember.value.user_id}`, {
+        await api.patch(`/api/spaces/${spaceId}/members/${selectedMember.value.user_id}`, {
             alias: aliasValue.value
         })
         showAliasModal.value = false

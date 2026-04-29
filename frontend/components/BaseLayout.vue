@@ -16,7 +16,7 @@
     </main>
 
     <!-- Optional Footer Slot (BottomNav) -->
-    <footer v-if="$slots.footer" class="fixed bottom-0 left-0 right-0 z-50 pointer-events-none" :class="footerClass">
+    <footer v-if="$slots.footer" class="fixed bottom-0 left-0 right-0 z-30 pointer-events-none" :class="footerClass">
       <div class="pointer-events-auto">
         <slot name="footer" />
       </div>

@@ -106,7 +106,8 @@ const fetchData = async () => {
 const handleUpdate = async () => {
   showLoading()
   try {
-    await api.patch(`/api/spaces/${spaceId}/stores/${storeId}`, form.value)
+    await api.put(`/api/spaces/${spaceId}/stores/${storeId}`, form.value)
+    detailStore.invalidate('stores')
     router.push(`/spaces/${spaceId}/stores/${storeId}`)
   } catch (e: any) {
     toast.error(e.message || '儲存失敗')

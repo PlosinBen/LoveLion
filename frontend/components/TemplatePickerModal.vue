@@ -8,7 +8,7 @@
       leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
-      <div v-if="visible" class="fixed inset-0 z-30 flex items-end justify-center">
+      <div v-if="visible" class="fixed inset-0 z-40 flex items-end justify-center">
         <div class="absolute inset-0 bg-black/60" @click="$emit('close')"></div>
         <div class="relative w-full max-w-lg bg-neutral-900 border-t border-neutral-800 rounded-t-2xl shadow-2xl max-h-3/4 flex flex-col">
           <!-- Header -->

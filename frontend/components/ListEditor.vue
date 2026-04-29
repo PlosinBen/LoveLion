@@ -2,12 +2,11 @@
   <div class="flex flex-col gap-3">
     <label class="text-sm text-neutral-400">{{ label }}</label>
 
-    <div class="relative">
+    <div class="relative" @keydown.enter.prevent="add">
       <BaseInput
         v-model="newItem"
         :placeholder="placeholder"
         class="pr-10"
-        @keydown.enter.prevent="add"
       />
       <button
         type="button"
