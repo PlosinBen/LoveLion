@@ -108,7 +108,7 @@ test.describe('Space & Expense', () => {
     await page.getByRole('button', { name: '確定' }).click()
     await page.waitForURL(/\/spaces\/[^/]+\/ledger$/)
 
-    await expect(page.getByText('E2E 晚餐')).not.toBeVisible()
+    await expect(page.locator('h4', { hasText: 'E2E 晚餐' })).not.toBeVisible()
   })
 })
 
