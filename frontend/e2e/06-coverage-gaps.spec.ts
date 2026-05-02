@@ -58,7 +58,7 @@ test.describe('Products Comparison', () => {
 
     await page.getByText('一蘭拉麵泡麵').first().click()
     await expect(page.getByText('價格對比')).toBeVisible()
-    await expect(page.getByText('唐吉軻德 澀谷店')).toBeVisible()
+    await expect(page.getByText('唐吉軻德 澀谷本店')).toBeVisible()
     await expect(page.getByText('Bic Camera 新宿')).toBeVisible()
     await expect(page.getByText('最便宜')).toBeVisible()
     // Cheapest is 1,850 JPY at Donki

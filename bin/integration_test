@@ -57,8 +57,23 @@ echo "🧪 Running integration tests..."
 docker compose exec backend go test -v -tags integration -count=1 ./integration/...
 echo "✅ All integration tests passed"
 
+# Step 10: Promote dev to admin (needed for announcement e2e tests)
 echo ""
-echo "🎉 Integration test passed!"
+echo "👑 Promoting dev user to admin..."
+docker compose exec postgres psql -U postgres -d lovelion -c "UPDATE users SET role = 'admin' WHERE username = 'dev';"
+
+# Step 11: E2E tests (Playwright)
+echo ""
+echo "🎭 Running E2E tests..."
+# Ensure backend is up-to-date and healthy before spawning playwright
+docker compose up -d backend
+echo "⏳ Waiting for backend to be ready..."
+until docker compose exec -T backend wget -q --spider http://localhost:8080/api/announcements 2>/dev/null; do sleep 2; done
+docker compose run --rm playwright sh -c "npm install --prefer-offline --silent 2>/dev/null && npx playwright test --reporter=list"
+echo "✅ All E2E tests passed"
+
+echo ""
+echo "🎉 All tests passed!"
 echo ""
 echo "📝 Test account:"
 echo "   Username: dev"

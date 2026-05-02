@@ -33,6 +33,7 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
       RECEIPT_EXTRACT_RATE_LIMIT_PER_DAY: ${RECEIPT_EXTRACT_RATE_LIMIT_PER_DAY:-20}
+      AUTH_RATE_LIMIT: ${AUTH_RATE_LIMIT:-200}
     ports:
       - "8080:8080"
     volumes:
@@ -56,6 +57,18 @@ services:
     depends_on:
       - backend
     command: sh -c "npm install && npm run dev"
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.52.0-noble
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    environment:
+      BASE_URL: http://frontend:3000
+    depends_on:
+      - frontend
+    profiles:
+      - test
 
 volumes:
   postgres_data:

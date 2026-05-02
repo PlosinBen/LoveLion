@@ -157,7 +157,7 @@ test.describe('Product Deletion', () => {
     // First, add a temporary product via API
     const token = await page.evaluate(() => localStorage.getItem('token'))
 
-    // Get the first store (唐吉軻德 澀谷店)
+    // Get the first store (唐吉軻德 澀谷本店)
     const storesRes = await page.request.get(`/api/spaces/${spaceId}/stores`, {
       headers: { Authorization: `Bearer ${token}` },
     })

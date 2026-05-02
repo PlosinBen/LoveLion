@@ -45,7 +45,7 @@ func Load() *Config {
 		R2Bucket:       getEnv("R2_BUCKET_NAME", ""),
 		R2PublicDomain: getEnv("R2_PUBLIC_DOMAIN", ""),
 
-		AuthRateLimit:          parsePositiveInt(getEnv("AUTH_RATE_LIMIT", "30"), 30),
+		AuthRateLimit: parsePositiveInt(getEnv("AUTH_RATE_LIMIT", "30"), 30),
 
 		GeminiAPIKey:           getEnv("GEMINI_API_KEY", ""),
 		GeminiModel:            getEnv("GEMINI_MODEL", "gemini-2.5-flash"),

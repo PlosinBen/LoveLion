@@ -127,8 +127,8 @@ test.describe('Payment', () => {
     // Select payer and payee by member name
     const payerSelect = page.locator('select').first()
     const payeeSelect = page.locator('select').nth(1)
-    await payerSelect.selectOption('Antigravity')
-    await payeeSelect.selectOption('小明')
+    await payerSelect.selectOption('我')
+    await payeeSelect.selectOption('老婆')
 
     // Fill amount
     const amountInput = page.locator('label:has-text("金額")').locator('..').getByRole('spinbutton')

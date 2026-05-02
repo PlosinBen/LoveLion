@@ -190,7 +190,7 @@ const formatAmount = (amount: string | number) => {
 }
 
 const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr)
+  const date = parseNaiveDate(dateStr)
   return date.toLocaleString('zh-TW', {
     year: 'numeric',
     month: 'long',

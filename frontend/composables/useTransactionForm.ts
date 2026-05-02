@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useToast } from '~/composables/useToast'
+import { parseNaiveDate } from '~/utils/date'
 
 function toLocalISOString(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -103,7 +104,7 @@ export function useTransactionForm(spaceId: string) {
     if (txn.type === 'expense' && txn.expense) {
       const itemsData = txn.expense.items || []
       expenseForm.value = {
-        date: new Date(txn.date),
+        date: parseNaiveDate(txn.date),
         title: txn.title,
         total_amount: Number(txn.total_amount),
         category: txn.expense.category,
@@ -136,7 +137,7 @@ export function useTransactionForm(spaceId: string) {
     } else if (txn.type === 'payment') {
       const debt = txn.debts?.[0]
       paymentForm.value = {
-        date: new Date(txn.date),
+        date: parseNaiveDate(txn.date),
         title: txn.title,
         payer_name: debt?.payer_name || '',
         payee_name: debt?.payee_name || '',
