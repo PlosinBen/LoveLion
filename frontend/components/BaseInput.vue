@@ -4,6 +4,7 @@
     <input
       :value="modelValue"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
+      @focus="type === 'number' && ($event.target as HTMLInputElement).select()"
       :type="type"
       :placeholder="placeholder"
       :required="required"

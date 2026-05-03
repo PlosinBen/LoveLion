@@ -62,23 +62,25 @@ type ExpenseDetailRequest struct {
 }
 
 type CreateExpenseRequest struct {
-	Date      *time.Time           `json:"date"`
-	Currency  string               `json:"currency"`
-	Title     string               `json:"title"`
-	Note      string               `json:"note"`
-	Expense   ExpenseDetailRequest `json:"expense"`
-	Debts     []DebtRequest        `json:"debts"`
-	AIExtract bool                 `json:"ai_extract"`
+	Date        *time.Time           `json:"date"`
+	Currency    string               `json:"currency"`
+	TotalAmount decimal.Decimal      `json:"total_amount"`
+	Title       string               `json:"title"`
+	Note        string               `json:"note"`
+	Expense     ExpenseDetailRequest `json:"expense"`
+	Debts       []DebtRequest        `json:"debts"`
+	AIExtract   bool                 `json:"ai_extract"`
 }
 
 type UpdateExpenseRequest struct {
-	Date      *time.Time           `json:"date"`
-	Currency  string               `json:"currency"`
-	Title     string               `json:"title"`
-	Note      string               `json:"note"`
-	Expense   ExpenseDetailRequest `json:"expense"`
-	Debts     []DebtRequest        `json:"debts"`
-	AIExtract bool                 `json:"ai_extract"`
+	Date        *time.Time           `json:"date"`
+	Currency    string               `json:"currency"`
+	TotalAmount *decimal.Decimal     `json:"total_amount"`
+	Title       string               `json:"title"`
+	Note        string               `json:"note"`
+	Expense     ExpenseDetailRequest `json:"expense"`
+	Debts       []DebtRequest        `json:"debts"`
+	AIExtract   bool                 `json:"ai_extract"`
 }
 
 func toExpenseItemInputs(reqs []ExpenseItemRequest) []services.ExpenseItemInput {
@@ -147,10 +149,11 @@ func (h *ExpenseHandler) Create(c *gin.Context) {
 	}
 
 	txn, err := h.svc.CreateExpense(c.Request.Context(), space.ID, services.CreateExpenseInput{
-		Date:     req.Date,
-		Currency: req.Currency,
-		Title:    req.Title,
-		Note:     req.Note,
+		Date:        req.Date,
+		Currency:    req.Currency,
+		TotalAmount: req.TotalAmount,
+		Title:       req.Title,
+		Note:        req.Note,
 		Expense: services.ExpenseInput{
 			Category:      req.Expense.Category,
 			ExchangeRate:  req.Expense.ExchangeRate,
@@ -298,10 +301,11 @@ func (h *ExpenseHandler) Update(c *gin.Context) {
 	}
 
 	txn, err := h.svc.UpdateExpense(c.Request.Context(), txnID, space.ID, services.UpdateExpenseInput{
-		Date:     req.Date,
-		Currency: req.Currency,
-		Title:    req.Title,
-		Note:     req.Note,
+		Date:        req.Date,
+		Currency:    req.Currency,
+		TotalAmount: req.TotalAmount,
+		Title:       req.Title,
+		Note:        req.Note,
 		Expense: services.ExpenseInput{
 			Category:      req.Expense.Category,
 			ExchangeRate:  req.Expense.ExchangeRate,

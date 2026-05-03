@@ -88,14 +88,15 @@ type ImageUpload struct {
 }
 
 type CreateExpenseInput struct {
-	Date      *time.Time
-	Currency  string
-	Title     string
-	Note      string
-	Expense   ExpenseInput
-	Debts     []DebtInput
-	Images    []ImageUpload // optional — uploaded to R2 in the same tx
-	AIExtract bool          // when true, ai_status is set to pending for worker pickup
+	Date        *time.Time
+	Currency    string
+	TotalAmount decimal.Decimal
+	Title       string
+	Note        string
+	Expense     ExpenseInput
+	Debts       []DebtInput
+	Images      []ImageUpload // optional — uploaded to R2 in the same tx
+	AIExtract   bool          // when true, ai_status is set to pending for worker pickup
 }
 
 type UpdateExpenseInput struct {
@@ -253,8 +254,11 @@ func (s *TransactionService) CreateExpense(ctx context.Context, spaceID uuid.UUI
 
 	expenseID := uuid.New()
 
-	// Build items and calculate total
+	// Build items and calculate total; fall back to user-provided total when no items
 	items, totalAmount := buildExpenseItems(expenseID, input.Expense.Items)
+	if totalAmount.IsZero() && input.TotalAmount.IsPositive() {
+		totalAmount = input.TotalAmount
+	}
 
 	currency := input.Currency
 	if currency == "" {
@@ -470,6 +474,9 @@ func (s *TransactionService) UpdateExpense(ctx context.Context, txnID string, sp
 			if err := itemRepo.BatchCreate(ctx, items); err != nil {
 				return err
 			}
+		}
+		if totalAmount.IsZero() && input.TotalAmount != nil && input.TotalAmount.IsPositive() {
+			totalAmount = *input.TotalAmount
 		}
 		params.TotalAmount = &totalAmount
 
