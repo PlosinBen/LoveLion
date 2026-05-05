@@ -235,6 +235,52 @@ func main() {
 			images.PUT("/order", imageHandler.Reorder)
 			images.DELETE("/:id", imageHandler.Delete)
 		}
+
+		// Investment routes
+		investments := api.Group("/investments")
+		investments.Use(middleware.AuthRequiredWithDB(cfg.JWTSecret, db), middleware.InvestmentAccess(db))
+		{
+			invHandler := handlers.NewInvestmentHandler(db)
+
+			// Allocations (all members can access)
+			investments.GET("/allocations", invHandler.ListAllocations)
+
+			// Owner-only routes
+			invOwner := investments.Group("")
+			invOwner.Use(middleware.InvestmentOwnerOnly())
+			{
+				// Members
+				invOwner.GET("/members", invHandler.ListMembers)
+				invOwner.POST("/members", invHandler.CreateMember)
+				invOwner.PUT("/members/:id", invHandler.UpdateMember)
+
+				// Settlements
+				invOwner.GET("/settlements", invHandler.ListSettlements)
+				invOwner.POST("/settlements", invHandler.CreateSettlement)
+				invOwner.GET("/settlements/:ym", invHandler.GetSettlement)
+				invOwner.PUT("/settlements/:ym/complete", invHandler.CompleteSettlement)
+				invOwner.PUT("/settlements/:ym/reopen", invHandler.ReopenSettlement)
+				invOwner.DELETE("/settlements/:ym", invHandler.DeleteSettlement)
+
+				// Futures
+				invOwner.PUT("/settlements/:ym/futures", invHandler.UpsertFutures)
+
+				// Stocks
+				invOwner.PUT("/settlements/:ym/stocks", invHandler.UpsertStocks)
+
+				// Member transactions
+				invOwner.GET("/members/transactions", invHandler.ListMemberTransactions)
+				invOwner.POST("/members/transactions", invHandler.CreateMemberTransaction)
+				invOwner.PUT("/members/transactions/:id", invHandler.UpdateMemberTransaction)
+				invOwner.DELETE("/members/transactions/:id", invHandler.DeleteMemberTransaction)
+
+				// Stock trades
+				invOwner.GET("/stocks/trades", invHandler.ListStockTrades)
+				invOwner.POST("/stocks/trades", invHandler.CreateStockTrade)
+				invOwner.PUT("/stocks/trades/:id", invHandler.UpdateStockTrade)
+				invOwner.DELETE("/stocks/trades/:id", invHandler.DeleteStockTrade)
+			}
+		}
 	}
 	// Start server with graceful shutdown
 	port := cfg.Port

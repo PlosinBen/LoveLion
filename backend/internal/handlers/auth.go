@@ -180,7 +180,21 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	var invMember models.InvMember
+	invAccess := h.db.Where("user_id = ? AND active = ?", userID, true).First(&invMember).Error == nil
+	invIsOwner := invAccess && invMember.IsOwner
+
+	type meResponse struct {
+		models.User
+		InvAccess  bool `json:"inv_access"`
+		InvIsOwner bool `json:"inv_is_owner"`
+	}
+
+	c.JSON(http.StatusOK, meResponse{
+		User:       user,
+		InvAccess:  invAccess,
+		InvIsOwner: invIsOwner,
+	})
 }
 
 func (h *AuthHandler) UpdateMe(c *gin.Context) {

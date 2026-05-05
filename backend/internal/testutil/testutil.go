@@ -84,6 +84,14 @@ func TestDB(t *testing.T) *gorm.DB {
 		&models.TransactionDebt{},
 		&models.ComparisonStore{},
 		&models.ComparisonProduct{},
+		&models.InvMember{},
+		&models.InvSettlement{},
+		&models.InvMemberTransaction{},
+		&models.InvSettlementAllocation{},
+		&models.InvFuturesStatement{},
+		&models.InvStockStatement{},
+		&models.InvStockHolding{},
+		&models.InvStockTrade{},
 	)
 	if err != nil {
 		t.Fatalf("Failed to migrate test database: %v", err)

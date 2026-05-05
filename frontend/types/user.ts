@@ -3,6 +3,8 @@ export interface User {
   username: string
   display_name: string
   role: string
+  inv_access?: boolean
+  inv_is_owner?: boolean
   created_at: string
   updated_at: string
 }
