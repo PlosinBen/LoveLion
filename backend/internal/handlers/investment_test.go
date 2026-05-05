@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"lovelion/internal/middleware"
 	"lovelion/internal/models"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -525,4 +527,98 @@ func TestAllocationPreview_OwnerAbsorbsRemainder(t *testing.T) {
 	assert.Equal(t, 2529, aAlloc.Amount)
 	assert.Equal(t, 843, bAlloc.Amount)
 	assert.Equal(t, totalPL-2529-843, ownerAlloc.Amount) // 8431
+}
+
+func TestCompleteSettlement_WritesProfitLossTransactions(t *testing.T) {
+	r, handler, _, _ := setupInvestmentTest(t)
+
+	handler.db.Create(&models.InvSettlement{YearMonth: "2026-05", Status: "draft"})
+	handler.db.Create(&models.InvFuturesStatement{YearMonth: "2026-05", ProfitLoss: 8000})
+	handler.db.Create(&models.InvStockStatement{YearMonth: "2026-05", ProfitLoss: 2000})
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/api/investments/settlements/2026-05/complete", nil)
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	// Verify profit_loss member_transaction was created for the owner
+	var txns []models.InvMemberTransaction
+	handler.db.Where("type = ? AND member_id = ?", "profit_loss", "test-owner-001").Find(&txns)
+	require.Len(t, txns, 1)
+	assert.Equal(t, 10000, txns[0].Amount)
+	// Date should be last day of month
+	assert.Equal(t, "2026-05-31", txns[0].Date.Format("2006-01-02"))
+}
+
+func TestListAllocations_RangeFilter(t *testing.T) {
+	db := testutil.TestDB(t)
+	handler := NewInvestmentHandler(db)
+
+	user := testutil.CreateTestUser(t, db)
+	member := &models.InvMember{ID: "owner-001", Name: "Owner", UserID: &user.ID, IsOwner: true, Active: true}
+	db.Create(member)
+
+	db.Create(&models.InvSettlement{YearMonth: "2026-03", Status: "completed"})
+	db.Create(&models.InvSettlement{YearMonth: "2026-04", Status: "completed"})
+	db.Create(&models.InvSettlement{YearMonth: "2026-05", Status: "completed"})
+	db.Create(&models.InvSettlementAllocation{YearMonth: "2026-03", MemberID: "owner-001", Amount: 1000, Balance: 51000})
+	db.Create(&models.InvSettlementAllocation{YearMonth: "2026-04", MemberID: "owner-001", Amount: 2000, Balance: 53000})
+	db.Create(&models.InvSettlementAllocation{YearMonth: "2026-05", MemberID: "owner-001", Amount: 3000, Balance: 56000})
+
+	r := testutil.TestRouter()
+	inv := r.Group("/api/investments")
+	inv.Use(testutil.AuthContext(user.ID), middleware.InvestmentAccess(db))
+	inv.GET("/allocations", handler.ListAllocations)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/investments/allocations?from=2026-04&to=2026-05", nil)
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var allocs []models.InvSettlementAllocation
+	json.Unmarshal(w.Body.Bytes(), &allocs)
+	require.Len(t, allocs, 2)
+	assert.Equal(t, "2026-05", allocs[0].YearMonth)
+	assert.Equal(t, "2026-04", allocs[1].YearMonth)
+}
+
+func TestListStockTrades_DateFilter(t *testing.T) {
+	r, handler, _, _ := setupInvestmentTest(t)
+
+	handler.db.Create(&models.InvStockTrade{
+		TradeDate: time.Date(2026, 4, 15, 0, 0, 0, 0, time.UTC),
+		Symbol:    "2330", Shares: 1000, Price: decimal.NewFromFloat(600),
+	})
+	handler.db.Create(&models.InvStockTrade{
+		TradeDate: time.Date(2026, 5, 10, 0, 0, 0, 0, time.UTC),
+		Symbol:    "2317", Shares: -500, Price: decimal.NewFromFloat(120),
+	})
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/investments/stocks/trades?from=2026-05-01&to=2026-05-31", nil)
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var trades []models.InvStockTrade
+	json.Unmarshal(w.Body.Bytes(), &trades)
+	require.Len(t, trades, 1)
+	assert.Equal(t, "2317", trades[0].Symbol)
+}
+
+func TestReopenSettlement_ClearsAllocations(t *testing.T) {
+	r, handler, _, _ := setupInvestmentTest(t)
+
+	handler.db.Create(&models.InvSettlement{YearMonth: "2026-05", Status: "completed", TotalProfitLoss: 10000})
+	handler.db.Create(&models.InvSettlementAllocation{YearMonth: "2026-05", MemberID: "test-owner-001", Amount: 10000, Balance: 60000})
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("PUT", "/api/investments/settlements/2026-05/reopen", nil)
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var allocs []models.InvSettlementAllocation
+	handler.db.Where("year_month = ?", "2026-05").Find(&allocs)
+	assert.Empty(t, allocs)
 }
