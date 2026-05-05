@@ -65,7 +65,7 @@
               ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
               : 'bg-transparent text-neutral-500 border-neutral-700 hover:text-neutral-300'"
           >
-            <Icon :icon="autoRefresh ? 'mdi:sync' : 'mdi:sync-off'" class="text-sm" :class="{ 'animate-spin': autoRefresh }" />
+            <Icon :icon="autoRefresh ? 'mdi:sync' : 'mdi:sync-off'" class="text-sm" :class="{ 'animate-spin': autoRefresh && loading }" />
             自動更新
           </button>
         </div>
