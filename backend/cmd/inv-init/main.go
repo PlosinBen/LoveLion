@@ -165,6 +165,13 @@ func main() {
 	// [4] Members & initial balances
 	fmt.Println("[4] 成員初始值")
 
+	type memberBalance struct {
+		id      string
+		balance int
+		deposit int
+	}
+	var allMembers []memberBalance
+
 	// Owner's initial balance
 	fmt.Printf("  --- %s (owner) ---\n", ownerMember.Name)
 	ownerBalance := askInt("  初始結餘", 0)
@@ -172,6 +179,7 @@ func main() {
 		createDeposit(db, ownerMember.ID, baseDate, ownerBalance)
 		fmt.Printf("  ✓ 入金 %s @ %s (繼承舊檔)\n", formatNumber(ownerBalance), baseDate.Format("2006-01-02"))
 	}
+	allMembers = append(allMembers, memberBalance{id: ownerMember.ID, balance: ownerBalance, deposit: ownerBalance})
 	fmt.Println()
 
 	// Additional members
@@ -204,8 +212,24 @@ func main() {
 			createDeposit(db, id, baseDate, balance)
 			fmt.Printf("  ✓ 入金 %s @ %s (繼承舊檔)\n", formatNumber(balance), baseDate.Format("2006-01-02"))
 		}
+		allMembers = append(allMembers, memberBalance{id: id, balance: balance, deposit: balance})
 		fmt.Println()
 	}
+
+	// Write baseline allocations so next month has prevBalances
+	fmt.Println("[5] 寫入基準期分配紀錄")
+	for _, mb := range allMembers {
+		alloc := models.InvSettlementAllocation{
+			YearMonth:  baseYM,
+			MemberID:   mb.id,
+			Balance:    mb.balance,
+			Deposit:    mb.deposit,
+		}
+		if err := db.Create(&alloc).Error; err != nil {
+			log.Fatalf("create baseline allocation: %v", err)
+		}
+	}
+	fmt.Printf("  ✓ 已寫入 %d 筆基準期分配\n", len(allMembers))
 
 	fmt.Println()
 	fmt.Println("✓ 初始化完成")

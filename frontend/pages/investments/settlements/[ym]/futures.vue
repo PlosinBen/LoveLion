@@ -10,8 +10,11 @@
       <div v-for="field in fields" :key="field.key" class="flex flex-col gap-1">
         <label class="text-xs font-bold text-neutral-400">{{ field.label }}</label>
         <input
-          v-model.number="form[field.key]"
-          type="number"
+          :value="form[field.key]"
+          @input="form[field.key] = toNum(($event.target as HTMLInputElement).value)"
+          @focus="($event.target as HTMLInputElement).select()"
+          type="text"
+          inputmode="numeric"
           class="w-full bg-neutral-900 border border-neutral-800 text-white text-sm py-2.5 px-3 rounded-xl focus:outline-none focus:border-indigo-500"
         >
       </div>
@@ -58,6 +61,11 @@ const form = reactive({
   deposit: 0,
   withdrawal: 0,
 })
+
+const toNum = (v: string) => {
+  const n = parseInt(v.replace(/,/g, ''), 10)
+  return isNaN(n) ? 0 : n
+}
 
 const fields = [
   { key: 'ending_equity' as const, label: '期末權益' },

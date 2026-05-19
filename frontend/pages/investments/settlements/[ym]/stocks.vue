@@ -10,8 +10,11 @@
       <div class="flex flex-col gap-1">
         <label class="text-xs font-bold text-neutral-400">帳戶餘額</label>
         <input
-          v-model.number="form.account_balance"
-          type="number"
+          :value="form.account_balance"
+          @input="form.account_balance = toNum(($event.target as HTMLInputElement).value)"
+          @focus="($event.target as HTMLInputElement).select()"
+          type="text"
+          inputmode="numeric"
           class="w-full bg-neutral-900 border border-neutral-800 text-white text-sm py-2.5 px-3 rounded-xl focus:outline-none focus:border-indigo-500"
         >
       </div>
@@ -19,8 +22,11 @@
       <div class="flex flex-col gap-1">
         <label class="text-xs font-bold text-neutral-400">入金</label>
         <input
-          v-model.number="form.deposit"
-          type="number"
+          :value="form.deposit"
+          @input="form.deposit = toNum(($event.target as HTMLInputElement).value)"
+          @focus="($event.target as HTMLInputElement).select()"
+          type="text"
+          inputmode="numeric"
           class="w-full bg-neutral-900 border border-neutral-800 text-white text-sm py-2.5 px-3 rounded-xl focus:outline-none focus:border-indigo-500"
         >
       </div>
@@ -28,8 +34,11 @@
       <div class="flex flex-col gap-1">
         <label class="text-xs font-bold text-neutral-400">出金</label>
         <input
-          v-model.number="form.withdrawal"
-          type="number"
+          :value="form.withdrawal"
+          @input="form.withdrawal = toNum(($event.target as HTMLInputElement).value)"
+          @focus="($event.target as HTMLInputElement).select()"
+          type="text"
+          inputmode="numeric"
           class="w-full bg-neutral-900 border border-neutral-800 text-white text-sm py-2.5 px-3 rounded-xl focus:outline-none focus:border-indigo-500"
         >
       </div>
@@ -108,6 +117,11 @@ const { getSettlement, upsertStocks } = useInvestment()
 const { show: showToast } = useToast()
 
 const saving = ref(false)
+
+const toNum = (v: string) => {
+  const n = parseInt(v.replace(/,/g, ''), 10)
+  return isNaN(n) ? 0 : n
+}
 
 interface HoldingForm {
   symbol: string
