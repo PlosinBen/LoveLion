@@ -42,9 +42,7 @@
 
     <BaseFab @click="router.push('/investments/transactions/add')" />
 
-    <Transition name="slide-right">
-      <NuxtPage />
-    </Transition>
+    <NuxtPage :transition="{ name: 'slide-right' }" />
   </div>
 </template>
 
