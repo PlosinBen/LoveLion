@@ -138,7 +138,7 @@ const handleSave = async () => {
 }
 
 const handleDelete = async () => {
-  const ok = await confirm({ message: '確認刪除此異動？', destructive: true })
+  const ok = await confirm({ message: '確認刪除此出入金？', destructive: true })
   if (!ok) return
   try {
     await deleteMemberTransaction(props.transactionId!)

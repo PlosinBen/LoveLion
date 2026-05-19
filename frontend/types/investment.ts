@@ -22,7 +22,7 @@ export interface InvSettlement {
 export interface InvMemberTransaction {
   id: string
   member_id: string
-  member_name?: string
+  member?: InvMember
   date: string
   type: 'deposit' | 'withdrawal' | 'profit_loss'
   amount: number

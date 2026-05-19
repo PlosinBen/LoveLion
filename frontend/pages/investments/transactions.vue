@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PageTitle title="成員異動" :show-back="false" />
+    <PageTitle title="出入金" :show-back="false" />
 
     <div v-if="loading" class="flex justify-center items-center py-20 text-neutral-500">
       <Icon icon="mdi:loading" class="text-3xl animate-spin" />
@@ -8,7 +8,7 @@
 
     <div v-else-if="memberTransactions.length === 0" class="bg-neutral-900/50 rounded-2xl border border-neutral-800 border-dashed p-10 flex flex-col items-center justify-center text-neutral-500 text-sm italic">
       <Icon icon="mdi:transfer" class="text-5xl opacity-20 mb-4" />
-      <p>尚無異動紀錄</p>
+      <p>尚無出入金紀錄</p>
     </div>
 
     <div v-else class="flex flex-col gap-1">
@@ -27,9 +27,9 @@
             >
               {{ typeLabel(t.type) }}
             </span>
-            <span class="text-sm text-neutral-200">{{ t.member_name || t.member_id }}</span>
+            <span class="text-sm text-neutral-200">{{ t.member?.name || t.member_id }}</span>
           </div>
-          <span class="text-xs text-neutral-500">{{ t.date }}</span>
+          <span class="text-xs text-neutral-500">{{ t.date.slice(0, 10) }}</span>
         </div>
         <div class="flex flex-col items-end gap-0.5">
           <span class="text-sm font-bold" :class="t.type === 'withdrawal' ? 'text-red-400' : 'text-emerald-400'">

@@ -81,7 +81,7 @@
             to="/investments/transactions"
             class="text-xs text-indigo-400 font-bold no-underline"
           >
-            前往異動
+            前往出入金
           </NuxtLink>
         </div>
         <div v-if="hasDeposits" class="bg-neutral-900 rounded-xl p-3 border border-neutral-800">

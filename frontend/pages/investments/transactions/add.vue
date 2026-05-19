@@ -1,9 +1,9 @@
 <template>
   <OverlayPage>
     <PageTitle
-      title="新增異動"
+      title="新增出入金"
       :show-back="true"
-      :breadcrumbs="[{ label: '異動', to: '/investments/transactions' }]"
+      :breadcrumbs="[{ label: '出入金', to: '/investments/transactions' }]"
     />
     <MemberTransactionForm @saved="router.back()" />
   </OverlayPage>
