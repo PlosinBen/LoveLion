@@ -23,8 +23,12 @@ import Header from '~/components/Header.vue'
 import BroadcastBar from '~/components/BroadcastBar.vue'
 import BottomNav from '~/components/BottomNav.vue'
 
-const { isAuthenticated, user } = useAuth()
+const { isAuthenticated, user, fetchUser } = useAuth()
 const route = useRoute()
+
+if (isAuthenticated.value) {
+  fetchUser().catch(() => {})
+}
 
 const shouldShowGlobalNav = computed(() => {
   if (!isAuthenticated.value) return false
