@@ -65,6 +65,25 @@ func loginUser(t *testing.T, username, password string) string {
 		JSON().Object().Value("token").String().Raw()
 }
 
+// ensureUser registers if needed, then logs in. Returns a valid token.
+func ensureUser(t *testing.T, username, password, displayName string) string {
+	t.Helper()
+	e := newExpect(t)
+	resp := e.POST("/api/users/register").
+		WithJSON(map[string]string{
+			"username":     username,
+			"password":     password,
+			"display_name": displayName,
+		}).
+		Expect()
+
+	status := int(resp.Raw().StatusCode)
+	if status == http.StatusCreated {
+		return resp.JSON().Object().Value("token").String().Raw()
+	}
+	return loginUser(t, username, password)
+}
+
 func findSpaceByName(t *testing.T, token, name string) string {
 	t.Helper()
 	ae := authExpect(t, token)
