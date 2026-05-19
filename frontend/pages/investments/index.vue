@@ -15,51 +15,34 @@
       <p>尚無損益紀錄</p>
     </div>
 
-    <div v-else class="overflow-x-auto no-scrollbar rounded-xl border border-neutral-800">
-      <table class="w-full text-sm whitespace-nowrap">
-        <thead>
-          <tr class="bg-neutral-900 text-neutral-400 text-xs">
-            <th class="sticky left-0 z-10 bg-neutral-900 px-3 py-2 text-left font-bold">月份</th>
-            <template v-for="m in members" :key="m.id">
-              <th class="px-2 py-2 text-right font-bold border-l border-neutral-800" colspan="4">{{ m.name }}</th>
-            </template>
-          </tr>
-          <tr class="bg-neutral-900/50 text-neutral-500 text-xs">
-            <th class="sticky left-0 z-10 bg-neutral-900/50 px-3 py-1"></th>
-            <template v-for="m in members" :key="m.id + '-sub'">
-              <th class="px-2 py-1 text-right border-l border-neutral-800">入金</th>
-              <th class="px-2 py-1 text-right">出金</th>
-              <th class="px-2 py-1 text-right">損益</th>
-              <th class="px-2 py-1 text-right">結餘</th>
-            </template>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="row in grouped" :key="row.yearMonth" class="border-t border-neutral-800/50 hover:bg-neutral-900/30">
-            <td class="sticky left-0 z-10 bg-neutral-950 px-3 py-2 font-mono text-xs text-neutral-300">{{ row.yearMonth }}</td>
-            <template v-for="m in members" :key="m.id + '-' + row.yearMonth">
-              <td class="px-2 py-2 text-right text-xs border-l border-neutral-800/50">
-                <span v-if="row.data[m.id]?.deposit" class="text-emerald-400">{{ formatAmount(row.data[m.id]!.deposit) }}</span>
-                <span v-else class="text-neutral-700">-</span>
-              </td>
-              <td class="px-2 py-2 text-right text-xs">
-                <span v-if="row.data[m.id]?.withdrawal" class="text-red-400">{{ formatAmount(row.data[m.id]!.withdrawal) }}</span>
-                <span v-else class="text-neutral-700">-</span>
-              </td>
-              <td class="px-2 py-2 text-right text-xs">
-                <span v-if="row.data[m.id]" :class="row.data[m.id]!.amount >= 0 ? 'text-emerald-400' : 'text-red-400'">
-                  {{ formatAmount(row.data[m.id]!.amount) }}
-                </span>
-                <span v-else class="text-neutral-700">-</span>
-              </td>
-              <td class="px-2 py-2 text-right text-xs">
-                <span v-if="row.data[m.id]" class="text-neutral-200">{{ formatAmount(row.data[m.id]!.balance) }}</span>
-                <span v-else class="text-neutral-700">-</span>
-              </td>
-            </template>
-          </tr>
-        </tbody>
-      </table>
+    <div v-else class="flex flex-col gap-3">
+      <div
+        v-for="row in grouped"
+        :key="row.yearMonth"
+        class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden"
+      >
+        <div class="px-4 py-2.5 border-b border-neutral-800 font-mono text-sm text-neutral-300 font-bold">
+          {{ row.yearMonth }}
+        </div>
+        <div class="divide-y divide-neutral-800/50">
+          <div
+            v-for="m in members"
+            :key="m.id + '-' + row.yearMonth"
+            class="px-4 py-2.5 flex items-center justify-between"
+          >
+            <span class="text-sm text-neutral-300 font-medium">{{ m.name }}</span>
+            <div v-if="row.data[m.id]" class="flex items-center gap-3 text-xs">
+              <span v-if="row.data[m.id]!.deposit" class="text-emerald-400">入 {{ row.data[m.id]!.deposit.toLocaleString() }}</span>
+              <span v-if="row.data[m.id]!.withdrawal" class="text-red-400">出 {{ row.data[m.id]!.withdrawal.toLocaleString() }}</span>
+              <span :class="row.data[m.id]!.amount >= 0 ? 'text-emerald-400' : 'text-red-400'">
+                {{ formatAmount(row.data[m.id]!.amount) }}
+              </span>
+              <span class="text-neutral-200 font-bold">{{ row.data[m.id]!.balance.toLocaleString() }}</span>
+            </div>
+            <span v-else class="text-xs text-neutral-700">-</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -120,7 +103,3 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped>
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-</style>
