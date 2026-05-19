@@ -161,7 +161,7 @@ onMounted(async () => {
     if (stockTrades.value.length === 0) await fetchStockTrades()
     const trade = stockTrades.value.find(t => t.id === props.tradeId)
     if (trade) {
-      form.trade_date = trade.trade_date
+      form.trade_date = trade.trade_date.slice(0, 10)
       form.symbol = trade.symbol
       form.shares = trade.shares
       form.price = trade.price

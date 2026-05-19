@@ -157,7 +157,7 @@ onMounted(async () => {
     if (txn) {
       form.member_id = txn.member_id
       form.type = txn.type
-      form.date = txn.date
+      form.date = txn.date.slice(0, 10)
       form.amount = txn.amount
       form.note = txn.note
     }
