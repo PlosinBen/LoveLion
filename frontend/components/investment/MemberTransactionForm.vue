@@ -31,11 +31,17 @@
 
     <div class="flex flex-col gap-1">
       <label class="text-xs font-bold text-neutral-400">日期</label>
-      <input
+      <VueDatePicker
         v-model="form.date"
-        type="date"
-        class="w-full bg-neutral-900 border border-neutral-800 text-white text-sm py-2.5 px-3 rounded-xl focus:outline-none focus:border-indigo-500"
-      >
+        model-type="yyyy-MM-dd"
+        :formats="{ input: 'yyyy-MM-dd' }"
+        :dark="true"
+        :time-config="{ enableTimePicker: false }"
+        :teleport="true"
+        cancel-text="取消"
+        select-text="確定"
+        placeholder="點擊選擇日期"
+      />
     </div>
 
     <div class="flex flex-col gap-1">
@@ -77,6 +83,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { VueDatePicker } from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
 import { useInvestment } from '~/composables/useInvestment'
 import { useToast } from '~/composables/useToast'
 import { useConfirm } from '~/composables/useConfirm'
