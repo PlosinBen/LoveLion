@@ -100,7 +100,7 @@
 
 **根本原因**：`docker-compose.yml` 中 backend 的 command 是 `go mod tidy && go run cmd/migrate/main.go && go run main.go`，遷移跑完才啟動伺服器。
 
-**注意事項**：如果遷移失敗，伺服器不會啟動。檢查 `docker compose logs backend` 確認遷移狀態。`bin/refresh-database` 會額外在 seed 前再跑一次遷移確保一致。
+**注意事項**：如果遷移失敗，伺服器不會啟動。檢查 `docker compose logs backend` 確認遷移狀態。
 
 ---
 

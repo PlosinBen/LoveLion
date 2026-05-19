@@ -24,7 +24,7 @@ playwright container
 
 ### DB 重置
 
-複用現有的 `bin/refresh-database` 流程（drop → create → migrate → seed），確保每次 E2E 測試都從乾淨狀態開始。
+Integration test 的 `TestMain` 會自動 truncate 所有表，測試過程本身建立 dev 資料，確保每次都從乾淨狀態開始。
 
 ## 檔案清單
 

@@ -160,7 +160,7 @@
 | 看/加遷移檔 | `backend/migrations/` | golang-migrate SQL 檔，依序 000001-000010 |
 | 執行遷移 | `backend/cmd/migrate/main.go` | 遷移執行器 |
 | 看種子資料 | `backend/cmd/seed/main.go` | dev/ming/mei 三用戶 + 示範空間/交易/比價 |
-| 重置資料庫 | `bin/refresh-database` | 停服務→刪庫→重建→遷移→seed |
+| 重置資料庫 | `bin/integration_test` | TestMain 自動 truncate 所有表→跑測試→seed dev 資料 |
 | 執行遷移腳本 | `bin/migrate` | docker compose exec 包裝 |
 
 ## 測試

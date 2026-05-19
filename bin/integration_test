@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # LoveLion Integration Test
-# Runs: go fmt → go test → stop → drop/create DB → cleanup R2 → start → migrate → integration tests
+# Runs: go fmt → unit tests → integration tests (self-cleaning) → E2E tests
 
 set -e
 
@@ -26,46 +26,19 @@ docker compose exec frontend npm test
 echo "✅ Frontend unit tests passed"
 echo ""
 
-# Step 4: Stop backend to release DB connections
-echo "🛑 Stopping backend..."
-docker compose stop backend
-
-# Step 5: Drop and recreate database
-echo "🗑️  Dropping existing database..."
-docker compose exec postgres psql -U postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'lovelion' AND pid <> pg_backend_pid();" > /dev/null 2>&1 || true
-docker compose exec postgres psql -U postgres -c "DROP DATABASE IF EXISTS lovelion"
-echo "📦 Creating fresh database..."
-docker compose exec postgres psql -U postgres -c "CREATE DATABASE lovelion"
-
-# Step 6: Clean up R2 bucket
-echo "🧹 Cleaning up R2 bucket..."
-docker compose run --rm backend go run cmd/cleanup-r2/main.go
-
-# Step 7: Start backend
-echo "🚀 Starting backend..."
-docker compose start backend
-echo "⏳ Waiting for backend to be ready..."
-sleep 3
-
-# Step 8: Migrate
-echo "📋 Running migrations..."
-docker compose exec backend go run cmd/migrate/main.go
-
-# Step 9: Integration tests (also seeds dev data)
-echo ""
+# Step 4: Integration tests (TestMain truncates all tables before running)
 echo "🧪 Running integration tests..."
 docker compose exec backend go test -v -tags integration -count=1 ./integration/...
 echo "✅ All integration tests passed"
 
-# Step 10: Promote dev to admin (needed for announcement e2e tests)
+# Step 5: Promote dev to admin (needed for announcement e2e tests)
 echo ""
 echo "👑 Promoting dev user to admin..."
 docker compose exec postgres psql -U postgres -d lovelion -c "UPDATE users SET role = 'admin' WHERE username = 'dev';"
 
-# Step 11: E2E tests (Playwright)
+# Step 6: E2E tests (Playwright)
 echo ""
 echo "🎭 Running E2E tests..."
-# Ensure backend is up-to-date and healthy before spawning playwright
 docker compose up -d backend
 echo "⏳ Waiting for backend to be ready..."
 until docker compose exec -T backend wget -q --spider http://localhost:8080/api/announcements 2>/dev/null; do sleep 2; done

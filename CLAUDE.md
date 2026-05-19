@@ -33,9 +33,8 @@ docker compose exec backend go test ./internal/handlers -run TestFunctionName
 # 執行前端測試
 docker compose exec frontend npm test
 
-# 資料庫完整重置（清除 + 遷移 + 種子資料）
-./bin/refresh-database
-# 重置後測試帳號：dev / dev123
+# 執行整合測試（自動清空 DB，跑完後帳號：dev / dev123）
+./bin/integration_test
 
 # 僅執行遷移
 ./bin/migrate
