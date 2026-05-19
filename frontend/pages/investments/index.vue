@@ -2,8 +2,7 @@
   <div>
     <PageTitle
       title="投資損益"
-      :show-back="true"
-      back-to="/"
+      :show-back="false"
       :settings-to="user?.inv_is_owner ? '/investments/settings' : undefined"
     />
 
