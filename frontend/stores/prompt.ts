@@ -8,6 +8,7 @@ export const usePromptStore = defineStore('prompt', () => {
   const inputValue = ref('')
   const confirmLabel = ref('確定')
   const cancelLabel = ref('取消')
+  const mode = ref<'text' | 'month'>('text')
 
   let resolvePromise: ((value: string | null) => void) | null = null
 
@@ -17,12 +18,14 @@ export const usePromptStore = defineStore('prompt', () => {
     defaultValue?: string
     confirmLabel?: string
     cancelLabel?: string
+    mode?: 'text' | 'month'
   }): Promise<string | null> => {
     title.value = options.title
     placeholder.value = options.placeholder ?? ''
     inputValue.value = options.defaultValue ?? ''
     confirmLabel.value = options.confirmLabel ?? '確定'
     cancelLabel.value = options.cancelLabel ?? '取消'
+    mode.value = options.mode ?? 'text'
     visible.value = true
 
     return new Promise<string | null>((resolve) => {
@@ -42,5 +45,5 @@ export const usePromptStore = defineStore('prompt', () => {
     resolvePromise = null
   }
 
-  return { visible, title, placeholder, inputValue, confirmLabel, cancelLabel, show, handleConfirm, handleCancel }
+  return { visible, title, placeholder, inputValue, confirmLabel, cancelLabel, mode, show, handleConfirm, handleCancel }
 })

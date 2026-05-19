@@ -62,12 +62,8 @@ const formatAmount = (n: number) => {
 const handleCreate = async () => {
   const now = new Date()
   const defaultYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  const ym = await prompt({ title: '新增月結算', placeholder: 'YYYY-MM', defaultValue: defaultYM })
+  const ym = await prompt({ title: '新增月結算', defaultValue: defaultYM, mode: 'month' })
   if (!ym) return
-  if (!/^\d{4}-\d{2}$/.test(ym)) {
-    showToast('格式錯誤，請使用 YYYY-MM', 'error')
-    return
-  }
   try {
     await createSettlement(ym)
     await fetchSettlements()

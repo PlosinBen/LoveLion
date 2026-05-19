@@ -13,7 +13,17 @@
         <div class="relative w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden">
           <div class="p-6 flex flex-col gap-3">
             <p class="text-white text-sm font-bold">{{ title }}</p>
+            <VueDatePicker
+              v-if="mode === 'month'"
+              v-model="monthValue"
+              month-picker
+              :dark="true"
+              :teleport="true"
+              :formats="{ input: 'yyyy-MM' }"
+              :time-config="{ enableTimePicker: false }"
+            />
             <input
+              v-else
               ref="inputRef"
               v-model="inputValue"
               :placeholder="placeholder"
@@ -43,14 +53,26 @@
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { watch, ref, nextTick } from 'vue'
+import { watch, ref, nextTick, computed } from 'vue'
+import { VueDatePicker } from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
 import { usePromptStore } from '~/stores/prompt'
 
 const store = usePromptStore()
-const { visible, title, placeholder, inputValue, confirmLabel, cancelLabel } = storeToRefs(store)
+const { visible, title, placeholder, inputValue, confirmLabel, cancelLabel, mode } = storeToRefs(store)
 const { handleConfirm, handleCancel } = store
 
 const inputRef = ref<HTMLInputElement | null>(null)
+
+const monthValue = computed({
+  get() {
+    const parts = inputValue.value.split('-')
+    return { year: parseInt(parts[0]) || new Date().getFullYear(), month: (parseInt(parts[1]) || 1) - 1 }
+  },
+  set(val: { month: number; year: number }) {
+    inputValue.value = `${val.year}-${String(val.month + 1).padStart(2, '0')}`
+  },
+})
 
 watch(visible, (val) => {
   if (val) {
