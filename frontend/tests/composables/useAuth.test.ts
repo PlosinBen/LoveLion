@@ -46,11 +46,13 @@ describe('useAuth', () => {
   })
 
   it('login stores token and user', async () => {
+    const fakeUser = { id: '1', username: 'dev', display_name: 'Dev', inv_access: true }
     const fakeResponse = {
       token: 'jwt-token-123',
       user: { id: '1', username: 'dev', display_name: 'Dev' },
     }
     mockPost.mockResolvedValueOnce(fakeResponse)
+    mockGet.mockResolvedValueOnce(fakeUser)
 
     const { login, isAuthenticated, user, token } = useAuth()
     await login('dev', 'dev123')
@@ -60,7 +62,7 @@ describe('useAuth', () => {
       password: 'dev123',
     })
     expect(token.value).toBe('jwt-token-123')
-    expect(user.value).toEqual(fakeResponse.user)
+    expect(user.value).toEqual(fakeUser)
     expect(isAuthenticated.value).toBe(true)
     expect(localStorageMock.setItem).toHaveBeenCalledWith('token', 'jwt-token-123')
   })
@@ -90,6 +92,7 @@ describe('useAuth', () => {
       token: 'tok',
       user: { id: '1', username: 'dev', display_name: 'Dev' },
     })
+    mockGet.mockResolvedValueOnce({ id: '1', username: 'dev', display_name: 'Dev' })
     const { login, logout, isAuthenticated, token, user } = useAuth()
     await login('dev', 'dev123')
     expect(isAuthenticated.value).toBe(true)
@@ -108,6 +111,7 @@ describe('useAuth', () => {
       token: 'tok',
       user: { id: '1', username: 'dev', display_name: 'Dev' },
     })
+    mockGet.mockResolvedValueOnce({ id: '1', username: 'dev', display_name: 'Dev' })
     const { login, fetchUser, user } = useAuth()
     await login('dev', 'dev123')
 
@@ -128,6 +132,7 @@ describe('useAuth', () => {
       token: 'tok',
       user: { id: '1', username: 'dev', display_name: 'Dev' },
     })
+    mockGet.mockResolvedValueOnce({ id: '1', username: 'dev', display_name: 'Dev' })
     const { login, updateProfile, user } = useAuth()
     await login('dev', 'dev123')
 
