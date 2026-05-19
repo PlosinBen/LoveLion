@@ -26,7 +26,11 @@
           </span>
           <span
             class="w-2.5 h-2.5 rounded-full"
-            :class="s.status === 'completed' ? 'bg-emerald-500' : 'bg-amber-500'"
+            :class="{
+              'bg-emerald-500': s.status === 'completed',
+              'bg-neutral-500': s.status === 'baseline',
+              'bg-amber-500': s.status === 'draft',
+            }"
           />
         </div>
       </button>

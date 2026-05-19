@@ -14,9 +14,13 @@
       <div class="flex items-center gap-2 mb-4">
         <span
           class="text-xs font-bold px-2 py-0.5 rounded"
-          :class="detail.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'"
+          :class="{
+            'bg-emerald-500/20 text-emerald-400': detail.status === 'completed',
+            'bg-neutral-500/20 text-neutral-400': detail.status === 'baseline',
+            'bg-amber-500/20 text-amber-400': detail.status === 'draft',
+          }"
         >
-          {{ detail.status === 'completed' ? '已完成' : '草稿' }}
+          {{ detail.status === 'completed' ? '已完成' : detail.status === 'baseline' ? '基準期' : '草稿' }}
         </span>
       </div>
 
