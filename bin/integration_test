@@ -35,8 +35,6 @@ echo "✅ All integration tests passed"
 echo ""
 echo "👑 Promoting dev user to admin..."
 docker compose exec postgres psql -U postgres -d lovelion -c "UPDATE users SET role = 'admin' WHERE username = 'dev';"
-echo "📈 Adding dev as investment owner..."
-docker compose exec backend go run cmd/inv-init/main.go dev
 
 # Step 6: E2E tests (Playwright)
 echo ""
