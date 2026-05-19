@@ -59,18 +59,20 @@ const navItems = computed(() => {
   ]
 })
 
-const isActive = (item: NavItem & { alternateTo?: string }) => {
+const isActive = (item: NavItem & { alternateTo?: string, exact?: boolean }) => {
   if (!item.to) return item.id === props.modelValue
-  
+
   if (item.to === '/') return route.path === '/'
-  
+
   const checkMatch = (path: string) => {
     return route.path === path || route.path.startsWith(path + '/')
   }
 
+  if (item.exact) return route.path === item.to
+
   const primaryMatch = checkMatch(item.to)
   const alternateMatch = item.alternateTo ? checkMatch(item.alternateTo) : false
-  
+
   return primaryMatch || alternateMatch
 }
 </script>

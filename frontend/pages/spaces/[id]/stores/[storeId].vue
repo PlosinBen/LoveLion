@@ -108,9 +108,7 @@
   </div>
   </OverlayPage>
 
-  <Transition name="slide-right">
-    <NuxtPage />
-  </Transition>
+  <NuxtPage :transition="{ name: 'slide-right' }" />
 </template>
 
 <script setup lang="ts">

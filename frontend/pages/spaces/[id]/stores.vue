@@ -49,9 +49,7 @@
     <BaseFab @click="router.push(`/spaces/${route.params.id}/stores/add`)" />
   </div>
 
-  <Transition name="slide-right">
-    <NuxtPage />
-  </Transition>
+  <NuxtPage :transition="{ name: 'slide-right' }" />
 </template>
 
 <script setup lang="ts">

@@ -115,9 +115,7 @@
     <BaseFab @click="router.push(`/spaces/${store.space.id}/ledger/transaction/add`)" />
   </div>
 
-  <Transition name="slide-right">
-    <NuxtPage />
-  </Transition>
+  <NuxtPage :transition="{ name: 'slide-right' }" />
 </template>
 
 <script setup lang="ts">
