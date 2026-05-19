@@ -44,7 +44,7 @@
           <div class="text-neutral-500">入金</div><div class="text-right text-neutral-200">{{ fmt(detail.futures_statement.deposit) }}</div>
           <div class="text-neutral-500">出金</div><div class="text-right text-neutral-200">{{ fmt(detail.futures_statement.withdrawal) }}</div>
           <div class="text-neutral-400 font-bold border-t border-neutral-700 pt-1 mt-1">損益</div>
-          <div class="text-right font-bold border-t border-neutral-700 pt-1 mt-1" :class="detail.futures_statement.profit_loss >= 0 ? 'text-emerald-400' : 'text-red-400'">
+          <div class="text-right font-bold border-t border-neutral-700 pt-1 mt-1" :class="detail.futures_statement.profit_loss >= 0 ? 'text-red-400' : 'text-emerald-400'">
             {{ formatPL(detail.futures_statement.profit_loss) }}
           </div>
         </div>
@@ -70,7 +70,7 @@
           <div class="text-neutral-500">入金</div><div class="text-right text-neutral-200">{{ fmt(detail.stock_statement.deposit) }}</div>
           <div class="text-neutral-500">出金</div><div class="text-right text-neutral-200">{{ fmt(detail.stock_statement.withdrawal) }}</div>
           <div class="text-neutral-400 font-bold border-t border-neutral-700 pt-1 mt-1">損益</div>
-          <div class="text-right font-bold border-t border-neutral-700 pt-1 mt-1" :class="detail.stock_statement.profit_loss >= 0 ? 'text-emerald-400' : 'text-red-400'">
+          <div class="text-right font-bold border-t border-neutral-700 pt-1 mt-1" :class="detail.stock_statement.profit_loss >= 0 ? 'text-red-400' : 'text-emerald-400'">
             {{ formatPL(detail.stock_statement.profit_loss) }}
           </div>
         </div>
@@ -105,20 +105,28 @@
       <section class="mb-6">
         <h3 class="text-sm font-bold text-neutral-300 mb-2">分配預覽</h3>
         <div class="bg-neutral-900 rounded-xl p-3 border border-neutral-800">
-          <div class="flex items-center justify-between text-sm mb-2 pb-2 border-b border-neutral-800">
+          <div class="flex items-center justify-between text-sm mb-1">
             <span class="text-neutral-400">總損益</span>
-            <span class="font-bold" :class="detail.total_profit_loss >= 0 ? 'text-emerald-400' : 'text-red-400'">
-              {{ formatPL(detail.total_profit_loss) }}
+            <span class="font-bold" :class="previewTotalPL >= 0 ? 'text-red-400' : 'text-emerald-400'">
+              {{ formatPL(previewTotalPL) }}
             </span>
           </div>
-          <div v-for="a in detail.allocations" :key="a.member_id" class="flex items-center justify-between text-sm py-1">
-            <span class="text-neutral-300">{{ a.member_name || a.member_id }}</span>
-            <div class="flex items-center gap-3">
-              <span class="text-xs text-neutral-500">權重 {{ a.weight }}</span>
-              <span class="font-bold" :class="a.amount >= 0 ? 'text-emerald-400' : 'text-red-400'">
-                {{ formatPL(a.amount) }}
-              </span>
-            </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-neutral-500">總權重</span>
+            <span class="text-neutral-400 tabular-nums">{{ previewTotalWeight }}</span>
+          </div>
+          <div class="flex items-center justify-between text-xs mb-2 pb-2 border-b border-neutral-800">
+            <span class="text-neutral-500">每單位損益</span>
+            <span class="text-neutral-400 tabular-nums">{{ formatPL(plPerWeight) }}</span>
+          </div>
+          <div v-for="a in detail.allocations" :key="a.member_id" class="flex items-center text-sm py-1">
+            <span class="flex-1">
+              <span class="text-neutral-300">{{ a.member_name || a.member_id }}</span>
+              <span class="text-xs text-neutral-600 ml-1">({{ a.weight }})</span>
+            </span>
+            <span class="font-bold tabular-nums" :class="a.amount >= 0 ? 'text-red-400' : 'text-emerald-400'">
+              {{ formatPL(a.amount) }}
+            </span>
           </div>
         </div>
       </section>
@@ -178,12 +186,34 @@ const detail = ref<InvSettlementDetail | null>(null)
 const fmt = (n: number) => n.toLocaleString()
 const formatPL = (n: number) => (n > 0 ? '+' : '') + n.toLocaleString()
 
+const previewTotalPL = computed(() => {
+  return detail.value?.allocations?.reduce((sum, a) => sum + a.amount, 0) ?? 0
+})
+
+const previewTotalWeight = computed(() => {
+  return detail.value?.allocations?.reduce((sum, a) => sum + a.weight, 0) ?? 0
+})
+
+const plPerWeight = computed(() => {
+  if (previewTotalWeight.value === 0) return 0
+  return Math.floor(previewTotalPL.value / previewTotalWeight.value)
+})
+
 const hasDeposits = computed(() => {
   return detail.value?.allocations?.some(a => a.deposit || a.withdrawal) ?? false
 })
 
 const handleComplete = async () => {
-  const ok = await confirm({ message: '完成後將寫入分配損益紀錄' })
+  const missing: string[] = []
+  if (!detail.value?.futures_statement) missing.push('期貨')
+  if (!detail.value?.stock_statement) missing.push('股票')
+
+  for (const item of missing) {
+    const ok = await confirm({ message: `${item}尚未填寫，是否繼續？` })
+    if (!ok) return
+  }
+
+  const ok = await confirm({ message: '確認完成結算並寫入分配損益紀錄？' })
   if (!ok) return
   try {
     await completeSettlement(ym)

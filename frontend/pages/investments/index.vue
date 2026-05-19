@@ -34,7 +34,7 @@
             <div v-if="row.data[m.id]" class="flex items-center gap-3 text-xs">
               <span v-if="row.data[m.id]!.deposit" class="text-emerald-400">入 {{ row.data[m.id]!.deposit.toLocaleString() }}</span>
               <span v-if="row.data[m.id]!.withdrawal" class="text-red-400">出 {{ row.data[m.id]!.withdrawal.toLocaleString() }}</span>
-              <span :class="row.data[m.id]!.amount >= 0 ? 'text-emerald-400' : 'text-red-400'">
+              <span :class="row.data[m.id]!.amount >= 0 ? 'text-red-400' : 'text-emerald-400'">
                 {{ formatAmount(row.data[m.id]!.amount) }}
               </span>
               <span class="text-neutral-200 font-bold">{{ row.data[m.id]!.balance.toLocaleString() }}</span>

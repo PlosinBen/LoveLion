@@ -328,26 +328,33 @@ func (h *InvestmentHandler) CompleteSettlement(c *gin.Context) {
 		return
 	}
 
-	// Verify all required statements exist
-	var futuresCount int64
-	h.db.Model(&models.InvFuturesStatement{}).Where("year_month = ?", ym).Count(&futuresCount)
-	var stocksCount int64
-	h.db.Model(&models.InvStockStatement{}).Where("year_month = ?", ym).Count(&stocksCount)
+	// Load statements (at least one must exist)
+	var futures *models.InvFuturesStatement
+	var fStmt models.InvFuturesStatement
+	if err := h.db.First(&fStmt, "year_month = ?", ym).Error; err == nil {
+		futures = &fStmt
+	}
 
-	if futuresCount == 0 || stocksCount == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "All statement types must be filled before completing"})
+	var stocks *models.InvStockStatement
+	var sStmt models.InvStockStatement
+	if err := h.db.First(&sStmt, "year_month = ?", ym).Error; err == nil {
+		stocks = &sStmt
+	}
+
+	if futures == nil && stocks == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "At least one statement must be filled before completing"})
 		return
 	}
 
-	// Load statements
-	var futures models.InvFuturesStatement
-	h.db.First(&futures, "year_month = ?", ym)
-	var stocks models.InvStockStatement
-	h.db.First(&stocks, "year_month = ?", ym)
-
 	// Calculate
-	totalPL := futures.ProfitLoss + stocks.ProfitLoss
-	previews := h.buildAllocationPreview(ym, &futures, &stocks)
+	totalPL := 0
+	if futures != nil {
+		totalPL += futures.ProfitLoss
+	}
+	if stocks != nil {
+		totalPL += stocks.ProfitLoss
+	}
+	previews := h.buildAllocationPreview(ym, futures, stocks)
 
 	totalWeight := 0
 	for _, p := range previews {

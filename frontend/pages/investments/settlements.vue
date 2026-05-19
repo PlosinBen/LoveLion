@@ -21,7 +21,7 @@
       >
         <span class="font-mono text-sm text-neutral-200">{{ s.year_month }}</span>
         <div class="flex items-center gap-3">
-          <span class="text-sm font-bold" :class="s.total_profit_loss >= 0 ? 'text-emerald-400' : 'text-red-400'">
+          <span class="text-sm font-bold" :class="s.total_profit_loss >= 0 ? 'text-red-400' : 'text-emerald-400'">
             {{ s.total_profit_loss ? formatAmount(s.total_profit_loss) : '-' }}
           </span>
           <span

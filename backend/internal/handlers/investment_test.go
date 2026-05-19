@@ -329,7 +329,7 @@ func TestCompleteSettlement_MissingStatements(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	assert.Contains(t, w.Body.String(), "All statement types must be filled")
+	assert.Contains(t, w.Body.String(), "At least one statement must be filled")
 }
 
 func TestReopenSettlement(t *testing.T) {
