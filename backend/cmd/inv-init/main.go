@@ -220,10 +220,10 @@ func main() {
 	fmt.Println("[5] 寫入基準期分配紀錄")
 	for _, mb := range allMembers {
 		alloc := models.InvSettlementAllocation{
-			YearMonth:  baseYM,
-			MemberID:   mb.id,
-			Balance:    mb.balance,
-			Deposit:    mb.deposit,
+			YearMonth: baseYM,
+			MemberID:  mb.id,
+			Balance:   mb.balance,
+			Deposit:   mb.deposit,
 		}
 		if err := db.Create(&alloc).Error; err != nil {
 			log.Fatalf("create baseline allocation: %v", err)
