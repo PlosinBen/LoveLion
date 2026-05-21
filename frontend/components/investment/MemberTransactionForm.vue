@@ -7,7 +7,7 @@
         class="w-full bg-neutral-900 border border-neutral-800 text-white text-sm py-2.5 px-3 rounded-xl focus:outline-none focus:border-indigo-500"
       >
         <option value="" disabled>選擇成員</option>
-        <option v-for="m in members" :key="m.id" :value="m.id">{{ m.name }}</option>
+        <option v-for="m in availableMembers" :key="m.id" :value="m.id">{{ m.name }}</option>
       </select>
     </div>
 
@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import { useInvestment } from '~/composables/useInvestment'
@@ -114,7 +114,13 @@ const form = reactive({
 const typeOptions = [
   { value: 'deposit', label: '入金' },
   { value: 'withdrawal', label: '出金' },
+  { value: 'fee', label: '費用' },
 ]
+
+const availableMembers = computed(() => {
+  if (form.type === 'fee') return members.value.filter(m => !m.is_owner)
+  return members.value
+})
 
 const handleSave = async () => {
   if (!form.member_id || !form.amount) {

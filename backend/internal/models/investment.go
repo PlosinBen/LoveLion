@@ -41,12 +41,13 @@ func (InvSettlement) TableName() string {
 }
 
 type InvMemberTransaction struct {
-	ID       uuid.UUID `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
-	MemberID string    `gorm:"type:varchar(21);not null" json:"member_id"`
-	Date     time.Time `gorm:"type:date;not null" json:"date"`
-	Type     string    `gorm:"type:varchar(20);not null" json:"type"`
-	Amount   int       `gorm:"not null;default:0" json:"amount"`
-	Note     string    `gorm:"type:text" json:"note"`
+	ID       uuid.UUID  `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
+	MemberID string     `gorm:"type:varchar(21);not null" json:"member_id"`
+	Date     time.Time  `gorm:"type:date;not null" json:"date"`
+	Type     string     `gorm:"type:varchar(20);not null" json:"type"`
+	Amount   int        `gorm:"not null;default:0" json:"amount"`
+	Note     string     `gorm:"type:text" json:"note"`
+	LinkedID *uuid.UUID `gorm:"type:uuid" json:"linked_id,omitempty"`
 
 	Member *InvMember `gorm:"foreignKey:MemberID" json:"member,omitempty"`
 }
@@ -62,6 +63,7 @@ type InvSettlementAllocation struct {
 	Amount     int    `gorm:"not null;default:0" json:"amount"`
 	Deposit    int    `gorm:"not null;default:0" json:"deposit"`
 	Withdrawal int    `gorm:"not null;default:0" json:"withdrawal"`
+	Fee        int    `gorm:"not null;default:0" json:"fee"`
 	Balance    int    `gorm:"not null;default:0" json:"balance"`
 
 	Member *InvMember `gorm:"foreignKey:MemberID" json:"member,omitempty"`

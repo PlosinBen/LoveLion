@@ -24,7 +24,7 @@ export interface InvMemberTransaction {
   member_id: string
   member?: InvMember
   date: string
-  type: 'deposit' | 'withdrawal' | 'profit_loss'
+  type: 'deposit' | 'withdrawal' | 'fee' | 'profit_loss'
   amount: number
   note: string
 }
@@ -37,6 +37,7 @@ export interface InvSettlementAllocation {
   amount: number
   deposit: number
   withdrawal: number
+  fee: number
   balance: number
 }
 
@@ -97,5 +98,6 @@ export interface AllocationPreview {
   amount: number
   deposit: number
   withdrawal: number
+  fee: number
   balance: number
 }

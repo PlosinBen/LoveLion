@@ -94,7 +94,8 @@
             <div class="flex gap-4 text-xs">
               <span v-if="a.deposit" class="text-emerald-400">入 {{ fmt(a.deposit) }}</span>
               <span v-if="a.withdrawal" class="text-red-400">出 {{ fmt(a.withdrawal) }}</span>
-              <span v-if="!a.deposit && !a.withdrawal" class="text-neutral-700">-</span>
+              <span v-if="a.fee" class="text-amber-400">費 {{ fmt(a.fee) }}</span>
+              <span v-if="!a.deposit && !a.withdrawal && !a.fee" class="text-neutral-700">-</span>
             </div>
           </div>
         </div>
@@ -200,7 +201,7 @@ const plPerWeight = computed(() => {
 })
 
 const hasDeposits = computed(() => {
-  return detail.value?.allocations?.some(a => a.deposit || a.withdrawal) ?? false
+  return detail.value?.allocations?.some(a => a.deposit || a.withdrawal || a.fee) ?? false
 })
 
 const handleComplete = async () => {

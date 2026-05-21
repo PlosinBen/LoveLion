@@ -162,6 +162,7 @@ type AllocationPreview struct {
 	Amount     int    `json:"amount"`
 	Deposit    int    `json:"deposit"`
 	Withdrawal int    `json:"withdrawal"`
+	Fee        int    `json:"fee"`
 	Balance    int    `json:"balance"`
 }
 
@@ -234,12 +235,15 @@ func (h *InvestmentHandler) buildAllocationPreview(ym string, futures *models.In
 
 	memberDeposits := map[string]int{}
 	memberWithdrawals := map[string]int{}
+	memberFees := map[string]int{}
 	for _, t := range txns {
 		switch t.Type {
 		case "deposit":
 			memberDeposits[t.MemberID] += t.Amount
 		case "withdrawal":
 			memberWithdrawals[t.MemberID] += t.Amount
+		case "fee":
+			memberFees[t.MemberID] += t.Amount
 		}
 	}
 
@@ -249,6 +253,7 @@ func (h *InvestmentHandler) buildAllocationPreview(ym string, futures *models.In
 		weight     int
 		deposit    int
 		withdrawal int
+		fee        int
 	}
 
 	var mws []memberWeight
@@ -265,6 +270,7 @@ func (h *InvestmentHandler) buildAllocationPreview(ym string, futures *models.In
 			weight:     w,
 			deposit:    memberDeposits[m.ID],
 			withdrawal: withdrawal,
+			fee:        memberFees[m.ID],
 		})
 		totalWeight += w
 	}
@@ -289,7 +295,7 @@ func (h *InvestmentHandler) buildAllocationPreview(ym string, futures *models.In
 		}
 
 		prevBal := prevBalances[mw.member.ID]
-		balance := prevBal + mw.deposit - mw.withdrawal + amount
+		balance := prevBal + mw.deposit - mw.withdrawal + mw.fee + amount
 
 		previews = append(previews, AllocationPreview{
 			MemberID:   mw.member.ID,
@@ -299,6 +305,7 @@ func (h *InvestmentHandler) buildAllocationPreview(ym string, futures *models.In
 			Amount:     amount,
 			Deposit:    mw.deposit,
 			Withdrawal: mw.withdrawal,
+			Fee:        mw.fee,
 			Balance:    balance,
 		})
 	}
@@ -308,7 +315,7 @@ func (h *InvestmentHandler) buildAllocationPreview(ym string, futures *models.In
 		ownerAmount := totalPL - allocated
 		previews[ownerIdx].Amount = ownerAmount
 		prevBal := prevBalances[mws[ownerIdx].member.ID]
-		previews[ownerIdx].Balance = prevBal + previews[ownerIdx].Deposit - previews[ownerIdx].Withdrawal + ownerAmount
+		previews[ownerIdx].Balance = prevBal + previews[ownerIdx].Deposit - previews[ownerIdx].Withdrawal + previews[ownerIdx].Fee + ownerAmount
 	}
 
 	return previews
@@ -389,6 +396,7 @@ func (h *InvestmentHandler) CompleteSettlement(c *gin.Context) {
 			Amount:     p.Amount,
 			Deposit:    p.Deposit,
 			Withdrawal: p.Withdrawal,
+			Fee:        p.Fee,
 			Balance:    p.Balance,
 		}
 		tx.Create(&alloc)
@@ -671,6 +679,9 @@ func (h *InvestmentHandler) ListMemberTransactions(c *gin.Context) {
 			query = query.Where("date <= ?", t)
 		}
 	}
+	if memberID := c.Query("member_id"); memberID != "" {
+		query = query.Where("member_id = ?", memberID)
+	}
 
 	var txns []models.InvMemberTransaction
 	if err := query.Find(&txns).Error; err != nil {
@@ -683,7 +694,7 @@ func (h *InvestmentHandler) ListMemberTransactions(c *gin.Context) {
 type CreateMemberTransactionRequest struct {
 	MemberID string `json:"member_id" binding:"required"`
 	Date     string `json:"date" binding:"required"`
-	Type     string `json:"type" binding:"required,oneof=deposit withdrawal"`
+	Type     string `json:"type" binding:"required,oneof=deposit withdrawal fee"`
 	Amount   int    `json:"amount" binding:"required,gt=0"`
 	Note     string `json:"note"`
 }
@@ -705,6 +716,52 @@ func (h *InvestmentHandler) CreateMemberTransaction(c *gin.Context) {
 	var member models.InvMember
 	if err := h.db.First(&member, "id = ?", req.MemberID).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Member not found"})
+		return
+	}
+
+	if req.Type == "fee" {
+		if member.IsOwner {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Fee cannot be created for the owner"})
+			return
+		}
+		var owner models.InvMember
+		if err := h.db.First(&owner, "is_owner = ?", true).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Owner not found"})
+			return
+		}
+
+		linkedID := uuid.New()
+		memberTxn := models.InvMemberTransaction{
+			ID:       uuid.New(),
+			MemberID: req.MemberID,
+			Date:     date,
+			Type:     "fee",
+			Amount:   -req.Amount,
+			Note:     req.Note,
+			LinkedID: &linkedID,
+		}
+		ownerTxn := models.InvMemberTransaction{
+			ID:       uuid.New(),
+			MemberID: owner.ID,
+			Date:     date,
+			Type:     "fee",
+			Amount:   req.Amount,
+			Note:     req.Note,
+			LinkedID: &linkedID,
+		}
+
+		if err := h.db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Create(&memberTxn).Error; err != nil {
+				return err
+			}
+			return tx.Create(&ownerTxn).Error
+		}); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create fee transactions"})
+			return
+		}
+
+		h.db.Preload("Member").First(&memberTxn, "id = ?", memberTxn.ID)
+		c.JSON(http.StatusCreated, memberTxn)
 		return
 	}
 
@@ -759,8 +816,8 @@ func (h *InvestmentHandler) UpdateMemberTransaction(c *gin.Context) {
 		}
 	}
 	if req.Type != nil {
-		if *req.Type != "deposit" && *req.Type != "withdrawal" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Type must be deposit or withdrawal"})
+		if *req.Type != "deposit" && *req.Type != "withdrawal" && *req.Type != "fee" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Type must be deposit, withdrawal, or fee"})
 			return
 		}
 		updates["type"] = *req.Type
@@ -773,7 +830,33 @@ func (h *InvestmentHandler) UpdateMemberTransaction(c *gin.Context) {
 	}
 
 	if len(updates) > 0 {
-		if err := h.db.Model(&txn).Updates(updates).Error; err != nil {
+		if err := h.db.Transaction(func(tx *gorm.DB) error {
+			if err := tx.Model(&txn).Updates(updates).Error; err != nil {
+				return err
+			}
+			if txn.LinkedID != nil {
+				linkedUpdates := map[string]interface{}{}
+				if req.Amount != nil {
+					if txn.Amount < 0 {
+						linkedUpdates["amount"] = -*req.Amount
+					} else {
+						linkedUpdates["amount"] = -(*req.Amount)
+					}
+				}
+				if req.Date != nil {
+					linkedUpdates["date"] = updates["date"]
+				}
+				if req.Note != nil {
+					linkedUpdates["note"] = *req.Note
+				}
+				if len(linkedUpdates) > 0 {
+					tx.Model(&models.InvMemberTransaction{}).
+						Where("linked_id = ? AND id != ?", *txn.LinkedID, txn.ID).
+						Updates(linkedUpdates)
+				}
+			}
+			return nil
+		}); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update transaction"})
 			return
 		}
@@ -792,7 +875,15 @@ func (h *InvestmentHandler) DeleteMemberTransaction(c *gin.Context) {
 		return
 	}
 
-	if err := h.db.Delete(&txn).Error; err != nil {
+	if err := h.db.Transaction(func(tx *gorm.DB) error {
+		if txn.LinkedID != nil {
+			if err := tx.Where("linked_id = ?", *txn.LinkedID).Delete(&models.InvMemberTransaction{}).Error; err != nil {
+				return err
+			}
+			return nil
+		}
+		return tx.Delete(&txn).Error
+	}); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete transaction"})
 		return
 	}
