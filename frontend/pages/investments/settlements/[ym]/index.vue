@@ -27,7 +27,7 @@
       <!-- Futures -->
       <section class="mb-6">
         <div class="flex items-center justify-between mb-2">
-          <h3 class="text-sm font-bold text-neutral-300">期貨</h3>
+          <h3 class="text-sm font-bold text-neutral-300">群益期貨</h3>
           <button
             v-if="detail.status === 'draft'"
             type="button"
@@ -46,6 +46,34 @@
           <div class="text-neutral-400 font-bold border-t border-neutral-700 pt-1 mt-1">損益</div>
           <div class="text-right font-bold border-t border-neutral-700 pt-1 mt-1" :class="detail.futures_statement.profit_loss >= 0 ? 'text-red-400' : 'text-emerald-400'">
             {{ formatPL(detail.futures_statement.profit_loss) }}
+          </div>
+        </div>
+        <div v-else class="text-sm text-neutral-600 italic px-1">尚未填寫</div>
+      </section>
+
+      <!-- Overseas Futures -->
+      <section class="mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-bold text-neutral-300">群益海期</h3>
+          <button
+            v-if="detail.status === 'draft'"
+            type="button"
+            @click="router.push(`/investments/settlements/${ym}/overseas-futures`)"
+            class="text-xs text-indigo-400 font-bold bg-transparent border-0 cursor-pointer"
+          >
+            編輯
+          </button>
+        </div>
+        <div v-if="detail.overseas_futures_statement" class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm bg-neutral-900 rounded-xl p-3 border border-neutral-800">
+          <div class="text-neutral-500">台幣餘額</div><div class="text-right text-neutral-200">{{ fmt(detail.overseas_futures_statement.twd_balance) }}</div>
+          <template v-for="cur in detail.overseas_futures_statement.currencies" :key="cur.id">
+            <div class="text-neutral-500">{{ cur.currency }} 結餘</div><div class="text-right text-neutral-200">{{ fmt(cur.balance) }}</div>
+            <div class="text-neutral-500">{{ cur.currency }} 未沖銷</div><div class="text-right text-neutral-200">{{ fmt(cur.unrealized) }}</div>
+          </template>
+          <div class="text-neutral-500">轉換後淨額</div><div class="text-right text-neutral-200">{{ fmt(detail.overseas_futures_statement.converted_net) }}</div>
+          <div class="text-neutral-400 font-bold border-t border-neutral-700 pt-1 mt-1">損益</div>
+          <div class="text-right font-bold border-t border-neutral-700 pt-1 mt-1" :class="detail.overseas_futures_statement.profit_loss >= 0 ? 'text-red-400' : 'text-emerald-400'">
+            {{ formatPL(detail.overseas_futures_statement.profit_loss) }}
           </div>
         </div>
         <div v-else class="text-sm text-neutral-600 italic px-1">尚未填寫</div>
@@ -206,7 +234,8 @@ const hasDeposits = computed(() => {
 
 const handleComplete = async () => {
   const missing: string[] = []
-  if (!detail.value?.futures_statement) missing.push('期貨')
+  if (!detail.value?.futures_statement) missing.push('群益期貨')
+  if (!detail.value?.overseas_futures_statement) missing.push('群益海期')
   if (!detail.value?.stock_statement) missing.push('股票')
 
   for (const item of missing) {

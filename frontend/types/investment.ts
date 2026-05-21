@@ -51,6 +51,23 @@ export interface InvFuturesStatement {
   profit_loss: number
 }
 
+export interface InvOverseasFuturesCurrency {
+  id: string
+  year_month: string
+  currency: string
+  balance: number | string
+  unrealized: number | string
+  exchange_rate: number | string
+}
+
+export interface InvOverseasFuturesStatement {
+  year_month: string
+  twd_balance: number
+  converted_net: number
+  profit_loss: number
+  currencies: InvOverseasFuturesCurrency[]
+}
+
 export interface InvStockStatement {
   year_month: string
   account_balance: number
@@ -86,6 +103,7 @@ export interface InvSettlementDetail {
   total_weight: number
   profit_loss_per_weight: number
   futures_statement: InvFuturesStatement | null
+  overseas_futures_statement: InvOverseasFuturesStatement | null
   stock_statement: (InvStockStatement & { holdings?: InvStockHolding[] }) | null
   allocations: AllocationPreview[]
 }

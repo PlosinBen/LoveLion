@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS inv_capital_oversea_futures_currencies;
+DROP TABLE IF EXISTS inv_capital_oversea_futures_statements;

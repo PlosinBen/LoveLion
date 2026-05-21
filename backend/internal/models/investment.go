@@ -31,9 +31,10 @@ type InvSettlement struct {
 	CreatedAt           time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt           time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 
-	Allocations      []InvSettlementAllocation `gorm:"foreignKey:YearMonth" json:"allocations,omitempty"`
-	FuturesStatement *InvFuturesStatement      `gorm:"foreignKey:YearMonth" json:"futures_statement,omitempty"`
-	StockStatement   *InvStockStatement        `gorm:"foreignKey:YearMonth" json:"stock_statement,omitempty"`
+	Allocations               []InvSettlementAllocation    `gorm:"foreignKey:YearMonth" json:"allocations,omitempty"`
+	FuturesStatement          *InvFuturesStatement         `gorm:"foreignKey:YearMonth" json:"futures_statement,omitempty"`
+	OverseasFuturesStatement  *InvOverseasFuturesStatement `gorm:"foreignKey:YearMonth" json:"overseas_futures_statement,omitempty"`
+	StockStatement            *InvStockStatement           `gorm:"foreignKey:YearMonth" json:"stock_statement,omitempty"`
 }
 
 func (InvSettlement) TableName() string {
@@ -84,7 +85,33 @@ type InvFuturesStatement struct {
 }
 
 func (InvFuturesStatement) TableName() string {
-	return "inv_futures_statements"
+	return "inv_capital_futures_statements"
+}
+
+type InvOverseasFuturesStatement struct {
+	YearMonth    string `gorm:"type:varchar(7);primary_key" json:"year_month"`
+	TwdBalance   int    `gorm:"not null;default:0" json:"twd_balance"`
+	ConvertedNet int    `gorm:"not null;default:0" json:"converted_net"`
+	ProfitLoss   int    `gorm:"not null;default:0" json:"profit_loss"`
+
+	Currencies []InvOverseasFuturesCurrency `gorm:"foreignKey:YearMonth" json:"currencies,omitempty"`
+}
+
+func (InvOverseasFuturesStatement) TableName() string {
+	return "inv_capital_oversea_futures_statements"
+}
+
+type InvOverseasFuturesCurrency struct {
+	ID           uuid.UUID       `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
+	YearMonth    string          `gorm:"type:varchar(7);not null" json:"year_month"`
+	Currency     string          `gorm:"type:varchar(10);not null;default:'USD'" json:"currency"`
+	Balance      decimal.Decimal `gorm:"type:decimal(12,2);not null;default:0" json:"balance"`
+	Unrealized   decimal.Decimal `gorm:"type:decimal(12,2);not null;default:0" json:"unrealized"`
+	ExchangeRate decimal.Decimal `gorm:"type:decimal(12,2);not null;default:30" json:"exchange_rate"`
+}
+
+func (InvOverseasFuturesCurrency) TableName() string {
+	return "inv_capital_oversea_futures_currencies"
 }
 
 type InvStockStatement struct {

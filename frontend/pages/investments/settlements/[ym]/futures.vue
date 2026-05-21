@@ -1,7 +1,7 @@
 <template>
   <OverlayPage>
     <PageTitle
-      :title="`期貨 ${ym}`"
+      :title="`群益期貨 ${ym}`"
       :show-back="true"
       :breadcrumbs="[{ label: '結算', to: '/investments/settlements' }, { label: ym, to: `/investments/settlements/${ym}` }]"
     />
@@ -22,7 +22,7 @@
       <div class="bg-neutral-900 rounded-xl p-3 border border-neutral-800 text-sm">
         <div class="flex justify-between text-neutral-500">
           <span>計算損益</span>
-          <span class="font-bold" :class="computedPL >= 0 ? 'text-emerald-400' : 'text-red-400'">
+          <span class="font-bold" :class="computedPL >= 0 ? 'text-red-400' : 'text-emerald-400'">
             {{ computedPL > 0 ? '+' : '' }}{{ computedPL.toLocaleString() }}
           </span>
         </div>
@@ -54,6 +54,7 @@ const { getSettlement, upsertFutures } = useInvestment()
 const { show: showToast } = useToast()
 
 const saving = ref(false)
+const prevRealEquity = ref(0)
 const form = reactive({
   ending_equity: 0,
   floating_profit_loss: 0,
@@ -77,9 +78,8 @@ const fields = [
 
 const computedPL = computed(() => {
   const realEquity = form.ending_equity - form.floating_profit_loss
-  // We don't have prev real equity on the frontend, so just show realized for now
-  // The backend computes the actual PL
-  return form.realized_profit_loss
+  const equityPL = realEquity - prevRealEquity.value - form.deposit + form.withdrawal
+  return Math.min(form.realized_profit_loss, equityPL)
 })
 
 const handleSave = async () => {
@@ -97,6 +97,18 @@ const handleSave = async () => {
 
 onMounted(async () => {
   try {
+    const [y, m] = ym.split('-').map(Number)
+    const prevDate = new Date(y, m - 2, 1)
+    const prevYM = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`
+    try {
+      const prevDetail = await getSettlement(prevYM)
+      if (prevDetail.futures_statement) {
+        prevRealEquity.value = prevDetail.futures_statement.ending_equity - prevDetail.futures_statement.floating_profit_loss
+      }
+    } catch {
+      // No previous settlement
+    }
+
     const detail = await getSettlement(ym)
     if (detail.futures_statement) {
       form.ending_equity = detail.futures_statement.ending_equity

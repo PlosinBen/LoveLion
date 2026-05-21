@@ -149,9 +149,10 @@ func (h *InvestmentHandler) CreateSettlement(c *gin.Context) {
 
 type SettlementDetail struct {
 	models.InvSettlement
-	FuturesStatement *models.InvFuturesStatement `json:"futures_statement"`
-	StockStatement   *models.InvStockStatement   `json:"stock_statement"`
-	Allocations      []AllocationPreview         `json:"allocations"`
+	FuturesStatement         *models.InvFuturesStatement         `json:"futures_statement"`
+	OverseasFuturesStatement *models.InvOverseasFuturesStatement `json:"overseas_futures_statement"`
+	StockStatement           *models.InvStockStatement           `json:"stock_statement"`
+	Allocations              []AllocationPreview                 `json:"allocations"`
 }
 
 type AllocationPreview struct {
@@ -182,6 +183,12 @@ func (h *InvestmentHandler) GetSettlement(c *gin.Context) {
 		futures = &fStmt
 	}
 
+	var overseasFutures *models.InvOverseasFuturesStatement
+	var ofStmt models.InvOverseasFuturesStatement
+	if err := h.db.Preload("Currencies").First(&ofStmt, "year_month = ?", ym).Error; err == nil {
+		overseasFutures = &ofStmt
+	}
+
 	var stocks *models.InvStockStatement
 	var sStmt models.InvStockStatement
 	if err := h.db.Preload("Holdings").First(&sStmt, "year_month = ?", ym).Error; err == nil {
@@ -189,23 +196,27 @@ func (h *InvestmentHandler) GetSettlement(c *gin.Context) {
 	}
 
 	// Build allocation preview
-	allocations := h.buildAllocationPreview(ym, futures, stocks)
+	allocations := h.buildAllocationPreview(ym, futures, overseasFutures, stocks)
 
 	detail := SettlementDetail{
-		InvSettlement:    settlement,
-		FuturesStatement: futures,
-		StockStatement:   stocks,
-		Allocations:      allocations,
+		InvSettlement:            settlement,
+		FuturesStatement:         futures,
+		OverseasFuturesStatement: overseasFutures,
+		StockStatement:           stocks,
+		Allocations:              allocations,
 	}
 
 	c.JSON(http.StatusOK, detail)
 }
 
-func (h *InvestmentHandler) buildAllocationPreview(ym string, futures *models.InvFuturesStatement, stocks *models.InvStockStatement) []AllocationPreview {
+func (h *InvestmentHandler) buildAllocationPreview(ym string, futures *models.InvFuturesStatement, overseasFutures *models.InvOverseasFuturesStatement, stocks *models.InvStockStatement) []AllocationPreview {
 	// Calculate total profit/loss
 	totalPL := 0
 	if futures != nil {
 		totalPL += futures.ProfitLoss
+	}
+	if overseasFutures != nil {
+		totalPL += overseasFutures.ProfitLoss
 	}
 	if stocks != nil {
 		totalPL += stocks.ProfitLoss
@@ -342,13 +353,19 @@ func (h *InvestmentHandler) CompleteSettlement(c *gin.Context) {
 		futures = &fStmt
 	}
 
+	var overseasFutures *models.InvOverseasFuturesStatement
+	var ofStmt models.InvOverseasFuturesStatement
+	if err := h.db.Preload("Currencies").First(&ofStmt, "year_month = ?", ym).Error; err == nil {
+		overseasFutures = &ofStmt
+	}
+
 	var stocks *models.InvStockStatement
 	var sStmt models.InvStockStatement
 	if err := h.db.First(&sStmt, "year_month = ?", ym).Error; err == nil {
 		stocks = &sStmt
 	}
 
-	if futures == nil && stocks == nil {
+	if futures == nil && overseasFutures == nil && stocks == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "At least one statement must be filled before completing"})
 		return
 	}
@@ -358,10 +375,13 @@ func (h *InvestmentHandler) CompleteSettlement(c *gin.Context) {
 	if futures != nil {
 		totalPL += futures.ProfitLoss
 	}
+	if overseasFutures != nil {
+		totalPL += overseasFutures.ProfitLoss
+	}
 	if stocks != nil {
 		totalPL += stocks.ProfitLoss
 	}
-	previews := h.buildAllocationPreview(ym, futures, stocks)
+	previews := h.buildAllocationPreview(ym, futures, overseasFutures, stocks)
 
 	totalWeight := 0
 	for _, p := range previews {
@@ -553,6 +573,95 @@ func (h *InvestmentHandler) UpsertFutures(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, stmt)
+}
+
+// --- Overseas Futures Statement ---
+
+type OverseasFuturesCurrencyInput struct {
+	Currency     string  `json:"currency"`
+	Balance      float64 `json:"balance"`
+	Unrealized   float64 `json:"unrealized"`
+	ExchangeRate float64 `json:"exchange_rate"`
+}
+
+type UpsertOverseasFuturesRequest struct {
+	TwdBalance int                            `json:"twd_balance"`
+	Currencies []OverseasFuturesCurrencyInput `json:"currencies"`
+}
+
+func (h *InvestmentHandler) UpsertOverseasFutures(c *gin.Context) {
+	ym := c.Param("ym")
+
+	var settlement models.InvSettlement
+	if err := h.db.First(&settlement, "year_month = ?", ym).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Settlement not found"})
+		return
+	}
+	if settlement.Status != "draft" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Settlement is not in draft status"})
+		return
+	}
+
+	var req UpsertOverseasFuturesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Calculate converted net (round to integer TWD)
+	convertedNet := req.TwdBalance
+	for _, cur := range req.Currencies {
+		net := cur.Balance - cur.Unrealized
+		convertedNet += int(math.Round(net * cur.ExchangeRate))
+	}
+
+	// Get previous month's converted net; no previous = PL 0
+	prevYM := prevYearMonth(ym)
+	profitLoss := 0
+	var prevStmt models.InvOverseasFuturesStatement
+	if err := h.db.First(&prevStmt, "year_month = ?", prevYM).Error; err == nil {
+		profitLoss = convertedNet - prevStmt.ConvertedNet
+	}
+
+	if err := h.db.Transaction(func(tx *gorm.DB) error {
+		stmt := models.InvOverseasFuturesStatement{
+			YearMonth:    ym,
+			TwdBalance:   req.TwdBalance,
+			ConvertedNet: convertedNet,
+			ProfitLoss:   profitLoss,
+		}
+		result := tx.Where("year_month = ?", ym).Assign(stmt).FirstOrCreate(&stmt)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			tx.Model(&stmt).Updates(stmt)
+		}
+
+		// Replace currencies
+		tx.Where("year_month = ?", ym).Delete(&models.InvOverseasFuturesCurrency{})
+		for _, cur := range req.Currencies {
+			entry := models.InvOverseasFuturesCurrency{
+				ID:           uuid.New(),
+				YearMonth:    ym,
+				Currency:     cur.Currency,
+				Balance:      decimal.NewFromFloat(cur.Balance),
+				Unrealized:   decimal.NewFromFloat(cur.Unrealized),
+				ExchangeRate: decimal.NewFromFloat(cur.ExchangeRate),
+			}
+			if err := tx.Create(&entry).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save overseas futures statement"})
+		return
+	}
+
+	var result models.InvOverseasFuturesStatement
+	h.db.Preload("Currencies").First(&result, "year_month = ?", ym)
+	c.JSON(http.StatusOK, result)
 }
 
 // --- Stock Statement ---

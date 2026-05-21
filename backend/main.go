@@ -265,6 +265,9 @@ func main() {
 				// Futures
 				invOwner.PUT("/settlements/:ym/futures", invHandler.UpsertFutures)
 
+				// Overseas Futures
+				invOwner.PUT("/settlements/:ym/overseas-futures", invHandler.UpsertOverseasFutures)
+
 				// Stocks
 				invOwner.PUT("/settlements/:ym/stocks", invHandler.UpsertStocks)
 

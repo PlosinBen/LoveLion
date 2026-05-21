@@ -57,6 +57,10 @@ export function useInvestment() {
     return await put<any>(`/api/investments/settlements/${ym}/futures`, data)
   }
 
+  const upsertOverseasFutures = async (ym: string, data: any) => {
+    return await put<any>(`/api/investments/settlements/${ym}/overseas-futures`, data)
+  }
+
   const upsertStocks = async (ym: string, data: any) => {
     return await put<any>(`/api/investments/settlements/${ym}/stocks`, data)
   }
@@ -138,6 +142,7 @@ export function useInvestment() {
     reopenSettlement,
     deleteSettlement,
     upsertFutures,
+    upsertOverseasFutures,
     upsertStocks,
     fetchAllocations,
     fetchMemberTransactions,

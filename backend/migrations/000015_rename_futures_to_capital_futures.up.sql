@@ -1,0 +1,1 @@
+ALTER TABLE inv_futures_statements RENAME TO inv_capital_futures_statements;

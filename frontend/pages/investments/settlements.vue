@@ -25,9 +25,9 @@
             {{ s.total_profit_loss ? formatAmount(s.total_profit_loss) : '-' }}
           </span>
           <span
+            v-if="s.status !== 'completed'"
             class="w-2.5 h-2.5 rounded-full"
             :class="{
-              'bg-emerald-500': s.status === 'completed',
               'bg-neutral-500': s.status === 'baseline',
               'bg-amber-500': s.status === 'draft',
             }"
