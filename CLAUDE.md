@@ -53,11 +53,11 @@ docker compose exec postgres psql -U postgres -d lovelion
 
 ### 後端結構 (`backend/`)
 - `main.go` — 路由定義與伺服器啟動
-- `internal/handlers/` — HTTP 處理器（auth, space, space_sharing, transaction, expense, payment, expense_template, comparison, image, announcement）
-- `internal/models/` — GORM 模型（user, space, transaction, transaction_debt, comparison, image, announcement, expense_template）
+- `internal/handlers/` — HTTP 處理器（auth, space, space_sharing, transaction, expense, payment, expense_template, comparison, image, announcement, investment）
+- `internal/models/` — GORM 模型（user, space, transaction, transaction_debt, comparison, image, announcement, expense_template, investment）
 - `internal/services/` — 業務邏輯（AI worker, AI extract, AI announcement, invite, transaction）
 - `internal/repositories/` — 資料存取（transaction, expense, debt, member, invite）
-- `internal/middleware/` — 認證（JWT）、空間權限、管理員權限、速率限制、請求日誌
+- `internal/middleware/` — 認證（JWT）、空間權限、管理員權限、投資權限、速率限制、請求日誌
 - `internal/config/` — 環境設定載入
 - `internal/database/` — 資料庫連線
 - `internal/storage/` — Cloudflare R2 儲存
@@ -68,8 +68,8 @@ docker compose exec postgres psql -U postgres -d lovelion
 - `migrations/` — SQL 遷移檔（golang-migrate，依序編號）
 
 ### 前端結構 (`frontend/`)
-- `pages/` — 檔案式路由。空間頁面在 `spaces/[id]/`，交易頁面在 `spaces/[id]/transaction/`
-- `composables/` — `useApi`, `useAuth`, `useSpace`, `useImages`, `useTransactionForm`, `useExpenseTemplates`, `useLoading`, `useToast`, `useConfirm`, `usePrompt`, `useButtonStyle`
+- `pages/` — 檔案式路由。空間頁面在 `spaces/[id]/`，交易頁面在 `spaces/[id]/transaction/`，投資頁面在 `investments/`
+- `composables/` — `useApi`, `useAuth`, `useSpace`, `useImages`, `useTransactionForm`, `useExpenseTemplates`, `useInvestment`, `useLoading`, `useToast`, `useConfirm`, `usePrompt`, `useButtonStyle`
 - `components/` — 共用元件（ImageManager, ExpenseForm, PaymentForm, DebtEditor, BroadcastBar, AnnouncementForm, BaseCard, BaseModal 等）
 - `stores/` — Pinia 狀態管理（auth, spaceDetail, toast, confirm, loading, prompt）
 - `types/` — TypeScript 型別定義

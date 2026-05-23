@@ -140,7 +140,11 @@
 | 改沉浸式 Header | `frontend/components/ImmersiveHeader.vue` | 帶封面圖的 Header |
 | 改 Toast 通知 | `frontend/components/AppToast.vue` + `frontend/stores/toast.ts` | 全域提示訊息 |
 | 改確認對話框 | `frontend/components/AppConfirm.vue` + `frontend/stores/confirm.ts` | Promise-based 確認 |
+| 改輸入提示框 | `frontend/components/AppPrompt.vue` + `frontend/stores/prompt.ts` | Promise-based 輸入對話框 |
 | 改載入覆蓋層 | `frontend/components/LoadingOverlay.vue` + `frontend/stores/loading.ts` | 全域 loading |
+| 改頁面標題 | `frontend/components/PageTitle.vue` | 標題列（含麵包屑、返回鍵） |
+| 改 Overlay 頁面 | `frontend/components/OverlayPage.vue` | 全螢幕 overlay 容器（slide 動畫） |
+| 改 FAB | `frontend/components/BaseFab.vue` | 浮動按鈕 |
 | 改佈局 | `frontend/layouts/default.vue` | Header + BroadcastBar + slot + BottomNav |
 | 改空佈局 | `frontend/layouts/empty.vue` | 無 Header/Nav 的乾淨佈局 |
 | 改根元件 | `frontend/app.vue` | NuxtLayout + NuxtPage + LoadingOverlay |
@@ -157,7 +161,7 @@
 
 | 意圖 | 路徑 | 說明 |
 |------|------|------|
-| 看/加遷移檔 | `backend/migrations/` | golang-migrate SQL 檔，依序 000001-000010 |
+| 看/加遷移檔 | `backend/migrations/` | golang-migrate SQL 檔，依序 000001-000016 |
 | 執行遷移 | `backend/cmd/migrate/main.go` | 遷移執行器 |
 | 看種子資料 | `backend/cmd/seed/main.go` | dev/ming/mei 三用戶 + 示範空間/交易/比價 |
 | 重置資料庫 | `bin/integration_test` | TestMain 自動 truncate 所有表→跑測試→seed dev 資料 |
@@ -179,6 +183,28 @@
 | 執行 E2E 測試 | `bin/e2e_test` | 隔離 Docker 環境啟動 → seed → playwright → cleanup |
 | 看 E2E 功能規格 | `.agent/features/e2e-testing.md` | E2E 測試架構與設計文件 |
 
+## 投資紀錄
+
+| 意圖 | 路徑 | 說明 |
+|------|------|------|
+| 改投資 API | `backend/internal/handlers/investment.go` | 成員、結算、月結單、入出金、交易 CRUD |
+| 改投資資料模型 | `backend/internal/models/investment.go` | InvMember、InvSettlement、InvFuturesStatement、InvOverseasFuturesStatement、InvStockStatement 等 |
+| 改投資存取權限 | `backend/internal/middleware/investment.go` | InvestmentAccess（成員驗證）、InvestmentOwnerOnly（擁有者限制） |
+| 改投資 composable | `frontend/composables/useInvestment.ts` | 投資相關 API 封裝、狀態管理 |
+| 改投資型別 | `frontend/types/investment.ts` | 投資相關 TypeScript interface |
+| 改損益列表頁 | `frontend/pages/investments/index.vue` | 損益列表，支援 `?member=` 模擬模式 |
+| 改結算列表頁 | `frontend/pages/investments/settlements.vue` | 月結算列表 |
+| 改結算總覽頁 | `frontend/pages/investments/settlements/[ym]/index.vue` | 結算詳情（唯讀展示 + 分配預覽） |
+| 改群益期貨表單 | `frontend/pages/investments/settlements/[ym]/futures.vue` | 群益期貨月結單編輯 |
+| 改群益海期表單 | `frontend/pages/investments/settlements/[ym]/overseas-futures.vue` | 群益海期月結單編輯（多幣別） |
+| 改股票表單 | `frontend/pages/investments/settlements/[ym]/stocks.vue` | 股票月結單編輯（含庫存） |
+| 改入出金明細頁 | `frontend/pages/investments/transactions.vue` | 成員入出金明細 |
+| 改交易清單頁 | `frontend/pages/investments/trades.vue` | 股票交易清單 |
+| 改成員管理頁 | `frontend/pages/investments/settings.vue` | 投資成員管理 |
+| 改入出金表單 | `frontend/components/investment/MemberTransactionForm.vue` | 入金/出金/費用表單 |
+| 改交易表單 | `frontend/components/investment/StockTradeForm.vue` | 股票交易表單 |
+| 看投資功能規格 | `.agent/features/INVESTMENTS.md` | 完整功能規格文件 |
+
 ## TypeScript 型別
 
 | 意圖 | 路徑 | 說明 |
@@ -188,3 +214,4 @@
 | 改交易相關型別 | `frontend/types/transaction.ts` | Transaction、Expense、Debt 等 interface |
 | 改比價型別 | `frontend/types/comparison.ts` | Store、Product interface |
 | 改圖片型別 | `frontend/types/image.ts` | Image interface |
+| 改投資型別 | `frontend/types/investment.ts` | InvMember、InvSettlement、InvSettlementDetail 等 interface |

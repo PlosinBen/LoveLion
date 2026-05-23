@@ -2,14 +2,14 @@
 
 ## 概述
 
-獨立於 Space 體系的個人投資損益追蹤功能。支援多種投資類型（期貨、股票等），每月結算各類型損益，按權重分配給各參與者。
+獨立於 Space 體系的個人投資損益追蹤功能。支援多種投資類型（群益期貨、群益海期、股票），每月結算各類型損益，按權重分配給各參與者。
 
 ## 存取控制
 
 - 透過 `inv_members.user_id` + `is_owner` 判斷權限
-- 登入用戶的 user_id 存在於 `inv_members`（active）→ 放���
+- 登入用戶的 user_id 存在於 `inv_members`（active）→ 放行
 - `is_owner = true` → 完整操作權限
-- 非 owner → 僅能查看自己的損益紀錄
+- 非 owner → 僅能查看自己的損益紀錄與入出金明細
 - 未在 inv_members 中的帳號完全看不到此功能（前端不渲染入口、後端拒絕請求）
 
 ## 前端入口
@@ -32,7 +32,7 @@
 
 - 可擴充設計，每種類型有自己的子表、表單、損益計算公式
 - 主表（月結算、成員分配）固定不動，新增類型只需加子表和對應邏輯
-- 目前支援：期貨、股票
+- 目前支援：群益期貨、群益海期、股票
 
 ### 月結算流程
 
@@ -77,14 +77,22 @@ B (權重 1)：843 × 1 = 843
 
 例如：owner 把自己的額度轉 10,000 給 A → owner withdrawal 10,000 + A deposit 10,000，但投資帳戶沒有任何動作。
 
+### 費用（fee）
+
+- 費用為成員到 owner 的單向轉移，永遠是成員付費、owner 收費
+- 建立費用交易時自動產生配對紀錄：成員 -amount + owner +amount，透過 `linked_id` 關聯
+- Owner 自己不能對自己建立費用
+- 費用影響當期結餘：`上期結餘 + 入金 - 出金 + 費用 + 損益`
+
 ### 前期資料
 
-- 損益計算需要前期數據（期貨的前期實質權益、股票的前期總權益）
+- 損益計算需要前期數據（期貨的前期實質權益、海期的前期轉換後淨額、股票的前期總權益）
 - 沒有前期資料時，前期值視為 0（入出金會抵銷，不影響損益正確性）
+- 群益海期沒有前期時損益直接為 0
 - 期貨從 2024-01 開始有歷史資料（初始值透過 seed data 建立）
 - 股票從 2026-05 開始，無前期
 
-## 投資類型：��貨
+## 投資類型：群益期貨
 
 ### 月結單欄位
 
@@ -104,13 +112,34 @@ B (權重 1)：843 × 1 = 843
 期貨損益 = min(沖銷損益, 權益損益)
 ```
 
+## 投資類型：群益海期
+
+### 月結單欄位
+
+| 欄位 | 說明 |
+|------|------|
+| 台幣餘額 | 帳戶台幣餘額 |
+| 外幣幣別 | 目前支援 USD，可新增其他幣別 |
+| 外幣結餘 | 該幣別帳戶結餘（decimal(12,2)） |
+| 外幣未沖銷 | 該幣別未平倉浮動損益（decimal(12,2)） |
+| 匯率 | 固定匯率（decimal(12,2)） |
+
+### 損益計算
+
+```
+外幣淨額 = 結餘 - 未沖銷
+台幣淨額 = 外幣淨額 × 匯率
+轉換後淨額 = 台幣餘額 + Σ(各幣別台幣淨額)
+海期損益 = 本期轉換後淨額 - 前期轉換後淨額（無前期時損益 = 0）
+```
+
 ## 投資類型：股票
 
 ### 月結單欄位
 
 | 欄位 | 說明 |
 |------|------|
-| 帳戶餘�� | 券商帳戶現金餘額 |
+| 帳戶餘額 | 券商帳戶現金餘額 |
 | 庫存現值 | 庫存現值總額 Σ(shares × closing_price) |
 | 總入金 | 當月入金總額 |
 | 總出金 | 當月出金總額 |
@@ -121,7 +150,7 @@ B (權重 1)：843 × 1 = 843
 | 欄位 | 說明 |
 |------|------|
 | 日期 | 交易日期 |
-| 代��� | 股票代號 |
+| 代號 | 股票代號 |
 | 股數 | 交易股數（正=買/負=賣） |
 | 成交價 | 每股成交價 |
 | 手續費 | 券商手續費 |
@@ -129,7 +158,7 @@ B (權重 1)：843 × 1 = 843
 
 交易紀錄獨立於 settlement，可在 settlement 建立前新增。
 
-### 損益計��
+### 損益計算
 
 ```
 庫存現值 = Σ(各股結算價 × 股數)
@@ -145,7 +174,8 @@ B (權重 1)：843 × 1 = 843
 /investments                                    ← 損益列表 (parent, 預設頁)
 /investments/settlements                        ← 結算列表 (parent)
 /investments/settlements/:ym                    ← 結算總覽 (overlay, 唯讀展示所有類型欄位 + 分配預覽)
-/investments/settlements/:ym/futures            ← 期貨月結單編輯 (overlay)
+/investments/settlements/:ym/futures            ← 群益期貨月結單編輯 (overlay)
+/investments/settlements/:ym/overseas-futures   ← 群益海期月結單編輯 (overlay)
 /investments/settlements/:ym/stocks             ← 股票月結單編輯 (overlay, 含庫存)
 /investments/trades                             ← 股票交易清單 (parent)
 /investments/trades/add                         ← 新增交易 (overlay)
@@ -159,7 +189,14 @@ B (權重 1)：843 × 1 = 843
 ### BottomNav
 
 - Owner：`損益 | 結算 | 交易 | 異動`，右上角設定 icon → 成員管理
-- 非 Owner：無 BottomNav，僅顯示損益列表（只有自己的資料）
+- 非 Owner：`損益 | 出入金`（僅顯示自己的資料）
+
+### 模擬模式
+
+- Owner 可透過 `?member=name` query param 模擬非 owner 的視角
+- 匹配方式：先比對 member ID，再比對 member name
+- 模擬時 BottomNav 切換為非 owner 模式（損益 + 出入金）
+- 頁面顯示「模擬：name」標示
 
 ### 損益列表頁 `/investments`
 
@@ -179,9 +216,9 @@ B (權重 1)：843 × 1 = 843
 
 ```
 ┌──────────┬────────────┬──────┐
-│ 2026-05  │ +11,803    │ 🟡   │  ← draft (黃色)
+│ 2026-05  │ +11,803    │ 🟡   │  ← draft（黃色圓點）
 ├──────────┼────────────┼──────┤
-│ 2026-04  │ +13,500    │ 🟢   │  ← completed (綠色)
+│ 2026-04  │ +13,500    │      │  ← completed（不顯示圓點）
 └──────────┴────────────┴──────┘
 
 FAB → 新增月結算
@@ -194,7 +231,7 @@ FAB → 新增月結算
 ```
 2026-05 (draft)
 
-── 期貨 ──────────────────── [編輯]
+── 群益期貨 ────────────── [編輯]
 期末權益        120,000
 浮動損益          5,000
 沖銷損益         15,000
@@ -202,7 +239,13 @@ FAB → 新增月結算
 出金                  0
 損益            +15,000
 
-── 股票 ──────────────────── [編輯]
+── 群益海期 ────────────── [編輯]
+台幣餘額          5,000
+USD 淨額: 1,234.56 → TWD 37,036
+轉換後淨額       42,036
+損益             +2,000
+
+── 股票 ──────────────── [編輯]
 帳戶餘額         80,000
 庫存現值        150,000
 入金                  0
@@ -210,15 +253,15 @@ FAB → 新增月結算
 損益             -3,197
 
 ── 成員入出金 ──────────── [→ 異動頁面]  (唯讀，顯示該月加總)
-我    入金 0     出金 0
-A     入金 10,000  出金 0
-B     入金 0     出金 0
+我(10)    入金 0     出金 0    費用 0
+A(3)      入金 10,000  出金 0  費用 -500
+B(1)      入金 0     出金 0    費用 0
 
 ── 分配預覽 ──
 總損益 +11,803
-我     +8,431 (權重 10)
-A      +2,529 (權重 3)
-B        +843 (權重 1)
+我     +8,431
+A      +2,529
+B        +843
 
 [完成結算]  /  [重新開啟] (已完成時)
 ```
@@ -229,11 +272,11 @@ B        +843 (權重 1)
 
 ### 成員管理 `/investments/settings`
 
-成員列表，支援新增��切換 active、調整排序。右上角齒輪 icon 進入。
+成員列表，支援新增、切換 active、調整排序。右上角齒輪 icon 進入。
 
 ## DB Schema
 
-金額欄位皆為 `integer`（台幣無小數），僅股價為 `decimal(10,2)`。
+金額欄位皆為 `integer`（台幣無小數），僅股價為 `decimal(10,2)`，海期外幣為 `decimal(12,2)`。
 
 ```
 ── inv_members (投資成員)
@@ -259,9 +302,10 @@ B        +843 (權重 1)
    id          UUID PK
    member_id   varchar(21) FK → inv_members
    date        date
-   type        varchar(20)          ← deposit / withdrawal / profit_loss
+   type        varchar(20)          ← deposit / withdrawal / fee / profit_loss
    amount      integer
    note        text
+   linked_id   UUID (nullable)      ← fee 配對紀錄關聯（成員 -amount ↔ owner +amount）
 
 ── inv_settlement_allocations (月結算分配，completed 時從 member_transactions 加總寫入)
    year_month   varchar(7) PK, FK → inv_settlements
@@ -270,9 +314,10 @@ B        +843 (權重 1)
    amount       integer              ← 本期分配損益 (從 member_transactions 加總)
    deposit      integer              ← 本期入金 (從 member_transactions 加總)
    withdrawal   integer              ← 本期出金 (從 member_transactions 加總)
-   balance      integer              ← 本期結餘 (上期結餘 + 入金 - 出金 + 損益)
+   fee          integer              ← 本期費用 (從 member_transactions 加總)
+   balance      integer              ← 本期結餘 (上期結餘 + 入金 - 出金 + 費用 + 損益)
 
-── inv_futures_statements (期貨月結單)
+── inv_capital_futures_statements (群益期貨月結單)
    year_month              varchar(7) PK, FK → inv_settlements
    ending_equity           integer
    floating_profit_loss    integer
@@ -280,6 +325,20 @@ B        +843 (權重 1)
    deposit                 integer
    withdrawal              integer
    profit_loss             integer
+
+── inv_capital_oversea_futures_statements (群益海期月結單)
+   year_month    varchar(7) PK, FK → inv_settlements
+   twd_balance   integer
+   converted_net integer             ← 台幣餘額 + Σ(外幣淨額 × 匯率)
+   profit_loss   integer
+
+── inv_capital_oversea_futures_currencies (群益海期外幣明細)
+   id            UUID PK
+   year_month    varchar(7) FK → inv_capital_oversea_futures_statements
+   currency      varchar(10)          ← 'USD' 等
+   balance       decimal(12,2)        ← 結餘
+   unrealized    decimal(12,2)        ← 未沖銷
+   exchange_rate decimal(12,2)        ← 匯率
 
 ── inv_stock_statements (股票月結單)
    year_month      varchar(7) PK, FK → inv_settlements
@@ -295,6 +354,7 @@ B        +843 (權重 1)
    symbol          varchar(20)
    shares          integer
    closing_price   decimal(10,2)
+   market_value    integer
 
 ── inv_stock_trades (股票交易紀錄，獨立於 settlement)
    id              UUID PK
@@ -304,7 +364,6 @@ B        +843 (權重 1)
    price           decimal(10,2)
    fee             integer
    tax             integer
-   note            text
 ```
 
 ## API
@@ -336,10 +395,16 @@ DELETE /api/investments/settlements/:ym                 ← 刪除 (僅 draft)
 
 完成驗證：所有已啟用投資類型皆有月結單才能 complete。
 
-### 期貨月結單 (owner only)
+### 群益期貨月結單 (owner only)
 
 ```
 PUT    /api/investments/settlements/:ym/futures         ← upsert
+```
+
+### 群益海期月結單 (owner only)
+
+```
+PUT    /api/investments/settlements/:ym/overseas-futures ← upsert（含外幣明細，每次全量替換）
 ```
 
 ### 股票月結單 (owner only)
@@ -352,9 +417,9 @@ PUT    /api/investments/settlements/:ym/stocks          ← upsert (含 holdings
 
 ```
 GET    /api/investments/members/transactions?from=&to=  ← 列表 (日期 range 篩選, optional)
-POST   /api/investments/members/transactions            ← 新增
-PUT    /api/investments/members/transactions/:id        ← 更新
-DELETE /api/investments/members/transactions/:id        ← 刪除
+POST   /api/investments/members/transactions            ← 新增（fee 類型自動建立配對紀錄）
+PUT    /api/investments/members/transactions/:id        ← 更新（fee 同步更新配對紀錄）
+DELETE /api/investments/members/transactions/:id        ← 刪除（fee 同步刪除配對紀錄）
 ```
 
 ### 股票交易紀錄 (owner only)
@@ -375,18 +440,23 @@ GET    /api/investments/allocations?from=&to=           ← owner 回全部人�
 ## 已決議
 
 - 減碼當月重算：直接用減碼後的新權重算整個月，不按天數拆分
-- 權重取整：floor（無條件���去）
+- 權重取整：floor（無條件捨去）
 - 擴充機制：主表固定，每次新增投資類型需開發子表 + 表單 + 損益公式
 - 成員管理：可新增、可隱藏，不可刪除
 - 月結算建立：手動建立（未來可加 cron 自動建 draft）
-- 金額：台幣限定，integer 無小數
+- 金額：台幣限定，integer 無小數（海期外幣除外，使用 decimal(12,2)）
 - 成員 ID：NanoID (varchar(21))
 - 存取控制：靠 inv_members.user_id + is_owner 判斷
 - completed ↔ draft 可雙向切換
 - complete 時驗證所有已啟用投資類型皆有月結單
-- 前期資料不存在時視為 0
+- 前期資料不存在時視為 0（海期特例：無前期時損益直接為 0）
 - 成員入出金與投資帳戶入出金完全獨立
 - 成員入出金/損益透過 inv_member_transactions 記錄明細，allocation 為加總快照
 - 股票交易紀錄獨立於 settlement，不帶 FK
 - 權重計算：floor((上期 balance - 當期 withdrawal) / 5000)，最小 1
 - profit_loss 在 complete 時寫入 member_transactions（date 為該月最後一天），reopen 後重新 complete 時覆蓋更新
+- 費用（fee）為成員→owner 的配對紀錄，透過 linked_id 關聯
+- 結餘公式：上期結餘 + 入金 - 出金 + 費用 + 損益
+- 結算列表 completed 狀態不顯示圓點，僅 draft（黃色）和 baseline（灰色）顯示
+- 海期外幣每次儲存全量替換（先刪後建），不做差異更新
+- shopspring/decimal 用於海期外幣欄位，JSON 序列化為字串
