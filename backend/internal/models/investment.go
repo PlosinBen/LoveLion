@@ -31,10 +31,10 @@ type InvSettlement struct {
 	CreatedAt           time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt           time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 
-	Allocations               []InvSettlementAllocation    `gorm:"foreignKey:YearMonth" json:"allocations,omitempty"`
-	FuturesStatement          *InvFuturesStatement         `gorm:"foreignKey:YearMonth" json:"futures_statement,omitempty"`
-	OverseasFuturesStatement  *InvOverseasFuturesStatement `gorm:"foreignKey:YearMonth" json:"overseas_futures_statement,omitempty"`
-	StockStatement            *InvStockStatement           `gorm:"foreignKey:YearMonth" json:"stock_statement,omitempty"`
+	Allocations              []InvSettlementAllocation    `gorm:"foreignKey:YearMonth" json:"allocations,omitempty"`
+	FuturesStatement         *InvFuturesStatement         `gorm:"foreignKey:YearMonth" json:"futures_statement,omitempty"`
+	OverseasFuturesStatement *InvOverseasFuturesStatement `gorm:"foreignKey:YearMonth" json:"overseas_futures_statement,omitempty"`
+	StockStatement           *InvStockStatement           `gorm:"foreignKey:YearMonth" json:"stock_statement,omitempty"`
 }
 
 func (InvSettlement) TableName() string {
