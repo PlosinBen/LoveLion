@@ -45,7 +45,9 @@ func TestMain(m *testing.M) {
 		inv_settlements,
 		inv_member_transactions,
 		inv_settlement_allocations,
-		inv_futures_statements,
+		inv_capital_futures_statements,
+		inv_capital_oversea_futures_statements,
+		inv_capital_oversea_futures_currencies,
 		inv_stock_statements,
 		inv_stock_holdings,
 		inv_stock_trades
