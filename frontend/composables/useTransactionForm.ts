@@ -1,12 +1,7 @@
 import { ref } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useToast } from '~/composables/useToast'
-import { parseNaiveDate } from '~/utils/date'
-
-function toLocalISOString(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}Z`
-}
+import { parseNaiveDate, toLocalISOString } from '~/utils/date'
 import type { ExpenseFormData } from '~/components/ExpenseForm.vue'
 import type { PaymentFormData } from '~/components/PaymentForm.vue'
 import type { DebtItem } from '~/components/DebtEditor.vue'

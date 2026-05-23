@@ -88,6 +88,7 @@ import '@vuepic/vue-datepicker/dist/main.css'
 import { useInvestment } from '~/composables/useInvestment'
 import { useToast } from '~/composables/useToast'
 import { useConfirm } from '~/composables/useConfirm'
+import { todayLocalDate } from '~/utils/date'
 
 const props = defineProps<{
   transactionId?: string
@@ -106,7 +107,7 @@ const saving = ref(false)
 const form = reactive({
   member_id: '',
   type: 'deposit',
-  date: new Date().toISOString().slice(0, 10),
+  date: todayLocalDate(),
   amount: 0,
   note: '',
 })

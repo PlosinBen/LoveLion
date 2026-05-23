@@ -98,6 +98,7 @@ import '@vuepic/vue-datepicker/dist/main.css'
 import { useInvestment } from '~/composables/useInvestment'
 import { useToast } from '~/composables/useToast'
 import { useConfirm } from '~/composables/useConfirm'
+import { todayLocalDate } from '~/utils/date'
 
 const props = defineProps<{
   tradeId?: string
@@ -114,7 +115,7 @@ const confirm = useConfirm()
 
 const saving = ref(false)
 const form = reactive({
-  trade_date: new Date().toISOString().slice(0, 10),
+  trade_date: todayLocalDate(),
   symbol: '',
   shares: 0,
   price: 0,

@@ -184,6 +184,7 @@ import ExpenseForm from '~/components/ExpenseForm.vue'
 import PaymentForm from '~/components/PaymentForm.vue'
 import TemplatePickerModal from '~/components/TemplatePickerModal.vue'
 import { useSpaceDetailStore } from '~/stores/spaceDetail'
+import { toLocalISOString } from '~/utils/date'
 import type { ExpenseTemplate } from '~/types'
 
 
@@ -218,7 +219,7 @@ const handleQuickText = async () => {
     await api.post(`/api/spaces/${route.params.id}/expenses`, {
       title: text,
       total_amount: 0,
-      date: new Date().toISOString(),
+      date: toLocalISOString(new Date()),
       currency: baseCurrency.value,
       note: '',
       expense: {
