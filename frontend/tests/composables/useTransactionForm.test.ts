@@ -224,6 +224,18 @@ describe('useTransactionForm', () => {
     expect(payload.debts).toBeUndefined() // no debts
   })
 
+  it('buildExpensePayload preserves a decimal item quantity', () => {
+    const form = useTransactionForm('space-1')
+    form.baseCurrency.value = 'TWD'
+    form.expenseForm.value.items = [
+      { name: '汽油', unit_price: 31.5, quantity: 3.41, discount: 0 },
+    ]
+
+    const payload = form.buildExpensePayload()
+
+    expect(payload.expense.items[0]?.quantity).toBe(3.41)
+  })
+
   it('buildExpensePayload uses custom rates for foreign currency', () => {
     const form = useTransactionForm('space-1')
     form.baseCurrency.value = 'TWD'

@@ -1,5 +1,8 @@
 <template>
-  <nav class="fixed bottom-0 left-0 right-0 bg-neutral-900 border-t border-neutral-800 flex justify-around items-center px-4 py-3 z-30">
+  <nav
+    class="flex w-full items-center justify-around border-t border-neutral-800 bg-neutral-900 px-4 py-3"
+    :class="fixed && 'fixed inset-x-0 bottom-0 z-30'"
+  >
     <template v-for="item in navItems" :key="item.to || item.id">
       <!-- Link Mode -->
       <NuxtLink
@@ -42,10 +45,13 @@ interface NavItem {
   to?: string
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   modelValue?: string
   items?: NavItem[]
-}>()
+  fixed?: boolean
+}>(), {
+  fixed: true,
+})
 
 defineEmits(['update:modelValue'])
 

@@ -50,6 +50,15 @@ func TestBuildExpenseItems_ZeroQuantityDefaultsToOne(t *testing.T) {
 	assert.True(t, d("300").Equal(total))
 }
 
+func TestBuildExpenseItems_DecimalQuantity(t *testing.T) {
+	items, total := buildExpenseItems(uuid.New(), []ExpenseItemInput{
+		{Name: "Fuel", UnitPrice: d("31.5"), Quantity: d("3.41")},
+	})
+
+	assert.True(t, d("3.41").Equal(items[0].Quantity))
+	assert.True(t, d("107.415").Equal(total))
+}
+
 func TestBuildExpenseItems_WithDiscount(t *testing.T) {
 	expenseID := uuid.New()
 	items, total := buildExpenseItems(expenseID, []ExpenseItemInput{

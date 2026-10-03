@@ -9,7 +9,7 @@
 
     <template #footer>
       <slot name="footer">
-        <BottomNav v-if="shouldShowGlobalNav" :items="spaceNavItems || globalNavItems" />
+        <BottomNav v-if="shouldShowGlobalNav" :items="spaceNavItems || globalNavItems" :fixed="false" />
       </slot>
     </template>
   </BaseLayout>
