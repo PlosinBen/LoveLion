@@ -172,6 +172,27 @@ func TestAIWorker_ProcessOne_Success(t *testing.T) {
 	assert.Equal(t, []string{"https://cdn/test/transaction/a.jpg"}, store.downloaded)
 }
 
+func TestAIWorker_TickSkipsJobUntilReservedQuotaWindow(t *testing.T) {
+	db := testutil.TestDB(t)
+	user := testutil.CreateTestUser(t, db)
+	space := createTestSpace(t, db, user.ID)
+
+	ext := &fakeExtractor{}
+	txnID := createPendingExpense(t, db, space.ID, "https://cdn/test/transaction/queued.jpg")
+	processAfter := time.Now().Add(24 * time.Hour)
+	require.NoError(t, db.Model(&models.Transaction{}).
+		Where("id = ?", txnID).
+		Update("ai_process_after", processAfter).Error)
+
+	worker := newTestWorker(db, ext, &fakeStorage{data: []byte("img"), contentType: "image/jpeg"})
+	worker.tick(context.Background())
+
+	txn := loadTxn(t, db, txnID)
+	require.NotNil(t, txn.AIStatus)
+	assert.Equal(t, aiStatusPending, *txn.AIStatus)
+	assert.Equal(t, 0, ext.calls)
+}
+
 func TestAIWorker_ProcessOne_LLMError_MarksFailed(t *testing.T) {
 	db := testutil.TestDB(t)
 	user := testutil.CreateTestUser(t, db)

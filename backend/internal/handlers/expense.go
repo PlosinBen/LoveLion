@@ -130,6 +130,7 @@ func (h *ExpenseHandler) Create(c *gin.Context) {
 		return
 	}
 
+	var aiProcessAfter *time.Time
 	if req.AIExtract {
 		// AI extraction can run on either an attached image or a non-empty
 		// title (quick text entry). At least one must be present.
@@ -142,9 +143,8 @@ func (h *ExpenseHandler) Create(c *gin.Context) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
 		}
-		if !h.aiRateLimit.Allow(userID.(uuid.UUID)) {
-			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Daily AI extraction limit reached"})
-			return
+		if processAfter, queued := h.aiRateLimit.Reserve(userID.(uuid.UUID)); queued {
+			aiProcessAfter = &processAfter
 		}
 	}
 
@@ -162,9 +162,10 @@ func (h *ExpenseHandler) Create(c *gin.Context) {
 			PaymentMethod: req.Expense.PaymentMethod,
 			Items:         toExpenseItemInputs(req.Expense.Items),
 		},
-		Debts:     toDebtInputs(req.Debts),
-		Images:    images,
-		AIExtract: req.AIExtract,
+		Debts:          toDebtInputs(req.Debts),
+		Images:         images,
+		AIExtract:      req.AIExtract,
+		AIProcessAfter: aiProcessAfter,
 	})
 	if err != nil {
 		respondError(c, err)
@@ -286,17 +287,17 @@ func (h *ExpenseHandler) Update(c *gin.Context) {
 		return
 	}
 
-	// Re-running AI on a failed row needs to go through the same rate limit
-	// as the create flow.
+	var aiProcessAfter *time.Time
+	// Re-running AI reserves a slot just like create. If today's allowance is
+	// full, the update succeeds and remains queued for the next window.
 	if req.AIExtract {
 		userID, ok := c.Get("userID")
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
 		}
-		if !h.aiRateLimit.Allow(userID.(uuid.UUID)) {
-			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Daily AI extraction limit reached"})
-			return
+		if processAfter, queued := h.aiRateLimit.Reserve(userID.(uuid.UUID)); queued {
+			aiProcessAfter = &processAfter
 		}
 	}
 
@@ -314,8 +315,9 @@ func (h *ExpenseHandler) Update(c *gin.Context) {
 			PaymentMethod: req.Expense.PaymentMethod,
 			Items:         toExpenseItemInputs(req.Expense.Items),
 		},
-		Debts:     toDebtInputs(req.Debts),
-		AIExtract: req.AIExtract,
+		Debts:          toDebtInputs(req.Debts),
+		AIExtract:      req.AIExtract,
+		AIProcessAfter: aiProcessAfter,
 	})
 	if err != nil {
 		respondError(c, err)

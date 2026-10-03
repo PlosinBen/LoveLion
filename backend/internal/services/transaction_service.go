@@ -88,15 +88,16 @@ type ImageUpload struct {
 }
 
 type CreateExpenseInput struct {
-	Date        *time.Time
-	Currency    string
-	TotalAmount decimal.Decimal
-	Title       string
-	Note        string
-	Expense     ExpenseInput
-	Debts       []DebtInput
-	Images      []ImageUpload // optional — uploaded to R2 in the same tx
-	AIExtract   bool          // when true, ai_status is set to pending for worker pickup
+	Date           *time.Time
+	Currency       string
+	TotalAmount    decimal.Decimal
+	Title          string
+	Note           string
+	Expense        ExpenseInput
+	Debts          []DebtInput
+	Images         []ImageUpload // optional — uploaded to R2 in the same tx
+	AIExtract      bool          // when true, ai_status is set to pending for worker pickup
+	AIProcessAfter *time.Time    // optional — defers worker pickup while preserving the queue
 }
 
 type UpdateExpenseInput struct {
@@ -109,7 +110,8 @@ type UpdateExpenseInput struct {
 	Debts       []DebtInput
 	// AIExtract toggles the AI re-run flow when the current row is in `failed`.
 	// See UpdateExpense for the full transition table.
-	AIExtract bool
+	AIExtract      bool
+	AIProcessAfter *time.Time
 }
 
 type CreatePaymentInput struct {
@@ -349,7 +351,10 @@ func (s *TransactionService) CreateExpense(ctx context.Context, spaceID uuid.UUI
 			pending := aiStatusPending
 			if err := tx.Model(&models.Transaction{}).
 				Where("id = ?", txnID).
-				Update("ai_status", pending).Error; err != nil {
+				Updates(map[string]interface{}{
+					"ai_status":        pending,
+					"ai_process_after": input.AIProcessAfter,
+				}).Error; err != nil {
 				return err
 			}
 		}
@@ -522,8 +527,9 @@ func (s *TransactionService) UpdateExpense(ctx context.Context, txnID string, sp
 			if err := tx.Model(&models.Transaction{}).
 				Where("id = ?", txnID).
 				Updates(map[string]interface{}{
-					"ai_status": aiStatusPending,
-					"ai_error":  gorm.Expr("NULL"),
+					"ai_status":        aiStatusPending,
+					"ai_error":         gorm.Expr("NULL"),
+					"ai_process_after": input.AIProcessAfter,
 				}).Error; err != nil {
 				return err
 			}
@@ -562,8 +568,9 @@ func (s *TransactionService) CancelAIExtract(ctx context.Context, txnID string, 
 		Model(&models.Transaction{}).
 		Where("id = ? AND space_id = ? AND ai_status IN ?", txnID, spaceID, []string{aiStatusPending, aiStatusProcessing}).
 		Updates(map[string]interface{}{
-			"ai_status": gorm.Expr("NULL"),
-			"ai_error":  gorm.Expr("NULL"),
+			"ai_status":        gorm.Expr("NULL"),
+			"ai_error":         gorm.Expr("NULL"),
+			"ai_process_after": gorm.Expr("NULL"),
 		})
 	if result.Error != nil {
 		return errorx.Wrap(errorx.ErrInternal, "Failed to cancel AI extraction")
