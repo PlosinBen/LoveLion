@@ -131,7 +131,7 @@ func (w *AIWorker) tick(ctx context.Context) {
 
 	var pending []models.Transaction
 	err := w.db.WithContext(ctx).
-		Where("ai_status = ?", aiStatusPending).
+		Where("ai_status = ? AND (ai_process_after IS NULL OR ai_process_after <= ?)", aiStatusPending, time.Now()).
 		Order("created_at ASC").
 		Limit(w.cfg.BatchSize).
 		Find(&pending).Error
@@ -323,8 +323,9 @@ func (w *AIWorker) loadSpaceHints(ctx context.Context, txnID string) (ExtractHin
 func (w *AIWorker) writeSuccess(ctx context.Context, txnID string, data *ReceiptData, overwriteTitle bool) error {
 	return w.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		updates := map[string]interface{}{
-			"ai_status": aiStatusCompleted,
-			"ai_error":  "",
+			"ai_status":        aiStatusCompleted,
+			"ai_error":         "",
+			"ai_process_after": gorm.Expr("NULL"),
 		}
 		if data.Date != nil {
 			if data.Date.Hour() != 0 || data.Date.Minute() != 0 {
@@ -421,8 +422,9 @@ func (w *AIWorker) writeFailure(ctx context.Context, txnID, message string) {
 		Model(&models.Transaction{}).
 		Where("id = ? AND ai_status = ?", txnID, aiStatusProcessing).
 		Updates(map[string]interface{}{
-			"ai_status": aiStatusFailed,
-			"ai_error":  truncateError(message, 500),
+			"ai_status":        aiStatusFailed,
+			"ai_error":         truncateError(message, 500),
+			"ai_process_after": gorm.Expr("NULL"),
 		}).Error
 	if err != nil {
 		slog.Error("ai worker mark failed", "txn_id", txnID, "error", err)

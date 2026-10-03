@@ -8,18 +8,19 @@ import (
 )
 
 type Transaction struct {
-	ID          string          `gorm:"type:varchar(21);primary_key" json:"id"`
-	SpaceID     uuid.UUID       `gorm:"type:uuid;not null" json:"space_id"`
-	Type        string          `gorm:"type:varchar(20);not null;default:'expense'" json:"type"`
-	Title       string          `gorm:"type:varchar(100)" json:"title"`
-	Date        time.Time       `gorm:"not null;default:NOW()" json:"date"`
-	Currency    string          `gorm:"type:varchar(3);not null;default:'TWD'" json:"currency"`
-	TotalAmount decimal.Decimal `gorm:"type:decimal(10,2);not null;default:0" json:"total_amount"`
-	Note        string          `gorm:"type:text" json:"note"`
-	AIStatus    *string         `gorm:"type:varchar(20);column:ai_status" json:"ai_status,omitempty"`
-	AIError     string          `gorm:"type:text;column:ai_error" json:"ai_error,omitempty"`
-	CreatedAt   time.Time       `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt   time.Time       `gorm:"autoUpdateTime" json:"updated_at"`
+	ID             string          `gorm:"type:varchar(21);primary_key" json:"id"`
+	SpaceID        uuid.UUID       `gorm:"type:uuid;not null" json:"space_id"`
+	Type           string          `gorm:"type:varchar(20);not null;default:'expense'" json:"type"`
+	Title          string          `gorm:"type:varchar(100)" json:"title"`
+	Date           time.Time       `gorm:"not null;default:NOW()" json:"date"`
+	Currency       string          `gorm:"type:varchar(3);not null;default:'TWD'" json:"currency"`
+	TotalAmount    decimal.Decimal `gorm:"type:decimal(10,2);not null;default:0" json:"total_amount"`
+	Note           string          `gorm:"type:text" json:"note"`
+	AIStatus       *string         `gorm:"type:varchar(20);column:ai_status" json:"ai_status,omitempty"`
+	AIError        string          `gorm:"type:text;column:ai_error" json:"ai_error,omitempty"`
+	AIProcessAfter *time.Time      `gorm:"column:ai_process_after" json:"-"`
+	CreatedAt      time.Time       `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt      time.Time       `gorm:"autoUpdateTime" json:"updated_at"`
 
 	// Associations
 	Space   *Space              `gorm:"foreignKey:SpaceID" json:"space,omitempty"`

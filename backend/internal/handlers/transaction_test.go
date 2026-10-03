@@ -3,8 +3,10 @@ package handlers
 import (
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"lovelion/internal/middleware"
+	"lovelion/internal/models"
 	"lovelion/internal/repositories"
 	"lovelion/internal/services"
 	"lovelion/internal/testutil"
@@ -116,6 +118,48 @@ func TestExpenseHandler_Create(t *testing.T) {
 			router.ServeHTTP(w, req)
 			testutil.ExpectStatus(t, w, tt.wantStatus)
 		})
+	}
+}
+
+func TestExpenseHandler_CreateQueuesWhenDailyAILimitIsFull(t *testing.T) {
+	db := testutil.TestDB(t)
+	user := testutil.CreateTestUser(t, db)
+	spaceID := createTestSpace(t, db, user.ID)
+
+	handler := NewExpenseHandler(newTestTransactionService(db), middleware.NewAIRateLimiter(1))
+	router := testutil.TestRouter()
+	router.POST("/api/spaces/:id/expenses", testutil.AuthContext(user.ID), middleware.SpaceAccess(db), handler.Create)
+
+	requestBody := map[string]interface{}{
+		"title":      "停車費 100",
+		"currency":   "TWD",
+		"ai_extract": true,
+		"expense": map[string]interface{}{
+			"category":      "其他",
+			"exchange_rate": 1,
+		},
+	}
+
+	for i := 0; i < 2; i++ {
+		w := httptest.NewRecorder()
+		req := testutil.JSONRequest("POST", "/api/spaces/"+spaceID+"/expenses", requestBody)
+		router.ServeHTTP(w, req)
+		testutil.ExpectStatus(t, w, 201)
+
+		if i == 1 {
+			var response map[string]interface{}
+			testutil.ParseResponse(t, w, &response)
+			var txn models.Transaction
+			if err := db.First(&txn, "id = ?", response["id"]).Error; err != nil {
+				t.Fatalf("load queued transaction: %v", err)
+			}
+			if txn.AIStatus == nil || *txn.AIStatus != "pending" {
+				t.Fatalf("expected pending AI status, got %v", txn.AIStatus)
+			}
+			if txn.AIProcessAfter == nil || txn.AIProcessAfter.Before(time.Now().Add(23*time.Hour)) {
+				t.Fatalf("expected AI work to be queued for the next quota window, got %v", txn.AIProcessAfter)
+			}
+		}
 	}
 }
 
