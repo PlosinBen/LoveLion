@@ -101,7 +101,15 @@
             <div class="flex items-end gap-3">
               <div class="w-24 flex flex-col gap-2">
                 <label class="text-xs font-bold text-neutral-500 uppercase px-1">數量</label>
-                <BaseInput v-model.number="item.quantity" type="number" placeholder="數量" min="1" input-class="text-right" />
+                <BaseInput
+                  v-model.number="item.quantity"
+                  type="number"
+                  placeholder="數量"
+                  min="0.01"
+                  step="0.01"
+                  inputmode="decimal"
+                  input-class="text-right"
+                />
               </div>
 
               <div class="flex-1 text-right pb-3">

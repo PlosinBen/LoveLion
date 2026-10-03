@@ -1,9 +1,9 @@
 <template>
   <BaseCard
     @click="router.push(`/spaces/${spaceId}/ledger/transaction/${transaction.id}`)"
-    class="flex justify-between items-center hover:bg-neutral-800 transition-colors cursor-pointer group active:scale-95 shadow-sm"
+    class="flex min-w-0 max-w-full justify-between items-center hover:bg-neutral-800 transition-colors cursor-pointer group active:scale-95 shadow-sm"
   >
-    <div class="flex items-center gap-3">
+    <div class="flex flex-1 min-w-0 items-center gap-3">
       <!-- Thumbnail or Type Icon -->
       <div v-if="thumbnail" class="w-10 h-10 rounded-xl overflow-hidden shrink-0">
         <img :src="thumbnail" class="w-full h-full object-cover" />
@@ -15,9 +15,9 @@
         <Icon icon="mdi:image-off-outline" class="text-xl" />
       </div>
 
-      <div class="flex flex-col min-w-0">
-        <div class="flex items-center gap-1.5">
-          <h4 class="text-sm font-semibold text-neutral-100 truncate">{{ transaction.title || '未命名' }}</h4>
+      <div class="flex flex-1 min-w-0 flex-col">
+        <div class="flex min-w-0 items-center gap-1.5">
+          <h4 class="min-w-0 truncate text-sm font-semibold text-neutral-100">{{ transaction.title || '未命名' }}</h4>
           <!-- Badge hides itself for completed / NULL statuses, so a normal
                transaction row looks identical to before. -->
           <AiStatusBadge :status="transaction.ai_status" :error="transaction.ai_error" />
@@ -26,7 +26,7 @@
       </div>
     </div>
 
-    <div class="text-right">
+    <div class="ml-3 shrink-0 text-right">
       <div class="text-xs text-neutral-500 uppercase font-bold leading-none mb-1">
         {{ transaction.currency }}
       </div>
